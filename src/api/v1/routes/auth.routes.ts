@@ -10,9 +10,19 @@ router
   .route("/signup")
   .post(
     limiters.signupLimiter,
-    userValidation.validateUser,
+    userValidation.validateUserSignup,
     handleValidationErrors,
     authControllers.signup
   );
+router
+  .route("/login")
+  .post(
+    limiters.loginLimiter,
+    userValidation.validateUserLogin,
+    handleValidationErrors,
+    authControllers.login
+  );
+router.route("/refresh").get(authControllers.refresh);
+router.route("/logout").post(authControllers.logout);
 
 export default router;

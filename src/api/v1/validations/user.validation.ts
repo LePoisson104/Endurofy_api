@@ -1,6 +1,6 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
-const validateUser = [
+const validateUserSignup = [
   body("firstName")
     .notEmpty()
     .withMessage("First name is required")
@@ -23,4 +23,21 @@ const validateUser = [
     .withMessage("Password must be a string"),
 ];
 
-export default { validateUser };
+const validateUserLogin = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required!")
+    .isEmail()
+    .withMessage("Invalid email address"),
+  body("password").notEmpty().withMessage("Password is required!"),
+];
+
+const validateUserId = [
+  param("userId") // Using `param` if `userId` is part of the URL parameters
+    .isUUID()
+    .withMessage("Invalid userId format")
+    .notEmpty()
+    .withMessage("UserId is required"),
+];
+
+export default { validateUserSignup, validateUserLogin, validateUserId };
