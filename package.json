@@ -2,10 +2,10 @@
   "name": "endurofy_api",
   "version": "1.0.0",
   "description": "## Overview",
-  "main": "index.js",
+  "main": "src/server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.ts",
+    "dev": "nodemon --exec ts-node src/server.ts",
     "build": "npx tsc",
     "start": "node dist/server.js"
   },
