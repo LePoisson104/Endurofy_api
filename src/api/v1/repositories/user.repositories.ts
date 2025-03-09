@@ -42,7 +42,7 @@ const queryCheckUserExists = async (email: string) => {
 
 const queryGetUserCredentials = async (email: string) => {
   const query =
-    "SELECT user_id, email, hashed_password, first_name, last_name FROM users WHERE email = ?";
+    "SELECT user_id, email, hashed_password, first_name, last_name, verified FROM users WHERE email = ?";
   try {
     const [results] = await pool.execute(query, [email]);
     return results as any[];
@@ -63,9 +63,47 @@ const queryGetUsersInfo = async (userId: string) => {
   }
 };
 
+const queryAddOTP = async (
+  email: string,
+  hashedOTP: string,
+  createdAt: string,
+  expiresAt: string
+) => {
+  const query =
+    "INSERT INTO otp (email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?)";
+  try {
+    const [results] = await pool.execute(query, [
+      email,
+      hashedOTP,
+      createdAt,
+      expiresAt,
+    ]);
+    return results as any[];
+  } catch (err: any) {
+    if (err.code === "ER_DUP_ENTRY") {
+      throw new ErrorResponse(`Duplicate entry for email ${email}`, 409);
+    }
+    console.error("Error creating new otp", err);
+    throw new ErrorResponse("Error creating new otp", 500);
+  }
+};
+
+const queryGetOTP = async (email: string) => {
+  const query = "SELECT * FROM otp WHERE email = ?";
+  try {
+    const [results] = await pool.execute(query, [email]);
+    return results as any[];
+  } catch (err) {
+    console.log("Error getting otp", err);
+    throw new ErrorResponse("Error getting otp", 500);
+  }
+};
+
 export default {
   queryCreateNewUser,
   queryCheckUserExists,
   queryGetUserCredentials,
   queryGetUsersInfo,
+  queryAddOTP,
+  queryGetOTP,
 };

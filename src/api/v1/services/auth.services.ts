@@ -5,6 +5,35 @@ import jwt from "jsonwebtoken";
 import { ErrorResponse } from "../middlewares/error.handlers";
 import { Response } from "express";
 import { DecodedToken } from "../interfaces/decoded.interface";
+import { generateOTP } from "../helpers/generateOTP";
+import nodemailer from "nodemailer";
+import { htmlContent } from "../helpers/html.content";
+
+const sendOTPVerification = async (
+  email: string,
+  otp: string
+): Promise<any> => {
+  const transporter = nodemailer.createTransport({
+    // Configure your email provider
+    host: process.env.MAIL_HOST as string,
+    port: parseInt(process.env.MAIL_PORT as string),
+    secure: true,
+    auth: {
+      user: process.env.AUTH_EMAIL as string,
+      pass: process.env.AUTH_EMAIL_PASSWORD as string,
+    },
+  });
+
+  await transporter.sendMail({
+    from: '"Endurofy" <endurofy@gmail.com>',
+    to: email,
+    subject: "Your Verification Code",
+    text: `Your verification code is: ${otp}. It will expire in 15 minutes.`,
+    html: htmlContent(otp),
+  });
+};
+
+const verifyOTP = async (email: string, otp: string) => {};
 
 const signup = async (
   firstName: string,
@@ -21,6 +50,14 @@ const signup = async (
     throw new ErrorResponse("User already exists!", 409);
   }
 
+  const otp = generateOTP();
+  const hashedOTP: string = await bcrypt.hash(otp, 10);
+  const createdAt: string = Date.now().toString();
+  const expiresAt: string = (Date.now() + 15 * 60 * 1000).toString();
+
+  // wait for otp to be insert into table
+  await Users.queryAddOTP(email, hashedOTP, createdAt, expiresAt);
+
   const newUser = await Users.queryCreateNewUser(
     userId,
     firstName,
@@ -33,13 +70,15 @@ const signup = async (
     throw new ErrorResponse("Error creating new user", 500);
   }
 
+  await sendOTPVerification(email, otp);
+
   return;
 };
 
 const login = async (email: string, password: string, res: Response) => {
   const userCredentials = await Users.queryGetUserCredentials(email);
 
-  if (userCredentials.length === 0) {
+  if (userCredentials.length === 0 || userCredentials[0].verified === 0) {
     throw new ErrorResponse("Unauthorized!", 401);
   }
 
