@@ -28,7 +28,7 @@ router
     limiters.otpLimiter,
     userValidation.validateUsersEmail,
     handleValidationErrors,
-    authControllers.verifyOTP
+    authControllers.resendOTP
   );
 router
   .route("/login")

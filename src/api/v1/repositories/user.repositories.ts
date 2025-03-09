@@ -12,14 +12,14 @@ const queryCreateNewUser = async (
     "INSERT INTO users (user_id, email, hashed_password, first_name, last_name) values (?,?,?,?,?)";
 
   try {
-    const [results] = await pool.execute(query, [
+    const [result] = await pool.execute(query, [
       userId,
       email,
       hashedPassword,
       firstName,
       lastName,
     ]);
-    return results;
+    return result;
   } catch (err: any) {
     console.error("Error executing query: ", err);
     if (err.code === "ER_DUP_ENTRY") {
@@ -44,8 +44,8 @@ const queryGetUserCredentials = async (email: string) => {
   const query =
     "SELECT user_id, email, hashed_password, first_name, last_name, verified FROM users WHERE email = ?";
   try {
-    const [results] = await pool.execute(query, [email]);
-    return results as any[];
+    const [result] = await pool.execute(query, [email]);
+    return result as any[];
   } catch (err) {
     console.error("Error getting user's credentials", err);
     throw new ErrorResponse("Error getting user's credentials", 500);
@@ -58,8 +58,8 @@ const queryUpdateUsersVerificationStatus = async (
 ) => {
   const query = "UPDATE users SET verified = ? WHERE email = ? ";
   try {
-    const [results] = await pool.execute(query, [verified, email]);
-    return results as any[];
+    const [result] = await pool.execute(query, [verified, email]);
+    return result as any[];
   } catch (err) {
     console.error("Error updating user's verification status", err);
     throw new ErrorResponse("Error updating user's verification status", 500);
@@ -69,8 +69,8 @@ const queryUpdateUsersVerificationStatus = async (
 const queryGetUsersInfo = async (userId: string) => {
   const query = "SELECT * FROM users WHERE user_id = ?";
   try {
-    const [results] = await pool.execute(query, [userId]);
-    return results as any[];
+    const [result] = await pool.execute(query, [userId]);
+    return result as any[];
   } catch (err) {
     console.error("Error getting user's info", err);
     throw new ErrorResponse("Error getting user's info", 500);
@@ -86,13 +86,13 @@ const queryAddOTP = async (
   const query =
     "INSERT INTO otp (email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?)";
   try {
-    const [results] = await pool.execute(query, [
+    const [result] = await pool.execute(query, [
       email,
       hashedOTP,
       createdAt,
       expiresAt,
     ]);
-    return results as any[];
+    return result as any[];
   } catch (err: any) {
     if (err.code === "ER_DUP_ENTRY") {
       throw new ErrorResponse(`Duplicate entry for email ${email}`, 409);
@@ -105,8 +105,8 @@ const queryAddOTP = async (
 const queryGetOTP = async (email: string) => {
   const query = "SELECT * FROM otp WHERE email = ?";
   try {
-    const [results] = await pool.execute(query, [email]);
-    return results as any[];
+    const [result] = await pool.execute(query, [email]);
+    return result as any[];
   } catch (err) {
     console.log("Error getting otp", err);
     throw new ErrorResponse("Error getting otp", 500);
@@ -128,6 +128,7 @@ const queryUpdateOTP = async (
       expiresAt,
       email,
     ]);
+    return result as any[];
   } catch (err) {
     console.error("Error updating otp", err);
     throw new ErrorResponse("Error updating otp", 500);
@@ -137,8 +138,8 @@ const queryUpdateOTP = async (
 const queryDeleteOTP = async (email: string) => {
   const query = "DELETE FROM otp WHERE email = ?";
   try {
-    const [results] = await pool.execute(query, [email]);
-    return results as any[];
+    const [result] = await pool.execute(query, [email]);
+    return result as any[];
   } catch (err) {
     console.error("Error deleting otp", err);
     throw new ErrorResponse("Error deleting otp", 500);

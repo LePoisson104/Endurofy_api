@@ -26,7 +26,10 @@ const verifyOTP = async (email: string, otp: string) => {
   const getOTP = await Users.queryGetOTP(email);
 
   if (getOTP.length === 0) {
-    throw new ErrorResponse("User not found, please signup", 404);
+    throw new ErrorResponse(
+      "Either account has already been verified or you have not signup",
+      404
+    );
   }
 
   const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
@@ -45,12 +48,31 @@ const verifyOTP = async (email: string, otp: string) => {
   await Users.queryDeleteOTP(email);
   const status = await Users.queryUpdateUsersVerificationStatus(email, 1); // 1 for true
 
-  console.log(status);
-
   return;
 };
 
-const resendOTP = async (email: string) => {};
+const resendOTP = async (email: string) => {
+  const getOTP = await Users.queryGetOTP(email);
+
+  if (getOTP.length === 0) {
+    throw new ErrorResponse(
+      "Either account has already been verified or you have not signup",
+      404
+    );
+  }
+
+  const otp = generateOTP();
+  const hashedOTP: string = await bcrypt.hash(otp, 10);
+  const createdAt: string = Date.now().toString();
+  const expiresAt: string = (Date.now() + 15 * 60 * 1000).toString();
+
+  await Users.queryUpdateOTP(email, hashedOTP, createdAt, expiresAt);
+
+  // Send OTP email
+  await sendOTPVerification(email, otp);
+
+  return;
+};
 
 const signup = async (
   firstName: string,
@@ -198,4 +220,4 @@ const logout = (cookies: { jwt?: string }, res: Response) => {
   return res.status(200).json({ message: "Cookie Cleared" });
 };
 
-export default { signup, login, refresh, logout, verifyOTP };
+export default { signup, login, refresh, logout, verifyOTP, resendOTP };
