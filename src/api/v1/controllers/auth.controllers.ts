@@ -7,12 +7,20 @@ const signup = async (req: Request, res: Response): Promise<any> => {
   const { firstName, lastName, email, password } = req.body;
   try {
     await authServices.signup(firstName, lastName, email, password);
-    return res
-      .status(200)
-      .json({
-        status: "pending",
-        message: "Verification code has been sent to your email",
-      });
+    return res.status(200).json({
+      status: "pending",
+      message: "Verification code has been sent to your email",
+    });
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const verifyOTP = async (req: Request, res: Response): Promise<any> => {
+  const { email, otp } = req.body;
+  try {
+    await authServices.verifyOTP(email, otp);
+    return res.status(200).json({ message: "User created successfully!" });
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
@@ -48,4 +56,4 @@ const logout = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default { signup, login, refresh, logout };
+export default { signup, login, refresh, logout, verifyOTP };

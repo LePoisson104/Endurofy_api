@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import userValidation from "../validations/user.validation";
 import { handleValidationErrors } from "../middlewares/error.handlers";
 import userControllers from "../controllers/users.controllers";
-import verifyJWT from "../middlewares/verifyJWT";
+import verifyJWT from "../middlewares/verify.JWT";
 
 const router: Router = express.Router();
 

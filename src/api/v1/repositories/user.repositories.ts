@@ -52,6 +52,20 @@ const queryGetUserCredentials = async (email: string) => {
   }
 };
 
+const queryUpdateUsersVerificationStatus = async (
+  email: string,
+  verified: number
+) => {
+  const query = "UPDATE users SET verified = ? WHERE email = ? ";
+  try {
+    const [results] = await pool.execute(query, [verified, email]);
+    return results as any[];
+  } catch (err) {
+    console.error("Error updating user's verification status", err);
+    throw new ErrorResponse("Error updating user's verification status", 500);
+  }
+};
+
 const queryGetUsersInfo = async (userId: string) => {
   const query = "SELECT * FROM users WHERE user_id = ?";
   try {
@@ -99,11 +113,46 @@ const queryGetOTP = async (email: string) => {
   }
 };
 
+const queryUpdateOTP = async (
+  email: string,
+  hashedOTP: string,
+  createdAt: string,
+  expiresAt: string
+) => {
+  const query =
+    "UPDATE otp SET hashed_otp = ?, created_at = ?, expires_at = ? WHERE email = ?";
+  try {
+    const [result] = await pool.execute(query, [
+      hashedOTP,
+      createdAt,
+      expiresAt,
+      email,
+    ]);
+  } catch (err) {
+    console.error("Error updating otp", err);
+    throw new ErrorResponse("Error updating otp", 500);
+  }
+};
+
+const queryDeleteOTP = async (email: string) => {
+  const query = "DELETE FROM otp WHERE email = ?";
+  try {
+    const [results] = await pool.execute(query, [email]);
+    return results as any[];
+  } catch (err) {
+    console.error("Error deleting otp", err);
+    throw new ErrorResponse("Error deleting otp", 500);
+  }
+};
+
 export default {
   queryCreateNewUser,
   queryCheckUserExists,
   queryGetUserCredentials,
+  queryUpdateUsersVerificationStatus,
   queryGetUsersInfo,
   queryAddOTP,
   queryGetOTP,
+  queryUpdateOTP,
+  queryDeleteOTP,
 };

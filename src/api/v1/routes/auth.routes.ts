@@ -15,6 +15,22 @@ router
     authControllers.signup
   );
 router
+  .route("/verify-otp")
+  .post(
+    limiters.otpLimiter,
+    userValidation.validateOTPVerification,
+    handleValidationErrors,
+    authControllers.verifyOTP
+  );
+router
+  .route("/resend-otp")
+  .post(
+    limiters.otpLimiter,
+    userValidation.validateUsersEmail,
+    handleValidationErrors,
+    authControllers.verifyOTP
+  );
+router
   .route("/login")
   .post(
     limiters.loginLimiter,

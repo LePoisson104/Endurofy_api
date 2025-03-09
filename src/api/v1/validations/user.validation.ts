@@ -40,4 +40,31 @@ const validateUserId = [
     .withMessage("UserId is required"),
 ];
 
-export default { validateUserSignup, validateUserLogin, validateUserId };
+const validateOTPVerification = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email"),
+  body("otp")
+    .notEmpty()
+    .withMessage("Otp is required")
+    .isString()
+    .withMessage("Otp has to be a string"),
+];
+
+const validateUsersEmail = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email"),
+];
+
+export default {
+  validateUserSignup,
+  validateUserLogin,
+  validateUserId,
+  validateOTPVerification,
+  validateUsersEmail,
+};

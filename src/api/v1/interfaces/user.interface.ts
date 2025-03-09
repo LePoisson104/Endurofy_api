@@ -3,5 +3,7 @@ export interface userInterface {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
+  hashedPassword: string;
+  verified: number;
+  updatedAt: Date;
 }

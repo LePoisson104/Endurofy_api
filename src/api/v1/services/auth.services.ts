@@ -6,24 +6,13 @@ import { ErrorResponse } from "../middlewares/error.handlers";
 import { Response } from "express";
 import { DecodedToken } from "../interfaces/decoded.interface";
 import { generateOTP } from "../helpers/generateOTP";
-import nodemailer from "nodemailer";
 import { htmlContent } from "../helpers/html.content";
+import { transporter } from "../../../config/nodemailer.config";
 
 const sendOTPVerification = async (
   email: string,
   otp: string
 ): Promise<any> => {
-  const transporter = nodemailer.createTransport({
-    // Configure your email provider
-    host: process.env.MAIL_HOST as string,
-    port: parseInt(process.env.MAIL_PORT as string),
-    secure: true,
-    auth: {
-      user: process.env.AUTH_EMAIL as string,
-      pass: process.env.AUTH_EMAIL_PASSWORD as string,
-    },
-  });
-
   await transporter.sendMail({
     from: '"Endurofy" <endurofy@gmail.com>',
     to: email,
@@ -33,7 +22,35 @@ const sendOTPVerification = async (
   });
 };
 
-const verifyOTP = async (email: string, otp: string) => {};
+const verifyOTP = async (email: string, otp: string) => {
+  const getOTP = await Users.queryGetOTP(email);
+
+  if (getOTP.length === 0) {
+    throw new ErrorResponse("User not found, please signup", 404);
+  }
+
+  const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
+
+  if (!match) {
+    throw new ErrorResponse("Invalid verification code", 400);
+  }
+
+  if (parseInt(getOTP[0].expires_at) < Date.now()) {
+    throw new ErrorResponse(
+      "Verification code has already been expired, please request for a new one",
+      400
+    );
+  }
+
+  await Users.queryDeleteOTP(email);
+  const status = await Users.queryUpdateUsersVerificationStatus(email, 1); // 1 for true
+
+  console.log(status);
+
+  return;
+};
+
+const resendOTP = async (email: string) => {};
 
 const signup = async (
   firstName: string,
@@ -181,4 +198,4 @@ const logout = (cookies: { jwt?: string }, res: Response) => {
   return res.status(200).json({ message: "Cookie Cleared" });
 };
 
-export default { signup, login, refresh, logout };
+export default { signup, login, refresh, logout, verifyOTP };
