@@ -1,4 +1,4 @@
-# Endurofy.com
+# Endurofy.app
 
 ## Overview
 
