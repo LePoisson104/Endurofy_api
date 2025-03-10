@@ -1,68 +1,101 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { controllerErrorResponse } from "../middlewares/error.handlers";
 import { CustomError } from "../interfaces/error.interface";
 import authServices from "../services/auth.services";
+import {
+  SignupRequest,
+  LoginRequest,
+  OTPRequest,
+} from "../interfaces/auth.interfaces";
+import { RequestHandler } from "express";
+import { sendSuccess, sendCreated } from "../utils/response.utils";
 
-const signup = async (req: Request, res: Response): Promise<any> => {
-  const { firstName, lastName, email, password } = req.body;
+const signup: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    await authServices.signup(firstName, lastName, email, password);
-    return res.status(200).json({
-      status: "pending",
-      message: "Verification code has been sent to your email",
-    });
+    const { firstName, lastName, email, password } = req.body as SignupRequest;
+    const result = await authServices.signup(
+      firstName,
+      lastName,
+      email,
+      password
+    );
+    sendSuccess(
+      res,
+      result.data,
+      "Verification code has been sent to your email"
+    );
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
 };
 
-const verifyOTP = async (req: Request, res: Response): Promise<any> => {
-  const { email, otp } = req.body;
+const verifyOTP: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    await authServices.verifyOTP(email, otp);
-    return res.status(200).json({ message: "User created successfully!" });
+    const { email, otp } = req.body as OTPRequest;
+    const result = await authServices.verifyOTP(email, otp);
+    sendCreated(res, null, result.message);
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
 };
 
-const resendOTP = async (req: Request, res: Response): Promise<any> => {
-  const { email } = req.body;
+const resendOTP: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    await authServices.resendOTP(email);
-    return res.status(200).json({
-      message: "Verification code has been sent, please check your email",
-    });
+    const { email } = req.body;
+    const result = await authServices.resendOTP(email);
+    sendSuccess(res, null, result.message);
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
 };
 
-const login = async (req: Request, res: Response): Promise<any> => {
-  const { email, password } = req.body;
+const login: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
+    const { email, password } = req.body as LoginRequest;
     const result = await authServices.login(email, password, res);
-    return res.status(200).json(result);
+    sendSuccess(res, result.data, "Login successful");
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
 };
 
-const refresh = async (req: Request, res: Response): Promise<any> => {
-  const cookies = req.cookies;
-
+const refresh: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const accessToken = await authServices.refresh(cookies);
-    return res.status(200).json(accessToken);
+    const result = await authServices.refresh(req.cookies);
+    sendSuccess(res, { accessToken: result.accessToken });
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
 };
 
-const logout = async (req: Request, res: Response): Promise<any> => {
-  const cookies = req.cookies;
+const logout: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    authServices.logout(cookies, res);
+    authServices.logout(req.cookies, res);
+    sendSuccess(res, null, "Logged out successfully");
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
