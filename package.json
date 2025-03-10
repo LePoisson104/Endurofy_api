@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/LePoisson104/Endurofy_api#readme",
   "dependencies": {
+    "@types/node-cron": "^3.0.11",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -33,6 +34,7 @@
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.13.0",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
     "uuid": "^11.1.0"
   },

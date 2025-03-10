@@ -14,11 +14,12 @@ import {
   OTPServiceResponse,
   TokenServiceResponse,
 } from "../interfaces/service.interfaces";
+import pool from "../../../config/db.config";
 
 // Constants
 const AUTH_CONSTANTS = {
   SALT_ROUNDS: 10,
-  ACCESS_TOKEN_EXPIRY: "30s",
+  ACCESS_TOKEN_EXPIRY: "15min",
   REFRESH_TOKEN_EXPIRY: "7d",
   OTP_EXPIRY_MINUTES: 15,
   COOKIE_NAME: "jwt",
@@ -31,6 +32,9 @@ const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Send OTP Verification Email
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const sendOTPVerification = async (
   email: string,
   otp: string
@@ -44,40 +48,71 @@ const sendOTPVerification = async (
   });
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Verify OTP
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const verifyOTP = async (
   email: string,
   otp: string
 ): Promise<OTPServiceResponse> => {
-  const getOTP = await Users.queryGetOTP(email);
+  const connection = await pool.getConnection();
 
-  if (getOTP.length === 0) {
-    throw new AppError(
-      "Either account has already been verified or you have not signed up",
-      404
+  try {
+    await connection.beginTransaction();
+
+    // Get OTP within transaction
+    const [otpRows] = await connection.execute(
+      "SELECT * FROM otp WHERE email = ?",
+      [email]
     );
+    const getOTP = otpRows as any[];
+
+    if (getOTP.length === 0) {
+      throw new AppError(
+        "Either account has already been verified or you have not signed up",
+        404
+      );
+    }
+
+    const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
+
+    if (!match) {
+      throw new AppError("Invalid verification code", 400);
+    }
+
+    if (parseInt(getOTP[0].expires_at) < Date.now()) {
+      throw new AppError(
+        "Verification code has expired, please request a new one",
+        400
+      );
+    }
+
+    // Delete OTP and update user verification status within transaction
+    await connection.execute("DELETE FROM otp WHERE email = ?", [email]);
+
+    await connection.execute("UPDATE users SET verified = ? WHERE email = ?", [
+      1,
+      email,
+    ]);
+
+    await connection.commit();
+
+    return {
+      success: true,
+      message: "OTP verified successfully",
+    };
+  } catch (err) {
+    await connection.rollback();
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error during OTP verification", 500);
+  } finally {
+    connection.release();
   }
-
-  const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
-  if (!match) {
-    throw new AppError("Invalid verification code", 400);
-  }
-
-  if (parseInt(getOTP[0].expires_at) < Date.now()) {
-    throw new AppError(
-      "Verification code has expired, please request a new one",
-      400
-    );
-  }
-
-  await Users.queryDeleteOTP(email);
-  await Users.queryUpdateUsersVerificationStatus(email, 1);
-
-  return {
-    success: true,
-    message: "OTP verified successfully",
-  };
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Resend OTP
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
   const getOTP = await Users.queryGetOTP(email);
 
@@ -91,13 +126,17 @@ const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
   const otp = generateOTP();
   const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
   const createdAt = Date.now().toString();
-  const expiresAt = (
-    Date.now() +
-    AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
-  ).toString();
+  const expiresAt = (Date.now() + AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000) // 15 minutes
+    .toString();
 
   await Users.queryUpdateOTP(email, hashedOTP, createdAt, expiresAt);
-  await sendOTPVerification(email, otp);
+
+  // Send OTP email after successful transaction
+  try {
+    await sendOTPVerification(email, otp);
+  } catch (emailError) {
+    throw new AppError("Error sending OTP email", 500);
+  }
 
   return {
     success: true,
@@ -105,59 +144,93 @@ const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Signup
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const signup = async (
   firstName: string,
   lastName: string,
   email: string,
   password: string
 ): Promise<AuthServiceResponse> => {
-  const userExists = await Users.queryCheckUserExists(email);
-  if (userExists) {
-    throw new AppError("User already exists!", 409);
-  }
+  const connection = await pool.getConnection();
 
-  const hashedPassword = await bcrypt.hash(
-    password,
-    AUTH_CONSTANTS.SALT_ROUNDS
-  );
-  const userId = uuidv4();
-  const otp = generateOTP();
-  const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
-  const createdAt = Date.now().toString();
-  const expiresAt = (
-    Date.now() +
-    AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
-  ).toString();
+  try {
+    await connection.beginTransaction();
 
-  await Users.queryAddOTP(email, hashedOTP, createdAt, expiresAt);
+    // Check if user exists within transaction
+    const [rows] = await connection.execute(
+      "SELECT email FROM users WHERE email = ?",
+      [email]
+    );
+    if ((rows as any[]).length > 0) {
+      throw new AppError("User already exists!", 409);
+    }
 
-  const newUser = await Users.queryCreateNewUser(
-    userId,
-    firstName,
-    lastName,
-    email,
-    hashedPassword
-  );
+    const hashedPassword = await bcrypt.hash(
+      password,
+      AUTH_CONSTANTS.SALT_ROUNDS
+    );
+    const userId = uuidv4();
+    const otp = generateOTP();
+    const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
+    const createdAt = Date.now().toString();
+    const expiresAt = (
+      Date.now() +
+      AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
+    ).toString();
 
-  if (!newUser) {
-    throw new AppError("Error creating new user", 500);
-  }
+    // Create user first
+    await connection.execute(
+      "INSERT INTO users (user_id, email, hashed_password, first_name, last_name, verified) VALUES (?,?,?,?,?,?)",
+      [userId, email, hashedPassword, firstName, lastName, 0]
+    );
 
-  await sendOTPVerification(email, otp);
+    // Then add OTP
+    await connection.execute(
+      "INSERT INTO otp (email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?)",
+      [email, hashedOTP, createdAt, expiresAt]
+    );
 
-  return {
-    success: true,
-    data: {
-      user: {
-        user_id: userId,
-        email,
-        first_name: firstName,
-        last_name: lastName,
+    // Commit the transaction
+    await connection.commit();
+
+    // Send OTP email after successful transaction
+    try {
+      await sendOTPVerification(email, otp);
+    } catch (emailError) {
+      throw new AppError("Error sending OTP email", 500);
+    }
+
+    return {
+      success: true,
+      data: {
+        user: {
+          user_id: userId,
+          email: email,
+        },
       },
-    },
-  };
+    };
+  } catch (err) {
+    await connection.rollback();
+
+    if (err instanceof AppError) throw err;
+
+    // Check for specific MySQL errors
+    const mysqlError = err as any;
+    if (mysqlError.code === "ER_DUP_ENTRY") {
+      throw new AppError("Email already registered", 409);
+    }
+
+    throw new AppError("Error during user registration", 500);
+  } finally {
+    connection.release();
+  }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Login
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const login = async (
   email: string,
   password: string,
@@ -212,6 +285,9 @@ const login = async (
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Refresh
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const refresh = async (cookies: {
   jwt?: string;
 }): Promise<TokenServiceResponse> => {
@@ -263,6 +339,9 @@ const refresh = async (cookies: {
   });
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Logout
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const logout = (cookies: { jwt?: string }, res: Response): void => {
   if (!cookies?.jwt) {
     throw new AppError("No cookie found", 400);

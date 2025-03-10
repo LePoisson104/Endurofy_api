@@ -1,10 +1,5 @@
 import { Response } from "express";
-
-export interface SuccessResponse<T = any> {
-  status: "success";
-  message: string;
-  data?: T;
-}
+import { SuccessResponse } from "../interfaces/response.interface";
 
 export const sendSuccess = <T>(
   res: Response,
@@ -21,6 +16,7 @@ export const sendSuccess = <T>(
   return res.status(statusCode).json(response);
 };
 
+// for create requests
 export const sendCreated = <T>(
   res: Response,
   data?: T,
@@ -29,6 +25,7 @@ export const sendCreated = <T>(
   return sendSuccess(res, data, message, 201);
 };
 
+// for delete requests
 export const sendNoContent = (res: Response): Response => {
   return res.status(204).send();
 };

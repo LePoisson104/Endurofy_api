@@ -8,6 +8,7 @@ import {
   ErrorResponse,
   ValidationError,
 } from "../interfaces/error.interface";
+import { logger } from "../utils/logger";
 
 export const handleValidationErrors = (
   req: Request,
@@ -54,6 +55,12 @@ export class AppError extends Error implements CustomError {
     this.code = code;
     this.details = details;
 
+    logger.error(
+      `Error occurred: ${this.message} | Code: ${
+        this.code
+      } | Details: ${JSON.stringify(this.details)} | Stack: ${this.stack}`
+    );
+
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
@@ -80,6 +87,12 @@ export const controllerErrorResponse = (
     stack: err.stack,
     details: err.details,
   });
+
+  logger.error(
+    `Error occurred: ${err.message} | Code: ${
+      err.code
+    } | Details: ${JSON.stringify(err.details)} | Stack: ${err.stack}`
+  );
 
   return res.status(statusCode).json(errorResponse);
 };
