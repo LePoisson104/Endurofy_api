@@ -186,6 +186,11 @@ const signup = async (
       [userId, email, hashedPassword, firstName, lastName, 0]
     );
 
+    await connection.execute(
+      "INSERT INTO users_profile (user_id, profile_status) VALUES (?, ?)",
+      [userId, "incomplete"]
+    );
+
     // Then add OTP
     await connection.execute(
       "INSERT INTO otp (email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?)",

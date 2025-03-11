@@ -6,13 +6,19 @@ import verifyJWT from "../middlewares/verify.JWT";
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 router.get(
   "/:userId",
   userValidation.validateUserId,
   handleValidationErrors,
   userControllers.getUsersInfo
+);
+router.post(
+  "/delete-account/:userId",
+  userValidation.validateDeleteAccount,
+  handleValidationErrors,
+  userControllers.deleteAccount
 );
 
 export default router;

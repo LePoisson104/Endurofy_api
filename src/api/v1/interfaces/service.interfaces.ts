@@ -1,4 +1,4 @@
-import { User } from "./db.models";
+import { User, UsersInfo } from "./db.models";
 
 export interface AuthServiceResponse {
   success: boolean;
@@ -19,8 +19,7 @@ export interface TokenServiceResponse {
 }
 
 export interface UserInfoServiceResponse {
-  success: boolean;
   data: {
-    userInfo: User;
+    userInfo: UsersInfo;
   };
 }

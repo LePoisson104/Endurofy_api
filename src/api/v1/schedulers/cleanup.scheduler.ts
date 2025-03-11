@@ -13,7 +13,7 @@ import { logger } from "../utils/logger";
  * - *: Every day of the week
  */
 export const scheduleCleanup = (): void => {
-  cron.schedule("0 0 * * *", async () => {
+  cron.schedule("0 1 * * *", async () => {
     try {
       await logger.info("Starting cleanup of unverified accounts...");
       const deletedCount = await cleanupServices.cleanupUnverifiedAccounts();

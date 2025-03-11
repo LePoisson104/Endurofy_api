@@ -23,19 +23,19 @@ const createLimiter = ({ windowMs, max, duration }: LimiterConfig) => {
 };
 
 const loginLimiter = createLimiter({
-  windowMs: 5 * 60 * 1000, // 1 minute
+  windowMs: 5 * 60 * 1000, // 5 minute
   max: 5,
   duration: "5 minutes",
 });
 
 const signupLimiter = createLimiter({
-  windowMs: 5 * 60 * 1000, // 1 minute
+  windowMs: 5 * 60 * 1000, // 5 minute
   max: 5,
   duration: "5 minutes",
 });
 
 const deleteAccountLimiter = createLimiter({
-  windowMs: 5 * 60 * 1000, // 1 minute
+  windowMs: 5 * 60 * 1000, // 5 minute
   max: 5,
   duration: "5 minutes",
 });
@@ -46,9 +46,16 @@ const otpLimiter = createLimiter({
   duration: "1 hour.",
 });
 
+const deleteAccountAttemptLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minute
+  max: 5,
+  duration: "15 minutes",
+});
+
 export default {
   loginLimiter,
   signupLimiter,
   deleteAccountLimiter,
   otpLimiter,
+  deleteAccountAttemptLimiter,
 };

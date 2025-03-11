@@ -57,6 +57,25 @@ const validateUserId = [
     .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
 ];
 
+const validateDeleteAccount = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid userId format")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
+  body("email")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Email"))
+    .isEmail()
+    .withMessage(ERROR_MESSAGES.INVALID_EMAIL)
+    .normalizeEmail()
+    .trim(),
+  body("password")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Password"))
+    .trim(),
+];
+
 const validateOTPVerification = [
   body("email")
     .notEmpty()
@@ -91,4 +110,5 @@ export default {
   validateUserId,
   validateOTPVerification,
   validateUsersEmail,
+  validateDeleteAccount,
 };
