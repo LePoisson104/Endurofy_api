@@ -38,8 +38,13 @@ const queryGetUsersInfo = async (
 
 const queryDeleteUser = async (userId: string): Promise<any> => {
   const query = "DELETE FROM users WHERE user_id = ?";
-  const [result] = await pool.execute(query, [userId]);
-  return result;
+  try {
+    const [result] = await pool.execute(query, [userId]);
+    return result;
+  } catch (err) {
+    console.error("Error deleting user", err);
+    throw new AppError("Database error while deleting user", 500);
+  }
 };
 
 export default { queryGetUsersInfo, queryDeleteUser };
