@@ -17,3 +17,10 @@ export interface OTPServiceResponse {
 export interface TokenServiceResponse {
   accessToken: string;
 }
+
+export interface UserInfoServiceResponse {
+  success: boolean;
+  data: {
+    userInfo: User;
+  };
+}

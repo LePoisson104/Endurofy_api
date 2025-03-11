@@ -1,4 +1,4 @@
-import Users from "../repositories/user.repositories";
+import Auth from "../repositories/auth.repositories";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
@@ -114,7 +114,7 @@ const verifyOTP = async (
 // Resend OTP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
-  const getOTP = await Users.queryGetOTP(email);
+  const getOTP = await Auth.queryGetOTP(email);
 
   if (getOTP.length === 0) {
     throw new AppError(
@@ -129,7 +129,7 @@ const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
   const expiresAt = (Date.now() + AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000) // 15 minutes
     .toString();
 
-  await Users.queryUpdateOTP(email, hashedOTP, createdAt, expiresAt);
+  await Auth.queryUpdateOTP(email, hashedOTP, createdAt, expiresAt);
 
   // Send OTP email after successful transaction
   try {
@@ -236,7 +236,7 @@ const login = async (
   password: string,
   res: Response
 ): Promise<AuthServiceResponse> => {
-  const userCredentials = await Users.queryGetUserCredentials(email);
+  const userCredentials = await Auth.queryGetUserCredentials(email);
 
   if (userCredentials.length === 0 || userCredentials[0].verified === 0) {
     throw new AppError("Unauthorized!", 401);
@@ -306,7 +306,7 @@ const refresh = async (cookies: {
 
         const decodedToken = decoded as DecodedToken;
         try {
-          const foundUser = await Users.queryGetUserCredentials(
+          const foundUser = await Auth.queryGetUserCredentials(
             decodedToken.email
           );
 
