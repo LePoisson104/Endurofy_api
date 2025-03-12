@@ -15,7 +15,7 @@ router
     authControllers.signup
   );
 router
-  .route("/verify-otp")
+  .route("/verify-otp/:userId")
   .post(
     limiters.otpLimiter,
     userValidation.validateOTPVerification,
@@ -23,10 +23,11 @@ router
     authControllers.verifyOTP
   );
 router
-  .route("/resend-otp")
+  .route("/resend-otp/:userId")
   .post(
     limiters.otpLimiter,
     userValidation.validateUsersEmail,
+    userValidation.validateUserId,
     handleValidationErrors,
     authControllers.resendOTP
   );

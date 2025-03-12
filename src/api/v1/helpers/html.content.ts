@@ -1,4 +1,4 @@
-export const htmlContent = (otp: string) => {
+export const htmlContent = (otp: string, expirationTime: string) => {
   return `<!DOCTYPE html>
 <html lang="en">
 
@@ -140,7 +140,7 @@ export const htmlContent = (otp: string) => {
 
                         <div class="verification-code">${otp}</div>
 
-                        <p class="expiry">This code will expire in 15 minutes.</p>
+                        <p class="expiry">This code will expire in ${expirationTime}.</p>
 
                         <p>If you didn't request this code, you can safely ignore this email.</p>
 

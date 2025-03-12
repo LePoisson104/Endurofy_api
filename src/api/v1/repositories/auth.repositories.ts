@@ -42,10 +42,10 @@ const queryGetUserCredentials = async (email: string): Promise<User[]> => {
   }
 };
 
-const queryGetOTP = async (email: string): Promise<OTP[]> => {
-  const query = "SELECT * FROM otp WHERE email = ?";
+const queryGetOTP = async (userId: string): Promise<OTP[]> => {
+  const query = "SELECT * FROM otp WHERE user_id = ?";
   try {
-    const [result] = await pool.execute(query, [email]);
+    const [result] = await pool.execute(query, [userId]);
     return result as OTP[];
   } catch (err) {
     console.log("Error getting otp", err);
@@ -54,19 +54,19 @@ const queryGetOTP = async (email: string): Promise<OTP[]> => {
 };
 
 const queryUpdateOTP = async (
-  email: string,
+  userId: string,
   hashedOTP: string,
   createdAt: string,
   expiresAt: string
 ): Promise<any> => {
   const query =
-    "UPDATE otp SET hashed_otp = ?, created_at = ?, expires_at = ? WHERE email = ?";
+    "UPDATE otp SET hashed_otp = ?, created_at = ?, expires_at = ? WHERE user_id = ?";
   try {
     const [result] = await pool.execute(query, [
       hashedOTP,
       createdAt,
       expiresAt,
-      email,
+      userId,
     ]);
     if ((result as any).affectedRows === 0) {
       throw new AppError("OTP not found", 404);
@@ -79,10 +79,10 @@ const queryUpdateOTP = async (
   }
 };
 
-const queryDeleteOTP = async (email: string): Promise<any> => {
-  const query = "DELETE FROM otp WHERE email = ?";
+const queryDeleteOTP = async (userId: string): Promise<any> => {
+  const query = "DELETE FROM otp WHERE user_id = ?";
   try {
-    const [result] = await pool.execute(query, [email]);
+    const [result] = await pool.execute(query, [userId]);
     if ((result as any).affectedRows === 0) {
       throw new AppError("OTP not found", 404);
     }

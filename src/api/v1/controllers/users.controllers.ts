@@ -59,6 +59,39 @@ const updateUsersPassword = async (
   }
 };
 
+const updateUsersEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const updateEmailPayload: UserCredentialsUpdatePayload = req.body;
+  try {
+    const result = await usersServices.initiateEmailChange(
+      userId,
+      updateEmailPayload
+    );
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const verifyUpdateEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const otp = req.body.otp;
+  try {
+    const result = await usersServices.verifyUpdateEmail(userId, otp);
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteAccount = async (
   req: Request,
   res: Response,
@@ -67,8 +100,8 @@ const deleteAccount = async (
   const userId = req.params.userId;
   const { email, password } = req.body;
   try {
-    await usersServices.deleteAccount(userId, email, password);
-    sendSuccess(res, null, "User deleted successfully");
+    const result = await usersServices.deleteAccount(userId, email, password);
+    sendSuccess(res, result.data.message);
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
@@ -79,4 +112,6 @@ export default {
   deleteAccount,
   updateUsersName,
   updateUsersPassword,
+  updateUsersEmail,
+  verifyUpdateEmail,
 };

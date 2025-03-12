@@ -4,34 +4,11 @@ import { AppError } from "../middlewares/error.handlers";
 import { UserInfoServiceResponse } from "../interfaces/service.interfaces";
 import bcrypt from "bcrypt";
 import { UserCredentialsUpdatePayload } from "../interfaces/user.interfaces";
+import { generateOTP } from "../helpers/generateOTP";
+import pool from "../../../config/db.config";
 import { logger } from "../utils/logger";
-import { v4 as uuidv4 } from "uuid";
-import { transporter } from "../../../config/nodemailer.config";
-
-const AUTH_CONSTANTS = {
-  SALT_ROUNDS: 10,
-  EMAIL_CHANGE_TOKEN_EXPIRY: 24 * 60 * 60 * 1000, // 24 hours
-} as const;
-
-const sendEmailChangeVerification = async (
-  email: string,
-  token: string
-): Promise<void> => {
-  const verificationLink = `${process.env.FRONTEND_URL}/verify-email-change?token=${token}`;
-
-  await transporter.sendMail({
-    from: '"Endurofy" <endurofy@gmail.com>',
-    to: email,
-    subject: "Verify Your New Email Address",
-    text: `Please click the following link to verify your new email address: ${verificationLink}. This link will expire in 24 hours.`,
-    html: `
-      <h1>Verify Your New Email Address</h1>
-      <p>Please click the following link to verify your new email address:</p>
-      <a href="${verificationLink}">${verificationLink}</a>
-      <p>This link will expire in 24 hours.</p>
-    `,
-  });
-};
+import authServices from "./auth.services";
+import { sendOTPVerification } from "./sendOTPVerification.service";
 
 const getUsersInfo = async (
   userId: string
@@ -71,81 +48,145 @@ const updateUsersName = async (
 
 const initiateEmailChange = async (
   userId: string,
-  currentEmail: string,
-  newEmail: string,
-  password: string
+  updateEmailPayload: UserCredentialsUpdatePayload
 ): Promise<{ data: { message: string } }> => {
+  const { email, newEmail, password } = updateEmailPayload;
+  const connection = await pool.getConnection();
+
+  // Retrieve user credentials
+  const userCredentials = await Auth.queryGetUserCredentials(email);
+  if (userCredentials.length === 0) {
+    throw new AppError("User not found", 404);
+  }
+
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(
+    password,
+    userCredentials[0].hashed_password
+  );
+  if (!isPasswordValid) {
+    throw new AppError("Invalid password", 401);
+  }
+
+  // Check if newEmail is already in use
+  const [existingEmail] = await connection.execute(
+    "SELECT user_id FROM users WHERE email = ?",
+    [newEmail]
+  );
+  if ((existingEmail as any[]).length > 0) {
+    throw new AppError("New email is already in use", 409);
+  }
+
   try {
-    // Verify current password
-    const userCredentials = await Auth.queryGetUserCredentials(currentEmail);
+    await connection.beginTransaction(); // Start transaction after all checks
 
-    if (userCredentials.length === 0) {
-      throw new AppError("User not found", 404);
-    }
+    // Generate OTP
+    const otp = generateOTP();
+    const hashedOTP = await bcrypt.hash(otp, 10);
+    const createdAt = Date.now().toString();
+    const expiresAt = (Date.now() + 24 * 60 * 60 * 1000).toString(); // 24 hours
 
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      userCredentials[0].hashed_password
+    // Update pending email
+    await connection.execute(
+      "UPDATE users SET pending_email = ? WHERE user_id = ?",
+      [newEmail, userId]
     );
 
-    if (!isPasswordValid) {
-      throw new AppError("Invalid password", 401);
-    }
-
-    // Generate verification token
-    const changeToken = uuidv4();
-    const tokenExpiresAt = new Date(
-      Date.now() + AUTH_CONSTANTS.EMAIL_CHANGE_TOKEN_EXPIRY
+    // Store OTP for verification
+    await connection.execute(
+      "INSERT INTO otp (user_id, email, hashed_otp, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
+      [userId, newEmail, hashedOTP, createdAt, expiresAt]
     );
 
-    // Save pending email change
-    await Users.queryInitiateEmailChange(
-      userId,
-      newEmail,
-      changeToken,
-      tokenExpiresAt
-    );
+    // Commit transaction
+    await connection.commit();
 
-    // Send verification email
-    await sendEmailChangeVerification(newEmail, changeToken);
-    await logger.info(
-      `Email change initiated for user ${userId} to ${newEmail}`
-    );
+    // Send OTP email after transaction success
+    await sendOTPVerification(newEmail, otp, "24 hours");
 
     return {
       data: {
         message:
-          "Email change initiated. Please check your new email for verification.",
+          "Email change initiated. Please check your new email for verification code.",
       },
     };
   } catch (err) {
-    await logger.error(
-      `Error initiating email change for user ${userId}: ${err}`
-    );
-    if (err instanceof AppError) throw err;
+    await connection.rollback();
+    logger.error(`Error initiating email change: ${err}`);
     throw new AppError("Error initiating email change", 500);
+  } finally {
+    connection.release();
   }
 };
 
-const confirmEmailChange = async (
+const verifyUpdateEmail = async (
   userId: string,
-  token: string
+  otp: string
 ): Promise<{ data: { message: string } }> => {
+  const connection = await pool.getConnection();
+  const [pendingEmailResult] = await connection.execute(
+    "SELECT pending_email FROM users WHERE user_id = ?",
+    [userId]
+  );
+  const pendingEmail = (pendingEmailResult as { pending_email: string }[])[0]
+    ?.pending_email;
+
+  if (!pendingEmail) {
+    throw new AppError("No pending email found", 404);
+  }
+
+  // Retrieve OTP record
+  const [otpResult] = await connection.execute(
+    "SELECT user_id, hashed_otp, expires_at FROM otp WHERE email = ?",
+    [pendingEmail]
+  );
+  const otpRecord = (
+    otpResult as { user_id: string; hashed_otp: string; expires_at: string }[]
+  )[0];
+
+  if (!otpRecord) {
+    throw new AppError("No OTP found", 404);
+  }
+
+  // Validate OTP expiration
+  if (parseInt(otpRecord.expires_at) < Date.now()) {
+    throw new AppError("OTP expired", 400);
+  }
+
+  // Validate OTP hash
+  const match = await bcrypt.compare(otp, otpRecord.hashed_otp);
+  if (!match) {
+    throw new AppError("Invalid OTP", 400);
+  }
+
   try {
-    await Users.queryConfirmEmailChange(userId, token);
-    await logger.info(`Email change confirmed for user ${userId}`);
+    // Retrieve pending email
+
+    // Start transaction for updating email
+    await connection.beginTransaction();
+    const updatedAt = new Date();
+
+    await connection.execute(
+      "UPDATE users SET email = ?, pending_email = NULL, updated_at = ? WHERE user_id = ?",
+      [pendingEmail, updatedAt, userId]
+    );
+
+    await connection.execute("DELETE FROM otp WHERE user_id = ?", [userId]);
+
+    await connection.commit();
 
     return {
       data: {
-        message: "Email changed successfully",
+        message: "Email updated successfully",
       },
     };
   } catch (err) {
-    await logger.error(
-      `Error confirming email change for user ${userId}: ${err}`
-    );
-    if (err instanceof AppError) throw err;
-    throw new AppError("Error confirming email change", 500);
+    await connection.rollback();
+    console.log(err);
+    logger.error(`Error verifying update email: ${err}`);
+    throw new AppError("Error verifying update email", 500);
+  } finally {
+    connection.release();
   }
 };
 
@@ -174,9 +215,10 @@ const updateUsersPassword = async (
     throw new AppError("Invalid password", 401);
   }
 
+  const updateAt = new Date();
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-  await Users.queryUpdateUsersPassword(userId, hashedPassword);
+  await Users.queryUpdateUsersPassword(userId, hashedPassword, updateAt);
 
   return {
     data: {
@@ -209,11 +251,11 @@ const deleteAccount = async (
     throw new AppError("Invalid password", 401);
   }
 
-  const deleteUser = await Users.queryDeleteUser(getCredential[0].user_id);
+  await Users.queryDeleteUser(getCredential[0].user_id);
 
   return {
     data: {
-      userInfo: deleteUser,
+      message: "User deleted successfully",
     },
   };
 };
@@ -224,5 +266,5 @@ export default {
   updateUsersName,
   updateUsersPassword,
   initiateEmailChange,
-  confirmEmailChange,
+  verifyUpdateEmail,
 };

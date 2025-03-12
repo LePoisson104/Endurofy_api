@@ -39,8 +39,9 @@ const verifyOTP: RequestHandler = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const userId = req.params.userId;
     const { email, otp } = req.body as OTPRequest;
-    const result = await authServices.verifyOTP(email, otp);
+    const result = await authServices.verifyOTP(userId, email, otp);
     sendCreated(res, null, result.message);
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
@@ -53,8 +54,9 @@ const resendOTP: RequestHandler = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const userId = req.params.userId;
     const { email } = req.body;
-    const result = await authServices.resendOTP(email);
+    const result = await authServices.resendOTP(userId, email);
     sendSuccess(res, null, result.message);
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);

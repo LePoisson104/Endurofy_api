@@ -6,8 +6,7 @@ import { AppError } from "../middlewares/error.handlers";
 import { Response } from "express";
 import { DecodedToken } from "../interfaces/decoded.interface";
 import { generateOTP } from "../helpers/generateOTP";
-import { htmlContent } from "../helpers/html.content";
-import { transporter } from "../../../config/nodemailer.config";
+import { sendOTPVerification } from "./sendOTPVerification.service";
 import { TokenPayload, CookieOptions } from "../interfaces/auth.interfaces";
 import {
   AuthServiceResponse,
@@ -33,25 +32,10 @@ const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Send OTP Verification Email
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-const sendOTPVerification = async (
-  email: string,
-  otp: string
-): Promise<void> => {
-  await transporter.sendMail({
-    from: '"Endurofy" <endurofy@gmail.com>',
-    to: email,
-    subject: "Your Verification Code",
-    text: `Your verification code is: ${otp}. It will expire in ${AUTH_CONSTANTS.OTP_EXPIRY_MINUTES} minutes.`,
-    html: htmlContent(otp),
-  });
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Verify OTP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 const verifyOTP = async (
+  userId: string,
   email: string,
   otp: string
 ): Promise<OTPServiceResponse> => {
@@ -74,6 +58,10 @@ const verifyOTP = async (
       );
     }
 
+    if (getOTP[0].user_id !== userId && getOTP[0].email !== email) {
+      throw new AppError("Invalid user", 400);
+    }
+
     const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
 
     if (!match) {
@@ -88,12 +76,12 @@ const verifyOTP = async (
     }
 
     // Delete OTP and update user verification status within transaction
-    await connection.execute("DELETE FROM otp WHERE email = ?", [email]);
+    await connection.execute("DELETE FROM otp WHERE user_id = ?", [userId]);
 
-    await connection.execute("UPDATE users SET verified = ? WHERE email = ?", [
-      1,
-      email,
-    ]);
+    await connection.execute(
+      "UPDATE users SET verified = ? WHERE user_id = ?",
+      [1, userId]
+    );
 
     await connection.commit();
 
@@ -113,8 +101,11 @@ const verifyOTP = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Resend OTP
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
-  const getOTP = await Auth.queryGetOTP(email);
+const resendOTP = async (
+  userId: string,
+  email: string
+): Promise<OTPServiceResponse> => {
+  const getOTP = await Auth.queryGetOTP(userId);
 
   if (getOTP.length === 0) {
     throw new AppError(
@@ -123,17 +114,19 @@ const resendOTP = async (email: string): Promise<OTPServiceResponse> => {
     );
   }
 
+  console.log(getOTP);
+
   const otp = generateOTP();
   const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
   const createdAt = Date.now().toString();
   const expiresAt = (Date.now() + AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000) // 15 minutes
     .toString();
 
-  await Auth.queryUpdateOTP(email, hashedOTP, createdAt, expiresAt);
+  await Auth.queryUpdateOTP(userId, hashedOTP, createdAt, expiresAt);
 
   // Send OTP email after successful transaction
   try {
-    await sendOTPVerification(email, otp);
+    await sendOTPVerification(email, otp, "15 minutes");
   } catch (emailError) {
     throw new AppError("Error sending OTP email", 500);
   }
@@ -159,11 +152,16 @@ const signup = async (
     await connection.beginTransaction();
 
     // Check if user exists within transaction
-    const [rows] = await connection.execute(
+    const [userRows] = await connection.execute(
       "SELECT email FROM users WHERE email = ?",
       [email]
     );
-    if ((rows as any[]).length > 0) {
+    const [otpRows] = await connection.execute(
+      "SELECT email FROM otp WHERE email = ?",
+      [email]
+    );
+
+    if ((userRows as any[]).length > 0 || (otpRows as any[]).length > 0) {
       throw new AppError("User already exists!", 409);
     }
 
@@ -193,8 +191,8 @@ const signup = async (
 
     // Then add OTP
     await connection.execute(
-      "INSERT INTO otp (email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?)",
-      [email, hashedOTP, createdAt, expiresAt]
+      "INSERT INTO otp (user_id, email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?,?)",
+      [userId, email, hashedOTP, createdAt, expiresAt]
     );
 
     // Commit the transaction
@@ -202,7 +200,7 @@ const signup = async (
 
     // Send OTP email after successful transaction
     try {
-      await sendOTPVerification(email, otp);
+      await sendOTPVerification(email, otp, "15 minutes");
     } catch (emailError) {
       throw new AppError("Error sending OTP email", 500);
     }
@@ -227,6 +225,7 @@ const signup = async (
       throw new AppError("Email already registered", 409);
     }
 
+    console.error(err);
     throw new AppError("Error during user registration", 500);
   } finally {
     connection.release();

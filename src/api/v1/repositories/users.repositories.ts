@@ -1,6 +1,5 @@
 import pool from "../../../config/db.config";
 import { User, UserProfile } from "../interfaces/db.models";
-import { CustomError } from "../interfaces/error.interface";
 import { AppError } from "../middlewares/error.handlers";
 import { logger } from "../utils/logger";
 
@@ -159,11 +158,17 @@ const queryConfirmEmailChange = async (
 
 const queryUpdateUsersPassword = async (
   userId: string,
-  hashedPassword: string
+  hashedPassword: string,
+  updateAt: Date
 ): Promise<any> => {
-  const query = "UPDATE users SET hashed_password = ? WHERE user_id = ?";
+  const query =
+    "UPDATE users SET hashed_password = ?, updated_at = ? WHERE user_id = ?";
   try {
-    const [result] = await pool.execute(query, [hashedPassword, userId]);
+    const [result] = await pool.execute(query, [
+      hashedPassword,
+      updateAt,
+      userId,
+    ]);
     return result;
   } catch (err: any) {
     await logger.error(`Error updating user's password: ${err.message}`);

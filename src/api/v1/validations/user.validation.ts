@@ -77,6 +77,11 @@ const validateDeleteAccount = [
 ];
 
 const validateOTPVerification = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid userId format")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
   body("email")
     .notEmpty()
     .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Email"))
@@ -144,6 +149,48 @@ const validateUserUpdateName = [
     .escape(),
 ];
 
+const validateUserUpdateEmail = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid userId format")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
+  body("email")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Email"))
+    .isEmail()
+    .withMessage(ERROR_MESSAGES.INVALID_EMAIL)
+    .normalizeEmail()
+    .trim(),
+  body("newEmail")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("New email"))
+    .isEmail()
+    .withMessage(ERROR_MESSAGES.INVALID_EMAIL)
+    .normalizeEmail()
+    .trim(),
+  body("password")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Password"))
+    .trim(),
+];
+
+const validateVerifyUpdateEmail = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid userId format")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
+  body("otp")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("OTP"))
+    .isLength({ min: OTP_LENGTH, max: OTP_LENGTH })
+    .withMessage(ERROR_MESSAGES.INVALID_OTP)
+    .matches(/^\d+$/)
+    .withMessage("OTP must contain only numbers")
+    .trim(),
+];
+
 export default {
   validateUserSignup,
   validateUserLogin,
@@ -153,4 +200,6 @@ export default {
   validateDeleteAccount,
   validateUserUpdatePassword,
   validateUserUpdateName,
+  validateUserUpdateEmail,
+  validateVerifyUpdateEmail,
 };

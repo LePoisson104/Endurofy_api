@@ -36,4 +36,18 @@ router.patch(
   userControllers.updateUsersPassword
 );
 
+router.patch(
+  "/update-email/:userId",
+  userValidation.validateUserUpdateEmail,
+  handleValidationErrors,
+  userControllers.updateUsersEmail
+);
+
+router.patch(
+  "/verify-update-email/:userId",
+  userValidation.validateVerifyUpdateEmail,
+  handleValidationErrors,
+  userControllers.verifyUpdateEmail
+);
+
 export default router;
