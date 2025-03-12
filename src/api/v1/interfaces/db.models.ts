@@ -5,6 +5,9 @@ export interface User {
   first_name: string;
   last_name: string;
   verified: number;
+  pending_email?: string; // For storing new email while waiting for verification
+  email_change_token?: string; // For verifying email change
+  token_expires_at?: Date;
   created_at?: Date;
   updated_at?: Date;
 }

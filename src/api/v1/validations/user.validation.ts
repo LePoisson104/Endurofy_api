@@ -102,6 +102,46 @@ const validateUsersEmail = [
     .withMessage(ERROR_MESSAGES.INVALID_EMAIL)
     .normalizeEmail()
     .trim(),
+  body("newEmail")
+    .optional()
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("New email"))
+    .isEmail()
+    .withMessage(ERROR_MESSAGES.INVALID_EMAIL)
+    .normalizeEmail()
+    .trim(),
+];
+
+const validateUserUpdatePassword = [
+  body("password")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Password"))
+    .trim(),
+  body("newPassword")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("New password"))
+    .isLength({ min: MIN_PASSWORD_LENGTH })
+    .withMessage(
+      `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
+    )
+    .trim(),
+];
+
+const validateUserUpdateName = [
+  body("firstName")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("First name"))
+    .isString()
+    .withMessage("First name must be a string")
+    .trim()
+    .escape(),
+  body("lastName")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Last name"))
+    .isString()
+    .withMessage("Last name must be a string")
+    .trim()
+    .escape(),
 ];
 
 export default {
@@ -111,4 +151,6 @@ export default {
   validateOTPVerification,
   validateUsersEmail,
   validateDeleteAccount,
+  validateUserUpdatePassword,
+  validateUserUpdateName,
 };

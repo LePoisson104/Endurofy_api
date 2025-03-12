@@ -20,5 +20,20 @@ router.post(
   handleValidationErrors,
   userControllers.deleteAccount
 );
+router.patch(
+  "/update-name/:userId",
+  userValidation.validateUserId,
+  userValidation.validateUserUpdateName,
+  handleValidationErrors,
+  userControllers.updateUsersName
+);
+router.patch(
+  "/update-password/:userId",
+  userValidation.validateUserId,
+  userValidation.validateUsersEmail,
+  userValidation.validateUserUpdatePassword,
+  handleValidationErrors,
+  userControllers.updateUsersPassword
+);
 
 export default router;
