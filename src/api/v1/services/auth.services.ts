@@ -14,6 +14,7 @@ import {
   TokenServiceResponse,
 } from "../interfaces/service.interfaces";
 import pool from "../../../config/db.config";
+import Logger from "../utils/logger";
 
 // Constants
 const AUTH_CONSTANTS = {
@@ -91,6 +92,10 @@ const verifyOTP = async (
     };
   } catch (err) {
     await connection.rollback();
+    await Logger.logEvents(
+      `Error during OTP verification: ${err}`,
+      "errLog.log"
+    );
     if (err instanceof AppError) throw err;
     throw new AppError("Error during OTP verification", 500);
   } finally {
@@ -114,8 +119,6 @@ const resendOTP = async (
     );
   }
 
-  console.log(getOTP);
-
   const otp = generateOTP();
   const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
   const createdAt = Date.now().toString();
@@ -126,8 +129,12 @@ const resendOTP = async (
 
   // Send OTP email after successful transaction
   try {
-    await sendOTPVerification(email, otp, "15 minutes");
+    await sendOTPVerification(email, otp, "15 minutes", false);
   } catch (emailError) {
+    await Logger.logEvents(
+      `Error sending OTP email: ${emailError}`,
+      "errLog.log"
+    );
     throw new AppError("Error sending OTP email", 500);
   }
 
@@ -200,8 +207,12 @@ const signup = async (
 
     // Send OTP email after successful transaction
     try {
-      await sendOTPVerification(email, otp, "15 minutes");
+      await sendOTPVerification(email, otp, "15 minutes", false);
     } catch (emailError) {
+      await Logger.logEvents(
+        `Error sending OTP email: ${emailError}`,
+        "errLog.log"
+      );
       throw new AppError("Error sending OTP email", 500);
     }
 
@@ -225,7 +236,10 @@ const signup = async (
       throw new AppError("Email already registered", 409);
     }
 
-    console.error(err);
+    await Logger.logEvents(
+      `Error during user registration: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Error during user registration", 500);
   } finally {
     connection.release();
@@ -336,6 +350,7 @@ const refresh = async (cookies: {
 
           resolve({ accessToken });
         } catch (err) {
+          await Logger.logEvents(`Error during refresh: ${err}`, "errLog.log");
           reject(new AppError("Server Error", 500));
         }
       }

@@ -1,7 +1,7 @@
 import pool from "../../../config/db.config";
 import { User, UserProfile } from "../interfaces/db.models";
 import { AppError } from "../middlewares/error.handlers";
-import { logger } from "../utils/logger";
+import Logger from "../utils/logger";
 
 const queryGetUsersInfo = async (
   userId: string
@@ -32,7 +32,7 @@ const queryGetUsersInfo = async (
     };
   } catch (err: any) {
     if (err instanceof AppError) throw err;
-    await logger.error(`Error getting user's info: ${err.message}`);
+    await Logger.logEvents(`Error fetching user info: ${err}`, "errLog.log");
     throw new AppError("Database error while fetching user info", 500);
   }
 };
@@ -54,7 +54,7 @@ const queryUpdateUsersName = async (
     ]);
     return result;
   } catch (err: any) {
-    await logger.error(`Error updating user's name: ${err.message}`);
+    await Logger.logEvents(`Error updating user's name: ${err}`, "errLog.log");
     throw new AppError("Database error while updating user's name", 500);
   }
 };
@@ -95,7 +95,10 @@ const queryInitiateEmailChange = async (
   } catch (err: any) {
     await connection.rollback();
     if (err instanceof AppError) throw err;
-    await logger.error(`Error initiating email change: ${err.message}`);
+    await Logger.logEvents(
+      `Error initiating email change: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Database error while initiating email change", 500);
   } finally {
     connection.release();
@@ -149,7 +152,10 @@ const queryConfirmEmailChange = async (
   } catch (err: any) {
     await connection.rollback();
     if (err instanceof AppError) throw err;
-    await logger.error(`Error confirming email change ${err.message}`);
+    await Logger.logEvents(
+      `Error confirming email change: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Database error while confirming email change", 500);
   } finally {
     connection.release();
@@ -171,7 +177,10 @@ const queryUpdateUsersPassword = async (
     ]);
     return result;
   } catch (err: any) {
-    await logger.error(`Error updating user's password: ${err.message}`);
+    await Logger.logEvents(
+      `Error updating user's password: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Database error while updating user's password", 500);
   }
 };
@@ -182,7 +191,7 @@ const queryDeleteUser = async (userId: string): Promise<any> => {
     const [result] = await pool.execute(query, [userId]);
     return result;
   } catch (err: any) {
-    await logger.error(`Error deleting user: ${err.message}`);
+    await Logger.logEvents(`Error deleting user: ${err}`, "errLog.log");
     throw new AppError("Database error while deleting user", 500);
   }
 };

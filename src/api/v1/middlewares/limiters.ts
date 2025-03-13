@@ -1,24 +1,30 @@
 import rateLimit, { Options } from "express-rate-limit";
 import { Request, Response, NextFunction } from "express";
 import { LimiterConfig } from "../interfaces/limiter.interface";
+import Logger from "../utils/logger";
 
 const createLimiter = ({ windowMs, max, duration }: LimiterConfig) => {
   return rateLimit({
     windowMs,
-    max, // Limit each Ip to 5 login requests per `window` per minute
+    max, // Limit each IP to max requests per window
     message: {
       message: `Too many requests from this IP, please try again after a ${duration} pause.`,
     },
-    handler: (
+    handler: async (
       req: Request,
       res: Response,
       next: NextFunction,
       options: Options
     ) => {
-      res.status(options.statusCode).send(options.message);
+      await Logger.logEvents(
+        `Too Many Requests: ${options.message.message}\t${req.method}\t${req.url}\t${req.headers.origin}`,
+        "errLog.log"
+      );
+
+      res.status(options.statusCode || 429).send(options.message);
     },
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    standardHeaders: true, // Return rate limit info in headers
+    legacyHeaders: false, // Disable deprecated headers
   });
 };
 

@@ -1,4 +1,8 @@
-export const htmlContent = (otp: string, expirationTime: string) => {
+export const htmlContent = (
+  otp: string,
+  expirationTime: string,
+  isUpdate: boolean
+) => {
   return `<!DOCTYPE html>
 <html lang="en">
 
@@ -135,8 +139,13 @@ export const htmlContent = (otp: string, expirationTime: string) => {
                     </div>
                     <div class="content">
                         <h1>Verify Your Email</h1>
-                        <p class="message">Thanks for signing up! To complete your registration, please use the
-                            verification code below:</p>
+                        <p class="message">
+                            ${
+                              isUpdate
+                                ? "To finalize your email update, please enter the verification code below to confirm your new email address."
+                                : "Thanks for signing up! To complete your registration, please use the verification code below."
+                            }
+                        </p>
 
                         <div class="verification-code">${otp}</div>
 

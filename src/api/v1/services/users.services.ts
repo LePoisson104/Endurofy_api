@@ -6,10 +6,8 @@ import bcrypt from "bcrypt";
 import { UserCredentialsUpdatePayload } from "../interfaces/user.interfaces";
 import { generateOTP } from "../helpers/generateOTP";
 import pool from "../../../config/db.config";
-import { logger } from "../utils/logger";
-import authServices from "./auth.services";
 import { sendOTPVerification } from "./sendOTPVerification.service";
-
+import Logger from "../utils/logger";
 const getUsersInfo = async (
   userId: string
 ): Promise<UserInfoServiceResponse> => {
@@ -102,7 +100,7 @@ const initiateEmailChange = async (
     await connection.commit();
 
     // Send OTP email after transaction success
-    await sendOTPVerification(newEmail, otp, "24 hours");
+    await sendOTPVerification(newEmail, otp, "24 hours", true);
 
     return {
       data: {
@@ -112,7 +110,10 @@ const initiateEmailChange = async (
     };
   } catch (err) {
     await connection.rollback();
-    logger.error(`Error initiating email change: ${err}`);
+    await Logger.logEvents(
+      `Error initiating email change: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Error initiating email change", 500);
   } finally {
     connection.release();
@@ -182,8 +183,10 @@ const verifyUpdateEmail = async (
     };
   } catch (err) {
     await connection.rollback();
-    console.log(err);
-    logger.error(`Error verifying update email: ${err}`);
+    await Logger.logEvents(
+      `Error verifying update email: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Error verifying update email", 500);
   } finally {
     connection.release();

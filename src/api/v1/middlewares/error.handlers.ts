@@ -8,9 +8,9 @@ import {
   ErrorResponse,
   ValidationError,
 } from "../interfaces/error.interface";
-import { logger } from "../utils/logger";
+import Logger from "../utils/logger";
 
-export const handleValidationErrors = (
+export const handleValidationErrors = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -30,6 +30,11 @@ export const handleValidationErrors = (
       message: "Validation failed",
       errors: validationErrors,
     };
+
+    await Logger.logEvents(
+      `Validation Error: ${JSON.stringify(errorResponse)}`,
+      "errLog.log"
+    );
 
     res.status(400).json(errorResponse);
     return;
@@ -55,22 +60,16 @@ export class AppError extends Error implements CustomError {
     this.code = code;
     this.details = details;
 
-    logger.error(
-      `Error occurred: ${this.message} | Code: ${
-        this.code
-      } | Details: ${JSON.stringify(this.details)} | Stack: ${this.stack}`
-    );
-
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
   }
 }
 
-export const controllerErrorResponse = (
+export const controllerErrorResponse = async (
   res: Response,
   err: CustomError
-): Response => {
+): Promise<Response> => {
   const statusCode = err.statusCode || 500;
   const errorResponse: ErrorResponse = {
     status: "error",
@@ -88,10 +87,9 @@ export const controllerErrorResponse = (
     details: err.details,
   });
 
-  logger.error(
-    `Error occurred: ${err.message} | Code: ${
-      err.code
-    } | Details: ${JSON.stringify(err.details)} | Stack: ${err.stack}`
+  await Logger.logEvents(
+    `Controller Error: ${JSON.stringify(errorResponse)}`,
+    "errLog.log"
   );
 
   return res.status(statusCode).json(errorResponse);

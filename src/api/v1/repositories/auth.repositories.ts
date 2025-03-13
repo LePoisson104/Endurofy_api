@@ -1,6 +1,7 @@
 import pool from "../../../config/db.config";
 import { AppError } from "../middlewares/error.handlers";
 import { User, OTP, DB_ERROR_CODES } from "../interfaces/db.models";
+import Logger from "../utils/logger";
 
 const queryCreateNewUser = async (
   userId: string,
@@ -22,7 +23,7 @@ const queryCreateNewUser = async (
     ]);
     return result;
   } catch (err: any) {
-    console.error("Error executing query: ", err);
+    await Logger.logEvents(`Error executing query: ${err}`, "errLog.log");
     if (err.code === DB_ERROR_CODES.DUPLICATE_ENTRY) {
       throw new AppError("Email already registered", 409);
     }
@@ -37,7 +38,10 @@ const queryGetUserCredentials = async (email: string): Promise<User[]> => {
     const [result] = await pool.execute(query, [email]);
     return result as User[];
   } catch (err) {
-    console.error("Error getting user's credentials", err);
+    await Logger.logEvents(
+      `Error getting user's credentials: ${err}`,
+      "errLog.log"
+    );
     throw new AppError("Database error while fetching user credentials", 500);
   }
 };
@@ -48,7 +52,7 @@ const queryGetOTP = async (userId: string): Promise<OTP[]> => {
     const [result] = await pool.execute(query, [userId]);
     return result as OTP[];
   } catch (err) {
-    console.log("Error getting otp", err);
+    await Logger.logEvents(`Error getting otp: ${err}`, "errLog.log");
     throw new AppError("Database error while fetching OTP", 500);
   }
 };
@@ -74,7 +78,7 @@ const queryUpdateOTP = async (
     return result;
   } catch (err) {
     if (err instanceof AppError) throw err;
-    console.error("Error updating otp", err);
+    await Logger.logEvents(`Error updating otp: ${err}`, "errLog.log");
     throw new AppError("Database error while updating OTP", 500);
   }
 };
@@ -89,7 +93,7 @@ const queryDeleteOTP = async (userId: string): Promise<any> => {
     return result;
   } catch (err) {
     if (err instanceof AppError) throw err;
-    console.error("Error deleting otp", err);
+    await Logger.logEvents(`Error deleting otp: ${err}`, "errLog.log");
     throw new AppError("Database error while deleting OTP", 500);
   }
 };

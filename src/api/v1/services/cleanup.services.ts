@@ -1,7 +1,6 @@
 import pool from "../../../config/db.config";
 import { AppError } from "../middlewares/error.handlers";
-import { logger } from "../utils/logger";
-
+import Logger from "../utils/logger";
 /**
  * Deletes unverified accounts that are older than 24 hours
  * This includes:
@@ -48,7 +47,7 @@ const cleanupUnverifiedAccounts = async (): Promise<number> => {
     return (result as any).affectedRows;
   } catch (err) {
     await connection.rollback();
-    await logger.error(err as Error);
+    Logger.logEvents(`Error during cleanup operation: ${err}`, "errLog.log");
     throw new AppError("Error during cleanup operation", 500);
   } finally {
     connection.release();

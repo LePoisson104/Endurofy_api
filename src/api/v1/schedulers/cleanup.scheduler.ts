@@ -1,7 +1,6 @@
 import cron from "node-cron";
 import cleanupServices from "../services/cleanup.services";
-import { logger } from "../utils/logger";
-
+import Logger from "../utils/logger";
 /**
  * Schedule cleanup of unverified accounts
  * Runs every day at midnight (00:00)
@@ -15,13 +14,20 @@ import { logger } from "../utils/logger";
 export const scheduleCleanup = (): void => {
   cron.schedule("0 1 * * *", async () => {
     try {
-      await logger.info("Starting cleanup of unverified accounts...");
+      await Logger.logEvents(
+        "Initializing cleanup of unverified accounts",
+        "info.log"
+      );
       const deletedCount = await cleanupServices.cleanupUnverifiedAccounts();
-      await logger.info(
-        `Cleanup completed. Deleted ${deletedCount} unverified accounts.`
+      await Logger.logEvents(
+        `Successfully cleaned up ${deletedCount} unverified accounts`,
+        "info.log"
       );
     } catch (error) {
-      await logger.error(error as Error);
+      await Logger.logEvents(
+        `Error cleaning up unverified accounts: ${error}`,
+        "errLog.log"
+      );
     }
   });
 };
