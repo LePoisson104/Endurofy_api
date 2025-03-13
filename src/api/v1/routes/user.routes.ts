@@ -50,4 +50,11 @@ router.patch(
   userControllers.verifyUpdateEmail
 );
 
+router.patch(
+  "/update-profile/:userId",
+  userValidation.validateUserUpdateProfile,
+  handleValidationErrors,
+  userControllers.updateUsersProfile
+);
+
 export default router;

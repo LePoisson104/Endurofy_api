@@ -2,6 +2,7 @@ import pool from "../../../config/db.config";
 import { User, UserProfile } from "../interfaces/db.models";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
+import { UserProfileUpdatePayload } from "../interfaces/user.interfaces";
 
 const queryGetUsersInfo = async (
   userId: string
@@ -185,6 +186,45 @@ const queryUpdateUsersPassword = async (
   }
 };
 
+const queryUpdateUsersProfile = async (
+  userId: string,
+  updateProfilePayload: UserProfileUpdatePayload
+): Promise<any> => {
+  try {
+    const updateFields = Object.keys(updateProfilePayload)
+      .map((key) => `${key} = ?`)
+      .join(", ");
+
+    const values = Object.values(updateProfilePayload);
+    values.push(userId); // Add userId for WHERE clause
+
+    const query = `UPDATE users_profile SET ${updateFields} WHERE user_id = ?`;
+
+    const [result] = await pool.execute(query, values);
+    return result;
+  } catch (err: any) {
+    await Logger.logEvents(
+      `Error updating user's profile: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Database error while updating user's profile", 500);
+  }
+};
+
+const queryGetUsersProfile = async (userId: string): Promise<any> => {
+  const query = "SELECT * FROM users_profile WHERE user_id = ?";
+  try {
+    const [result] = await pool.execute(query, [userId]);
+    return result;
+  } catch (err: any) {
+    await Logger.logEvents(
+      `Error fetching user's profile: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Database error while fetching user's profile", 500);
+  }
+};
+
 const queryDeleteUser = async (userId: string): Promise<any> => {
   const query = "DELETE FROM users WHERE user_id = ?";
   try {
@@ -203,4 +243,6 @@ export default {
   queryUpdateUsersPassword,
   queryInitiateEmailChange,
   queryConfirmEmailChange,
+  queryUpdateUsersProfile,
+  queryGetUsersProfile,
 };

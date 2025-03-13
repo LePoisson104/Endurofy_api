@@ -3,11 +3,19 @@ import Auth from "../repositories/auth.repositories";
 import { AppError } from "../middlewares/error.handlers";
 import { UserInfoServiceResponse } from "../interfaces/service.interfaces";
 import bcrypt from "bcrypt";
-import { UserCredentialsUpdatePayload } from "../interfaces/user.interfaces";
+import {
+  UserCredentialsUpdatePayload,
+  UserProfileUpdatePayload,
+} from "../interfaces/user.interfaces";
 import { generateOTP } from "../helpers/generateOTP";
 import pool from "../../../config/db.config";
 import { sendOTPVerification } from "./sendOTPVerification.service";
 import Logger from "../utils/logger";
+import { getBMR } from "../helpers/getBMR";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Get User's Info
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const getUsersInfo = async (
   userId: string
 ): Promise<UserInfoServiceResponse> => {
@@ -29,6 +37,9 @@ const getUsersInfo = async (
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Update User's Name
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const updateUsersName = async (
   userId: string,
   userUpdatePayload: UserCredentialsUpdatePayload
@@ -44,6 +55,9 @@ const updateUsersName = async (
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Initiate Email Change
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const initiateEmailChange = async (
   userId: string,
   updateEmailPayload: UserCredentialsUpdatePayload
@@ -120,6 +134,9 @@ const initiateEmailChange = async (
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Verify Update Email
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const verifyUpdateEmail = async (
   userId: string,
   otp: string
@@ -193,10 +210,100 @@ const verifyUpdateEmail = async (
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Update User's Profile
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+const updateUsersProfile = async (
+  userId: string,
+  updateProfilePayload: UserProfileUpdatePayload
+): Promise<{ data: { message: string } }> => {
+  if (
+    updateProfilePayload.birth_date &&
+    updateProfilePayload.weight &&
+    updateProfilePayload.height &&
+    updateProfilePayload.gender &&
+    updateProfilePayload.weight_unit &&
+    updateProfilePayload.height_unit &&
+    updateProfilePayload.profile_status === "incomplete"
+  ) {
+    const BMR = getBMR(
+      updateProfilePayload.birth_date,
+      updateProfilePayload.gender,
+      updateProfilePayload.weight,
+      updateProfilePayload.weight_unit,
+      updateProfilePayload.height,
+      updateProfilePayload.height_unit
+    );
+    updateProfilePayload.profile_status = "complete";
+    updateProfilePayload.BMR = BMR;
+  } else if (
+    updateProfilePayload.profile_status === "complete" &&
+    (updateProfilePayload.birth_date ||
+      updateProfilePayload.weight ||
+      updateProfilePayload.height ||
+      updateProfilePayload.gender)
+  ) {
+    const userProfile = await Users.queryGetUsersProfile(userId);
+    if (userProfile.length === 0) {
+      throw new AppError("User profile not found", 404);
+    }
+
+    const profileData = userProfile[0];
+
+    // Check if any value in userProfile[0] is null or undefined
+    const hasNullOrUndefined = Object.values(profileData).some(
+      (value) => value == null || value == undefined || value == ""
+    );
+
+    if (hasNullOrUndefined) {
+      const updateProfileStatus: UserProfileUpdatePayload = {
+        profile_status: "incomplete",
+      };
+      await Users.queryUpdateUsersProfile(userId, updateProfileStatus);
+      throw new AppError(
+        "Incomplete user profile data for BMR calculation",
+        400
+      );
+    }
+
+    const birth_date =
+      updateProfilePayload.birth_date || profileData.birth_date;
+    const weight = updateProfilePayload.weight || profileData.weight;
+    const height = updateProfilePayload.height || profileData.height;
+    const gender = updateProfilePayload.gender || profileData.gender;
+    const weight_unit =
+      updateProfilePayload.weight_unit || profileData.weight_unit;
+    const height_unit =
+      updateProfilePayload.height_unit || profileData.height_unit;
+
+    const BMR = getBMR(
+      birth_date,
+      gender,
+      weight,
+      weight_unit,
+      height,
+      height_unit
+    );
+    updateProfilePayload.BMR = BMR;
+  }
+
+  updateProfilePayload.updated_at = new Date();
+  await Users.queryUpdateUsersProfile(userId, updateProfilePayload);
+
+  return {
+    data: {
+      message: "Profile updated successfully",
+    },
+  };
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Update Password
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const updateUsersPassword = async (
   userId: string,
   updatePasswordPayload: UserCredentialsUpdatePayload
-) => {
+): Promise<{ data: { message: string } }> => {
   const { email, password, newPassword } = updatePasswordPayload;
 
   const getCredential = await Auth.queryGetUserCredentials(email);
@@ -230,11 +337,14 @@ const updateUsersPassword = async (
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Delete Account
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 const deleteAccount = async (
   userId: string,
   email: string,
   password: string
-): Promise<any> => {
+): Promise<{ data: { message: string } }> => {
   const getCredential = await Auth.queryGetUserCredentials(email);
 
   if (getCredential.length === 0) {
@@ -270,4 +380,5 @@ export default {
   updateUsersPassword,
   initiateEmailChange,
   verifyUpdateEmail,
+  updateUsersProfile,
 };

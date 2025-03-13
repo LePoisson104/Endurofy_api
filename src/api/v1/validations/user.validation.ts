@@ -191,6 +191,74 @@ const validateVerifyUpdateEmail = [
     .trim(),
 ];
 
+const validateUserUpdateProfile = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid userId format")
+    .notEmpty()
+    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
+  body("birth_date")
+    .optional()
+    .isDate()
+    .withMessage("Invalid birth date format")
+    .trim(),
+  body("gender")
+    .optional()
+    .isIn(["male", "female"])
+    .withMessage("Invalid gender")
+    .trim(),
+  body("weight")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Weight must be a positive number")
+    .trim(),
+  body("height")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("Height must be a positive integer")
+    .trim(),
+  body("weight_unit")
+    .optional()
+    .isIn(["kg", "lb"])
+    .withMessage("Invalid weight unit")
+    .trim(),
+  body("height_unit")
+    .optional()
+    .isIn(["cm", "ft"])
+    .withMessage("Invalid height unit")
+    .trim(),
+  body("weight_goal")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Weight goal must be a positive number")
+    .trim(),
+  body("weight_goal_unit")
+    .optional()
+    .isIn(["kg", "lb"])
+    .withMessage("Invalid weight goal unit")
+    .trim(),
+  body("goal")
+    .optional()
+    .isIn(["lose", "gain", "maintain"])
+    .withMessage("Invalid goal type")
+    .trim(),
+  body("activity_level")
+    .optional()
+    .isIn([
+      "sedentary",
+      "lightly_active",
+      "moderately_active",
+      "very_active",
+      "extra_active",
+    ])
+    .withMessage("Invalid activity level")
+    .trim(),
+  body("profile_status")
+    .isIn(["complete", "incomplete"])
+    .withMessage("Invalid profile status")
+    .trim(),
+];
+
 export default {
   validateUserSignup,
   validateUserLogin,
@@ -202,4 +270,5 @@ export default {
   validateUserUpdateName,
   validateUserUpdateEmail,
   validateVerifyUpdateEmail,
+  validateUserUpdateProfile,
 };
