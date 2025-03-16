@@ -7,7 +7,7 @@ const queryIsWeightLogExists = async (
   date: Date
 ): Promise<any> => {
   try {
-    const query = `SELECT * FROM weight_log WHERE user_id = ? AND date = ?`;
+    const query = `SELECT * FROM weight_log WHERE user_id = ? AND log_date = ?`;
     const [result] = await pool.execute(query, [userId, date]);
     return (result as any[]).length > 0;
   } catch (err) {
@@ -22,6 +22,21 @@ const queryIsWeightLogExists = async (
   }
 };
 
+const queryGetWeightLogByDate = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<any> => {
+  try {
+    const query = `SELECT weight_log_id, weight, weight_unit, calories_intake, log_date FROM weight_log WHERE user_id = ? AND log_date BETWEEN ? AND ?`;
+    const [result] = await pool.execute(query, [userId, startDate, endDate]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error getting weight log by date: ${err}`, "errLog.log");
+    throw new AppError("Database error while getting weight log by date", 500);
+  }
+};
+
 const queryCreateWeightLog = async (
   weightLogId: string,
   userId: string,
@@ -31,7 +46,7 @@ const queryCreateWeightLog = async (
   date: Date
 ): Promise<any> => {
   try {
-    const query = `INSERT INTO weight_log (weight_log_id, user_id, weight, weight_unit, calories_intake, date) VALUES (?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO weight_log (weight_log_id, user_id, weight, weight_unit, calories_intake, log_date) VALUES (?, ?, ?, ?, ?, ?)`;
     const [result] = await pool.execute(query, [
       weightLogId,
       userId,
@@ -50,4 +65,5 @@ const queryCreateWeightLog = async (
 export default {
   queryCreateWeightLog,
   queryIsWeightLogExists,
+  queryGetWeightLogByDate,
 };

@@ -22,6 +22,7 @@ export interface UserProfileUpdatePayload {
   weight_unit?: string;
   weight_goal?: number;
   weight_goal_unit?: string;
+  target_calories?: number;
   height?: number;
   height_unit?: string;
   gender?: string;

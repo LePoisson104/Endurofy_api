@@ -12,6 +12,7 @@ import pool from "../../../config/db.config";
 import { sendOTPVerification } from "./sendOTPVerification.service";
 import Logger from "../utils/logger";
 import { getBMR } from "../helpers/getBMR";
+import { getActivityMultiplier } from "../constants/activity-level";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Get User's Info
@@ -236,6 +237,13 @@ const updateUsersProfile = async (
     );
     updateProfilePayload.profile_status = "complete";
     updateProfilePayload.BMR = BMR;
+    if (!updateProfilePayload.target_calories) {
+      updateProfilePayload.target_calories =
+        BMR *
+        getActivityMultiplier(
+          updateProfilePayload?.activity_level?.toUpperCase() || "SEDENTARY"
+        );
+    }
   } else if (
     updateProfilePayload.profile_status === "complete" &&
     (updateProfilePayload.birth_date ||

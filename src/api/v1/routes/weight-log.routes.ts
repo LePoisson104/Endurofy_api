@@ -9,6 +9,14 @@ const router: Router = express.Router();
 
 // router.use(verifyJWT);
 
+router.get(
+  "/get-weight-log-by-date/:userId",
+  userValidation.validateUserId,
+  weightLogValidation.validateGetWeightLogByDate,
+  handleValidationErrors,
+  weightLogControllers.getWeightLogByDate
+);
+
 router.post(
   "/create-weight-log/:userId",
   userValidation.validateUserId,
