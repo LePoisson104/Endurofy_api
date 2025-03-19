@@ -22,6 +22,7 @@ const getWeightLogByDate = async (
     (a: any, b: any) =>
       new Date(a.log_date).getTime() - new Date(b.log_date).getTime()
   );
+
   const weightLogsWithRateChange = [];
   for (let i = weightLogs.length - 1; i >= 0; i--) {
     if (i === 0) {

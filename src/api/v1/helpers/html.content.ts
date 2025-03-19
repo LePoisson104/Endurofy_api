@@ -42,6 +42,7 @@ export const htmlContent = (
         }
 
         .header {
+            background-color: black;
             text-align: center;
             border-bottom: 1px solid #eee;
             padding: 20px 0;
@@ -49,9 +50,9 @@ export const htmlContent = (
 
         .logo {
             font-size: 30px;
-            color: #6d76fa;
             font-weight: bold;
             margin: 0;
+            color: white;
         }
 
         .content {
@@ -60,10 +61,10 @@ export const htmlContent = (
         }
 
         .verification-code {
+            color: teal;
             font-family: 'Courier New', monospace;
             font-size: 36px;
             font-weight: bold;
-            color: #70d8bd;
             background-color: #F8FAFC;
             border-radius: 6px;
             padding: 15px 30px;
@@ -107,7 +108,7 @@ export const htmlContent = (
 
         .email-link {
             text-decoration: none;
-            color: #4F46E5;
+            color: teal;
         }
 
         .email-link:hover {

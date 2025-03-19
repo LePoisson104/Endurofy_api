@@ -4,3 +4,4 @@
 /dist
 /src/config/db.sql
 /src/api/v1/logs
+/src/email.html
