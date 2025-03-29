@@ -84,7 +84,7 @@ const refresh: RequestHandler = async (
 ): Promise<void> => {
   try {
     const result = await authServices.refresh(req.cookies);
-    sendSuccess(res, { accessToken: result.accessToken });
+    sendSuccess(res, result.data, "Refresh successful");
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }

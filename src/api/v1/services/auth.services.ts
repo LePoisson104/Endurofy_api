@@ -308,7 +308,7 @@ const login = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 const refresh = async (cookies: {
   jwt?: string;
-}): Promise<TokenServiceResponse> => {
+}): Promise<AuthServiceResponse> => {
   if (!cookies?.jwt) {
     throw new AppError("Unauthorized", 401);
   }
@@ -348,7 +348,18 @@ const refresh = async (cookies: {
             { expiresIn: AUTH_CONSTANTS.ACCESS_TOKEN_EXPIRY }
           );
 
-          resolve({ accessToken });
+          resolve({
+            success: true,
+            data: {
+              user: {
+                user_id: foundUser[0].user_id,
+                email: foundUser[0].email,
+                first_name: foundUser[0].first_name,
+                last_name: foundUser[0].last_name,
+              },
+              accessToken,
+            },
+          });
         } catch (err) {
           await Logger.logEvents(`Error during refresh: ${err}`, "errLog.log");
           reject(new AppError("Server Error", 500));
