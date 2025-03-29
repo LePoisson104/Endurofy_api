@@ -27,8 +27,8 @@ const AUTH_CONSTANTS = {
 
 const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: false,
+  sameSite: "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -362,6 +362,7 @@ const refresh = async (cookies: {
 // Logout
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 const logout = (cookies: { jwt?: string }, res: Response): void => {
+  console.log("logout", cookies);
   if (!cookies?.jwt) {
     throw new AppError("No cookie found", 400);
   }
