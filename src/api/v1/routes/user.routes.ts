@@ -15,7 +15,7 @@ router.get(
   handleValidationErrors,
   userControllers.getUsersInfo
 );
-router.post(
+router.delete(
   "/delete-account/:userId",
   limiters.deleteAccountAttemptLimiter,
   userValidation.validateDeleteAccount,

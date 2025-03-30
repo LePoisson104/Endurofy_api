@@ -373,7 +373,6 @@ const refresh = async (cookies: {
 // Logout
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 const logout = (cookies: { jwt?: string }, res: Response): void => {
-  console.log("logout", cookies);
   if (!cookies?.jwt) {
     throw new AppError("No cookie found", 400);
   }
