@@ -3,10 +3,11 @@ import userValidation from "../validations/user.validation";
 import { handleValidationErrors } from "../middlewares/error.handlers";
 import userControllers from "../controllers/users.controllers";
 import verifyJWT from "../middlewares/verify.JWT";
+import limiters from "../middlewares/limiters";
 
 const router: Router = express.Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.get(
   "/:userId",
@@ -16,6 +17,7 @@ router.get(
 );
 router.post(
   "/delete-account/:userId",
+  limiters.deleteAccountAttemptLimiter,
   userValidation.validateDeleteAccount,
   handleValidationErrors,
   userControllers.deleteAccount

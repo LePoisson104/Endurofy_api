@@ -40,16 +40,10 @@ const signupLimiter = createLimiter({
   duration: "5 minutes",
 });
 
-const deleteAccountLimiter = createLimiter({
-  windowMs: 5 * 60 * 1000, // 5 minute
-  max: 5,
-  duration: "5 minutes",
-});
-
 const otpLimiter = createLimiter({
-  windowMs: 60 * 60 * 1000, // 24 hours
-  max: 5, // Allow 5 OTP requests within 24 hours
-  duration: "1 hour.",
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Allow 5 OTP requests within 15 minutes
+  duration: "15 minutes",
 });
 
 const deleteAccountAttemptLimiter = createLimiter({
@@ -61,7 +55,6 @@ const deleteAccountAttemptLimiter = createLimiter({
 export default {
   loginLimiter,
   signupLimiter,
-  deleteAccountLimiter,
   otpLimiter,
   deleteAccountAttemptLimiter,
 };
