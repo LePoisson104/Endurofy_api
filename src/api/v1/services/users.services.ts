@@ -218,7 +218,22 @@ const updateUsersProfile = async (
   userId: string,
   updateProfilePayload: UserProfileUpdatePayload
 ): Promise<{ data: { message: string } }> => {
-  if (
+  const isMetricUnits =
+    updateProfilePayload.weight_unit === "kg" &&
+    updateProfilePayload.height_unit === "cm" &&
+    updateProfilePayload.weight_goal_unit === "kg";
+
+  const isUSUnits =
+    updateProfilePayload.weight_unit === "lb" &&
+    updateProfilePayload.height_unit === "ft" &&
+    updateProfilePayload.weight_goal_unit === "lb";
+
+  if (!isMetricUnits && !isUSUnits) {
+    throw new AppError(
+      "Make sure your height and weight units are either all in US units or all in metric units",
+      400
+    );
+  } else if (
     updateProfilePayload.birth_date &&
     updateProfilePayload.weight &&
     updateProfilePayload.height &&
