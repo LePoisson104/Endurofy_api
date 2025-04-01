@@ -45,7 +45,7 @@ router.patch(
   userControllers.updateUsersEmail
 );
 
-router.patch(
+router.post(
   "/verify-update-email/:userId",
   userValidation.validateVerifyUpdateEmail,
   handleValidationErrors,
