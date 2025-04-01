@@ -255,8 +255,7 @@ const validateUserUpdateProfile = [
     .trim(),
   body("profile_status")
     .isIn(["complete", "incomplete"])
-    .withMessage("Invalid profile status")
-    .trim(),
+    .withMessage("Invalid profile status"),
 ];
 
 export default {

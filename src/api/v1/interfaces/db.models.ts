@@ -7,6 +7,7 @@ export interface User {
   verified: number;
   created_at?: Date;
   updated_at?: Date;
+  pending_email?: string;
 }
 
 export interface UserProfile {

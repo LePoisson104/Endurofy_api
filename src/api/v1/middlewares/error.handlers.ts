@@ -27,7 +27,7 @@ export const handleValidationErrors = async (
     const errorResponse: ErrorResponse = {
       status: "error",
       code: "VALIDATION_ERROR",
-      message: "Validation failed",
+      message: validationErrors[0].message,
       errors: validationErrors,
     };
 

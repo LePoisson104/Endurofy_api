@@ -8,7 +8,7 @@ const queryGetUsersInfo = async (
   userId: string
 ): Promise<{ user: User; userProfile: UserProfile }> => {
   const userQuery =
-    "SELECT email, first_name, last_name, updated_at FROM users WHERE user_id = ?";
+    "SELECT email, first_name, last_name, updated_at, pending_email FROM users WHERE user_id = ?";
   const userProfileQuery =
     "SELECT profile_status, birth_date, weight, weight_unit, weight_goal, weight_goal_unit, height, height_unit, gender, goal, activity_level, BMR, updated_at FROM users_profile WHERE user_id = ?";
 
