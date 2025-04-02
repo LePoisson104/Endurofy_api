@@ -14,7 +14,6 @@ import {
 } from "../interfaces/service.interfaces";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
-import Users from "../repositories/users.repositories";
 // Constants
 const AUTH_CONSTANTS = {
   SALT_ROUNDS: 10,
@@ -267,10 +266,6 @@ const login = async (
     throw new AppError("Unauthorized!", 401);
   }
 
-  const userProfile = await Users.queryGetUsersProfile(
-    userCredentials[0].user_id
-  );
-
   const tokenPayload: TokenPayload = {
     UserInfo: {
       userId: userCredentials[0].user_id,
@@ -300,7 +295,6 @@ const login = async (
         email: userCredentials[0].email,
         first_name: userCredentials[0].first_name,
         last_name: userCredentials[0].last_name,
-        profile_status: userProfile[0].profile_status,
       },
       accessToken,
     },
@@ -339,10 +333,6 @@ const refresh = async (cookies: {
             return reject(new AppError("Unauthorized", 401));
           }
 
-          const userProfile = await Users.queryGetUsersProfile(
-            foundUser[0].user_id
-          );
-
           const tokenPayload: TokenPayload = {
             UserInfo: {
               userId: foundUser[0].user_id,
@@ -364,7 +354,6 @@ const refresh = async (cookies: {
                 email: foundUser[0].email,
                 first_name: foundUser[0].first_name,
                 last_name: foundUser[0].last_name,
-                profile_status: userProfile[0].profile_status,
               },
               accessToken,
             },

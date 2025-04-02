@@ -3,7 +3,7 @@ import { User, UsersInfo } from "./db.models";
 export interface AuthServiceResponse {
   success: boolean;
   data?: {
-    user?: Partial<User & { profile_status: string }>;
+    user?: Partial<User>;
     accessToken?: string;
     refreshToken?: string;
   };
