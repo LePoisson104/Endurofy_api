@@ -12,7 +12,7 @@
 
 ### Tech Stack:
 
-- **Backend:** Node.js, TypeScript, Express.js, MySQL, AWS:RDS, JWT
+- **Backend:** Node.js, TypeScript, Express.js, MySQL, AWS:RDS, EC2, JWT
 
 ## Installation
 
