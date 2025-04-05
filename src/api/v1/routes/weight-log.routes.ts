@@ -7,7 +7,7 @@ import verifyJWT from "../middlewares/verify.JWT";
 
 const router: Router = express.Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.get(
   "/get-weight-log-by-date/:userId",
