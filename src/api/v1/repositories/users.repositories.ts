@@ -10,7 +10,7 @@ const queryGetUsersInfo = async (
   const userQuery =
     "SELECT email, first_name, last_name, updated_at, pending_email FROM users WHERE user_id = ?";
   const userProfileQuery =
-    "SELECT profile_status, birth_date, weight, weight_unit, weight_goal, weight_goal_unit, height, height_unit, gender, goal, activity_level, BMR, updated_at FROM users_profile WHERE user_id = ?";
+    "SELECT profile_status, birth_date, starting_weight, starting_weight_unit, current_weight, current_weight_unit, weight_goal, weight_goal_unit, height, height_unit, gender, goal, activity_level, updated_at FROM users_profile WHERE user_id = ?";
 
   try {
     // Execute queries concurrently for efficiency

@@ -11,8 +11,6 @@ import { generateOTP } from "../helpers/generateOTP";
 import pool from "../../../config/db.config";
 import { sendOTPVerification } from "./sendOTPVerification.service";
 import Logger from "../utils/logger";
-import { getBMR } from "../helpers/getBMR";
-import { getActivityMultiplier } from "../constants/activity-level";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Get User's Info
@@ -218,96 +216,75 @@ const updateUsersProfile = async (
   userId: string,
   updateProfilePayload: UserProfileUpdatePayload
 ): Promise<{ data: { message: string } }> => {
+  if (
+    !updateProfilePayload.starting_weight ||
+    !updateProfilePayload.weight_goal ||
+    !updateProfilePayload.goal ||
+    !updateProfilePayload.starting_weight_unit ||
+    !updateProfilePayload.weight_goal_unit ||
+    !updateProfilePayload.current_weight ||
+    !updateProfilePayload.current_weight_unit ||
+    !updateProfilePayload.height ||
+    !updateProfilePayload.height_unit ||
+    !updateProfilePayload.gender ||
+    !updateProfilePayload.activity_level
+  ) {
+    throw new AppError("All fields are required", 400);
+  }
+
   const isMetricUnits =
-    updateProfilePayload.weight_unit === "kg" &&
+    updateProfilePayload.starting_weight_unit === "kg" &&
+    updateProfilePayload.current_weight_unit === "kg" &&
     updateProfilePayload.height_unit === "cm" &&
     updateProfilePayload.weight_goal_unit === "kg";
 
   const isUSUnits =
-    updateProfilePayload.weight_unit === "lb" &&
+    updateProfilePayload.starting_weight_unit === "lb" &&
+    updateProfilePayload.current_weight_unit === "lb" &&
     updateProfilePayload.height_unit === "ft" &&
     updateProfilePayload.weight_goal_unit === "lb";
+
+  if (
+    updateProfilePayload.starting_weight < updateProfilePayload.weight_goal &&
+    updateProfilePayload.goal === "lose"
+  ) {
+    throw new AppError(
+      "Starting weight cannot be greater than weight goal when losing weight",
+      400
+    );
+  }
+
+  if (
+    updateProfilePayload.starting_weight > updateProfilePayload.weight_goal &&
+    updateProfilePayload.goal === "gain"
+  ) {
+    throw new AppError(
+      "Starting weight cannot be less than weight goal when gaining weight",
+      400
+    );
+  }
 
   if (!isMetricUnits && !isUSUnits) {
     throw new AppError(
       "Make sure your height and weight units are either all in US units or all in metric units",
       400
     );
-  } else if (
+  }
+
+  if (
+    updateProfilePayload.profile_status === "incomplete" &&
     updateProfilePayload.birth_date &&
-    updateProfilePayload.weight &&
+    updateProfilePayload.current_weight &&
+    updateProfilePayload.current_weight_unit &&
+    updateProfilePayload.starting_weight &&
+    updateProfilePayload.starting_weight_unit &&
     updateProfilePayload.height &&
-    updateProfilePayload.gender &&
-    updateProfilePayload.weight_unit &&
     updateProfilePayload.height_unit &&
-    updateProfilePayload.profile_status === "incomplete"
+    updateProfilePayload.gender &&
+    updateProfilePayload.goal &&
+    updateProfilePayload.activity_level
   ) {
-    const BMR = getBMR(
-      updateProfilePayload.birth_date,
-      updateProfilePayload.gender,
-      updateProfilePayload.weight,
-      updateProfilePayload.weight_unit,
-      updateProfilePayload.height,
-      updateProfilePayload.height_unit
-    );
     updateProfilePayload.profile_status = "complete";
-    updateProfilePayload.BMR = BMR;
-    if (!updateProfilePayload.target_calories) {
-      updateProfilePayload.target_calories =
-        BMR *
-        getActivityMultiplier(
-          updateProfilePayload?.activity_level?.toUpperCase() || "SEDENTARY"
-        );
-    }
-  } else if (
-    updateProfilePayload.profile_status === "complete" &&
-    (updateProfilePayload.birth_date ||
-      updateProfilePayload.weight ||
-      updateProfilePayload.height ||
-      updateProfilePayload.gender)
-  ) {
-    const userProfile = await Users.queryGetUsersProfile(userId);
-    if (userProfile.length === 0) {
-      throw new AppError("User profile not found", 404);
-    }
-
-    const profileData = userProfile[0];
-
-    // Check if any value in userProfile[0] is null or undefined
-    const hasNullOrUndefined = Object.values(profileData).some(
-      (value) => value == null || value == undefined || value == ""
-    );
-
-    if (hasNullOrUndefined) {
-      const updateProfileStatus: UserProfileUpdatePayload = {
-        profile_status: "incomplete",
-      };
-      await Users.queryUpdateUsersProfile(userId, updateProfileStatus);
-      throw new AppError(
-        "Incomplete user profile data for BMR calculation",
-        400
-      );
-    }
-
-    const birth_date =
-      updateProfilePayload.birth_date || profileData.birth_date;
-    const weight = updateProfilePayload.weight || profileData.weight;
-    const height = updateProfilePayload.height || profileData.height;
-    const gender = updateProfilePayload.gender || profileData.gender;
-    const weight_unit =
-      updateProfilePayload.weight_unit || profileData.weight_unit;
-    const height_unit =
-      updateProfilePayload.height_unit || profileData.height_unit;
-
-    const BMR = getBMR(
-      birth_date,
-      gender,
-      weight,
-      weight_unit,
-      height,
-      height_unit
-    );
-    updateProfilePayload.BMR = BMR;
   }
 
   updateProfilePayload.updated_at = new Date();

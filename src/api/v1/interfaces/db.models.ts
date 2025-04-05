@@ -13,8 +13,10 @@ export interface User {
 export interface UserProfile {
   profile_status: string;
   birth_date: string;
-  weight: number;
-  weight_unit: string;
+  current_weight: number;
+  current_weight_unit: string;
+  starting_weight: number;
+  starting_weight_unit: string;
   weight_goal: number;
   weight_goal_unit: string;
   height: number;
@@ -22,7 +24,6 @@ export interface UserProfile {
   gender: string;
   goal: string;
   activity_level: string;
-  BMR: number;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -33,8 +34,10 @@ export interface UsersInfo {
   last_name: string;
   profile_status: string;
   birth_date?: string;
-  weight?: number;
-  weight_unit?: string;
+  current_weight?: number;
+  current_weight_unit?: string;
+  starting_weight?: number;
+  starting_weight_unit?: string;
   weight_goal?: number;
   weight_goal_unit?: string;
   height?: number;
@@ -42,7 +45,6 @@ export interface UsersInfo {
   gender?: string;
   goal?: string;
   activity_level?: string;
-  BMR?: number;
   user_updated_at?: string;
   user_profile_updated_at?: string;
 }

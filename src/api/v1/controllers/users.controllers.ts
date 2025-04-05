@@ -99,6 +99,7 @@ const updateUsersProfile = async (
 ): Promise<void> => {
   const userId = req.params.userId;
   const updateProfilePayload: UserProfileUpdatePayload = req.body;
+
   try {
     const result = await usersServices.updateUsersProfile(
       userId,
