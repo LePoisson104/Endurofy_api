@@ -35,10 +35,7 @@ const createWeightLog = async (
   try {
     const result = await weightLogServices.createWeightLog(
       userId,
-      weightLogPayload.weight,
-      weightLogPayload.weightUnit,
-      weightLogPayload.date,
-      weightLogPayload.caloriesIntake
+      weightLogPayload
     );
     sendSuccess(res, result.data.message);
   } catch (err) {

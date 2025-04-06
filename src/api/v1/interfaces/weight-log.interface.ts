@@ -3,6 +3,7 @@ export interface WeightLogPayload {
   weightUnit: string;
   caloriesIntake: number;
   date: Date;
+  notes: string;
 }
 
 export interface WeightLogResponse {

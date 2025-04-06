@@ -21,6 +21,7 @@ const validateWeightLogPayload = [
     .withMessage("Date is required!")
     .isDate()
     .withMessage("Date must be a valid date"),
+  body("notes").optional().isString().withMessage("Notes must be a string"),
 ];
 
 const validateGetWeightLogByDate = [

@@ -1,7 +1,10 @@
 import { AppError } from "../middlewares/error.handlers";
 import { v4 as uuidv4 } from "uuid";
 import WeightLogs from "../repositories/weight-log.repositories";
-import { WeightLogResponse } from "../interfaces/weight-log.interface";
+import {
+  WeightLogResponse,
+  WeightLogPayload,
+} from "../interfaces/weight-log.interface";
 
 const getWeightLogByDate = async (
   userId: string,
@@ -51,14 +54,11 @@ const getWeightLogByDate = async (
 
 const createWeightLog = async (
   userId: string,
-  weight: number,
-  weightUnit: string,
-  date: Date,
-  caloriesIntake: number
+  weightLogPayload: WeightLogPayload
 ): Promise<{ data: { message: string } }> => {
   const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
     userId,
-    date
+    weightLogPayload.date
   );
 
   if (isWeightLogExists) {
@@ -70,10 +70,26 @@ const createWeightLog = async (
   await WeightLogs.queryCreateWeightLog(
     weightLogId,
     userId,
-    weight,
-    weightUnit,
-    caloriesIntake,
-    date
+    weightLogPayload.weight,
+    weightLogPayload.weightUnit,
+    weightLogPayload.caloriesIntake,
+    weightLogPayload.date
+  );
+
+  if (weightLogPayload.notes === "") {
+    return {
+      data: {
+        message: "Weight log created successfully",
+      },
+    };
+  }
+
+  const noteId = uuidv4();
+
+  await WeightLogs.queryCreateWeightLogNotes(
+    noteId,
+    weightLogId,
+    weightLogPayload.notes
   );
 
   return {

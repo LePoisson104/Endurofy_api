@@ -28,7 +28,18 @@ const queryGetWeightLogByDate = async (
   endDate: Date
 ): Promise<any> => {
   try {
-    const query = `SELECT weight_log_id, weight, weight_unit, calories_intake, log_date FROM weight_log WHERE user_id = ? AND log_date BETWEEN ? AND ?`;
+    const query = `
+      SELECT 
+        wl.weight_log_id,
+        wl.weight,
+        wl.weight_unit,
+        wl.calories_intake,
+        wl.log_date,
+        wln.notes
+      FROM weight_log wl
+      LEFT JOIN weight_log_notes wln ON wl.weight_log_id = wln.weight_log_id
+      WHERE wl.user_id = ? AND wl.log_date BETWEEN ? AND ?
+    `;
     const [result] = await pool.execute(query, [userId, startDate, endDate]);
     return result;
   } catch (err) {
@@ -62,8 +73,24 @@ const queryCreateWeightLog = async (
   }
 };
 
+const queryCreateWeightLogNotes = async (
+  noteId: string,
+  weightLogId: string,
+  notes: string
+): Promise<any> => {
+  try {
+    const query = `INSERT INTO weight_log_notes (note_id, weight_log_id, notes) VALUES (?, ?, ?)`;
+    const [result] = await pool.execute(query, [noteId, weightLogId, notes]);
+    return result;
+  } catch (error) {
+    Logger.logEvents(`Error creating weight log notes: ${error}`, "errLog.log");
+    throw new AppError("Database error while creating weight log notes", 500);
+  }
+};
+
 export default {
   queryCreateWeightLog,
   queryIsWeightLogExists,
   queryGetWeightLogByDate,
+  queryCreateWeightLogNotes,
 };
