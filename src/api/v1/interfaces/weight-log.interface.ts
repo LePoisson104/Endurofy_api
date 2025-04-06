@@ -2,7 +2,7 @@ export interface WeightLogPayload {
   weight: number;
   weightUnit: string;
   caloriesIntake: number;
-  date: Date;
+  logDate: Date;
   notes: string;
 }
 

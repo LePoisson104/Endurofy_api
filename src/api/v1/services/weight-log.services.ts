@@ -5,6 +5,9 @@ import {
   WeightLogResponse,
   WeightLogPayload,
 } from "../interfaces/weight-log.interface";
+import pool from "../../../config/db.config";
+import Logger from "../utils/logger";
+import { format } from "date-fns";
 
 const getWeightLogByDate = async (
   userId: string,
@@ -56,47 +59,80 @@ const createWeightLog = async (
   userId: string,
   weightLogPayload: WeightLogPayload
 ): Promise<{ data: { message: string } }> => {
+  const connection = await pool.getConnection();
+
+  if (weightLogPayload.notes.length > 50) {
+    throw new AppError("Notes cannot be more than 50 characters", 400);
+  }
+
   const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
     userId,
-    weightLogPayload.date
+    weightLogPayload.logDate
   );
 
   if (isWeightLogExists) {
-    throw new AppError("You have already logged your weight for today", 400);
+    throw new AppError(
+      `You have already logged your weight this date: ${format(
+        weightLogPayload.logDate,
+        "MM/dd/yyyy"
+      )}`,
+      400
+    );
   }
 
-  const weightLogId = uuidv4();
+  try {
+    await connection.beginTransaction();
+    const weightLogId = uuidv4();
 
-  await WeightLogs.queryCreateWeightLog(
-    weightLogId,
-    userId,
-    weightLogPayload.weight,
-    weightLogPayload.weightUnit,
-    weightLogPayload.caloriesIntake,
-    weightLogPayload.date
-  );
+    await connection.execute(
+      "INSERT INTO weight_log (weight_log_id, user_id, weight, weight_unit, calories_intake, log_date) VALUES (?, ?, ?, ?, ?, ?)",
+      [
+        weightLogId,
+        userId,
+        weightLogPayload.weight,
+        weightLogPayload.weightUnit,
+        weightLogPayload.caloriesIntake,
+        weightLogPayload.logDate,
+      ]
+    );
 
-  if (weightLogPayload.notes === "") {
+    await connection.execute(
+      "UPDATE users SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
+      [weightLogPayload.weight, weightLogPayload.weightUnit, userId]
+    );
+
+    if (
+      weightLogPayload.notes === "" ||
+      weightLogPayload.notes === null ||
+      weightLogPayload.notes === undefined
+    ) {
+      return {
+        data: {
+          message: "Weight log created successfully",
+        },
+      };
+    }
+    const noteId = uuidv4();
+
+    await connection.execute(
+      "INSERT INTO weight_log_notes (note_id, weight_log_id, notes) VALUES (?, ?, ?)",
+      [noteId, weightLogId, weightLogPayload.notes]
+    );
+
+    await connection.commit();
+
     return {
       data: {
         message: "Weight log created successfully",
       },
     };
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(`Error creating weight log: ${err}`, "errLog.log");
+    throw new AppError("Database error while creating weight log", 500);
+  } finally {
+    connection.release();
   }
-
-  const noteId = uuidv4();
-
-  await WeightLogs.queryCreateWeightLogNotes(
-    noteId,
-    weightLogId,
-    weightLogPayload.notes
-  );
-
-  return {
-    data: {
-      message: "Weight log created successfully",
-    },
-  };
 };
 
 export default {
