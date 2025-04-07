@@ -71,13 +71,7 @@ const createWeightLog = async (
   );
 
   if (isWeightLogExists) {
-    throw new AppError(
-      `You have already logged your weight this date: ${format(
-        weightLogPayload.logDate,
-        "MM/dd/yyyy"
-      )}`,
-      400
-    );
+    throw new AppError("Weight log already exists for this date", 400);
   }
 
   try {
@@ -97,7 +91,7 @@ const createWeightLog = async (
     );
 
     await connection.execute(
-      "UPDATE users SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
+      "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
       [weightLogPayload.weight, weightLogPayload.weightUnit, userId]
     );
 

@@ -16,7 +16,7 @@ const validateWeightLogPayload = [
     .withMessage("Calories intake is required!")
     .isFloat({ min: 0 })
     .withMessage("Calories intake must be a number"),
-  body("date")
+  body("logDate")
     .notEmpty()
     .withMessage("Date is required!")
     .isDate()

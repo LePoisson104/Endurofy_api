@@ -32,6 +32,7 @@ const createWeightLog = async (
 ): Promise<void> => {
   const userId = req.params.userId;
   const weightLogPayload: WeightLogPayload = req.body;
+
   try {
     const result = await weightLogServices.createWeightLog(
       userId,
