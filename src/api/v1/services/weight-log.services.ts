@@ -7,7 +7,6 @@ import {
 } from "../interfaces/weight-log.interface";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
-import { format } from "date-fns";
 
 const getWeightLogByDate = async (
   userId: string,
@@ -90,22 +89,30 @@ const createWeightLog = async (
       ]
     );
 
-    await connection.execute(
-      "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
-      [weightLogPayload.weight, weightLogPayload.weightUnit, userId]
-    );
+    // Update current weight if the log date is today
+    if (
+      new Date(weightLogPayload.logDate).toISOString().split("T")[0] ===
+      new Date().toISOString().split("T")[0]
+    ) {
+      await connection.execute(
+        "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
+        [weightLogPayload.weight, weightLogPayload.weightUnit, userId]
+      );
+    }
 
     if (
       weightLogPayload.notes === "" ||
       weightLogPayload.notes === null ||
       weightLogPayload.notes === undefined
     ) {
+      await connection.commit();
       return {
         data: {
           message: "Weight log created successfully",
         },
       };
     }
+
     const noteId = uuidv4();
 
     await connection.execute(
@@ -129,7 +136,37 @@ const createWeightLog = async (
   }
 };
 
+const updateWeightLog = async (
+  weightLogId: string,
+  userId: string,
+  weightLogPayload: WeightLogPayload
+): Promise<{ data: { message: string } }> => {
+  return {
+    data: {
+      message: "Weight log updated successfully",
+    },
+  };
+};
+
+const deleteWeightLog = async (
+  weightLogId: string,
+  userId: string
+): Promise<{ data: { message: string } }> => {
+  const result = await WeightLogs.queryDeleteWeightLog(weightLogId, userId);
+  if (result.affectedRows === 0) {
+    throw new AppError("Weight log not found", 404);
+  }
+
+  return {
+    data: {
+      message: "Weight log deleted successfully",
+    },
+  };
+};
+
 export default {
   createWeightLog,
   getWeightLogByDate,
+  deleteWeightLog,
+  updateWeightLog,
 };

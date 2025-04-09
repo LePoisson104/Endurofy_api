@@ -44,7 +44,46 @@ const createWeightLog = async (
   }
 };
 
+const updateWeightLog = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const weightLogId = req.params.weightLogId;
+  const userId = req.params.userId;
+  const weightLogPayload: WeightLogPayload = req.body;
+
+  try {
+    const result = await weightLogServices.updateWeightLog(
+      weightLogId,
+      userId,
+      weightLogPayload
+    );
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const deleteWeightLog = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const weightLogId = req.params.weightLogId;
+  const userId = req.params.userId;
+
+  try {
+    const result = await weightLogServices.deleteWeightLog(weightLogId, userId);
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 export default {
   createWeightLog,
   getWeightLogByDate,
+  deleteWeightLog,
+  updateWeightLog,
 };

@@ -25,4 +25,20 @@ router.post(
   weightLogControllers.createWeightLog
 );
 
+router.patch(
+  "/update-weight-log/:userId/:weightLogId",
+  userValidation.validateUserId,
+  weightLogValidation.validateWeightLogId,
+  handleValidationErrors,
+  weightLogControllers.updateWeightLog
+);
+
+router.delete(
+  "/delete-weight-log/:userId/:weightLogId",
+  userValidation.validateUserId,
+  weightLogValidation.validateWeightLogId,
+  handleValidationErrors,
+  weightLogControllers.deleteWeightLog
+);
+
 export default router;

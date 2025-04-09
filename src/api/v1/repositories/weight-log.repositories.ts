@@ -48,7 +48,22 @@ const queryGetWeightLogByDate = async (
   }
 };
 
+const queryDeleteWeightLog = async (
+  weightLogId: string,
+  userId: string
+): Promise<any> => {
+  try {
+    const query = `DELETE FROM weight_log WHERE weight_log_id = ? AND user_id = ?`;
+    const [result] = await pool.execute(query, [weightLogId, userId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error deleting weight log: ${err}`, "errLog.log");
+    throw new AppError("Database error while deleting weight log", 500);
+  }
+};
+
 export default {
   queryIsWeightLogExists,
   queryGetWeightLogByDate,
+  queryDeleteWeightLog,
 };
