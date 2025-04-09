@@ -61,7 +61,17 @@ const validateUpdateWeightLog = [
     .withMessage("Weight unit is required!")
     .isIn(["kg", "lb"])
     .withMessage("Weight unit must be either kg or lb"),
-  body("caloriesIntake"),
+  body("caloriesIntake")
+    .notEmpty()
+    .withMessage("Calories intake is required!")
+    .isFloat({ min: 0 })
+    .withMessage("Calories intake must be a number"),
+  body("logDate")
+    .notEmpty()
+    .withMessage("Date is required!")
+    .isDate()
+    .withMessage("Date must be a valid date"),
+  body("notes").optional().isString().withMessage("Notes must be a string"),
 ];
 
 export default {

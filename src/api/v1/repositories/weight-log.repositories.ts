@@ -22,6 +22,20 @@ const queryIsWeightLogExists = async (
   }
 };
 
+const queryGetWeightLog = async (
+  userId: string,
+  weightLogId: string
+): Promise<any> => {
+  try {
+    const query = `SELECT * FROM weight_log WHERE user_id = ? AND weight_log_id = ?`;
+    const [result] = await pool.execute(query, [userId, weightLogId]);
+    return result;
+  } catch (error) {
+    Logger.logEvents(`Error getting weight log: ${error}`, "errLog.log");
+    throw new AppError("Database error while getting weight log", 500);
+  }
+};
+
 const queryGetWeightLogByDate = async (
   userId: string,
   startDate: Date,
@@ -48,6 +62,29 @@ const queryGetWeightLogByDate = async (
   }
 };
 
+const queryGetAllWeightLog = async (userId: string): Promise<any> => {
+  try {
+    const query = `
+      SELECT 
+        wl.weight_log_id,
+        wl.weight,
+        wl.weight_unit,
+        wl.calories_intake,
+        wl.log_date,
+        wln.notes
+      FROM weight_log wl
+      LEFT JOIN weight_log_notes wln ON wl.weight_log_id = wln.weight_log_id
+      WHERE wl.user_id = ?
+      ORDER BY wl.log_date DESC
+    `;
+    const [result] = await pool.execute(query, [userId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error getting all weight log: ${err}`, "errLog.log");
+    throw new AppError("Database error while getting all weight log", 500);
+  }
+};
+
 const queryDeleteWeightLog = async (
   weightLogId: string,
   userId: string
@@ -66,4 +103,6 @@ export default {
   queryIsWeightLogExists,
   queryGetWeightLogByDate,
   queryDeleteWeightLog,
+  queryGetWeightLog,
+  queryGetAllWeightLog,
 };
