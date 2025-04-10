@@ -27,28 +27,6 @@ const getWeightLogByDate = async (
   }
 };
 
-const getAllWeightLog = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const options = req.query.options as string;
-  console.log(options);
-  console.log(userId);
-  try {
-    const result = await weightLogServices.getWeightLogByRange(
-      userId,
-      undefined,
-      undefined,
-      options as "all" | "date"
-    );
-    sendSuccess(res, result.data.weightLogs);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
-  }
-};
-
 const createWeightLog = async (
   req: Request,
   res: Response,
@@ -108,7 +86,6 @@ const deleteWeightLog = async (
 export default {
   createWeightLog,
   getWeightLogByDate,
-  getAllWeightLog,
   deleteWeightLog,
   updateWeightLog,
 };

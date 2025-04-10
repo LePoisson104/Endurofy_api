@@ -17,13 +17,6 @@ router.get(
   weightLogControllers.getWeightLogByDate
 );
 
-router.get(
-  "/get-all-weight-log/:userId",
-  userValidation.validateUserId,
-  handleValidationErrors,
-  weightLogControllers.getAllWeightLog
-);
-
 router.post(
   "/create-weight-log/:userId",
   userValidation.validateUserId,

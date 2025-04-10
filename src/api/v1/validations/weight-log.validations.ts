@@ -20,21 +20,33 @@ const validateWeightLogPayload = [
     .notEmpty()
     .withMessage("Date is required!")
     .isDate()
-    .withMessage("Date must be a valid date"),
+    .withMessage("Date must be a valid date")
+    .custom((value) => {
+      const today = new Date().toString();
+      const inputDate = new Date(value).toString();
+
+      if (inputDate > today) {
+        throw new Error("Date cannot be in the future");
+      }
+      return true;
+    }),
   body("notes").optional().isString().withMessage("Notes must be a string"),
 ];
 
 const validateGetWeightLogByDate = [
   query("startDate")
-    .notEmpty()
-    .withMessage("Start date is required!")
+    .optional({ checkFalsy: true }) // allows undefined, null, or empty string
     .isDate()
     .withMessage("Start date must be a valid date"),
   query("endDate")
-    .notEmpty()
-    .withMessage("End date is required!")
+    .optional({ checkFalsy: true })
     .isDate()
     .withMessage("End date must be a valid date"),
+  query("options")
+    .notEmpty()
+    .withMessage("Options is required!")
+    .isIn(["all", "date"])
+    .withMessage("Options must be either all or date"),
 ];
 
 const validateWeightLogId = [

@@ -16,7 +16,7 @@ const getWeightLogByRange = async (
 ): Promise<{ data: { weightLogs: WeightLogResponse[] } }> => {
   let weightLogs;
 
-  if (options === "all" && !startDate && !endDate) {
+  if (options === "all") {
     weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
   } else if (options === "date" && startDate && endDate) {
     weightLogs = await WeightLogs.queryGetWeightLogByDate(
@@ -99,9 +99,14 @@ const createWeightLog = async (
     );
 
     // Update current weight if the log date is today
+    console.log(
+      new Date().toString() === new Date(weightLogPayload.logDate).toString()
+    );
+    console.log(new Date().toString());
+    console.log("2025-04-09".toString());
+
     if (
-      new Date(weightLogPayload.logDate).toISOString().split("T")[0] ===
-      new Date().toISOString().split("T")[0]
+      new Date(weightLogPayload.logDate).toString() === new Date().toString()
     ) {
       await connection.execute(
         "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
