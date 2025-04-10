@@ -85,6 +85,23 @@ const queryGetAllWeightLog = async (userId: string): Promise<any> => {
   }
 };
 
+const queryGetWeightByDate = async (
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<any> => {
+  try {
+    const query = `
+      SELECT weight, weight_unit, log_date FROM weight_log WHERE user_id = ? AND log_date BETWEEN ? AND ?
+    `;
+    const [result] = await pool.execute(query, [userId, startDate, endDate]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error getting weight by date: ${err}`, "errLog.log");
+    throw new AppError("Database error while getting weight by date", 500);
+  }
+};
+
 const queryDeleteWeightLog = async (
   weightLogId: string,
   userId: string
@@ -105,4 +122,5 @@ export default {
   queryDeleteWeightLog,
   queryGetWeightLog,
   queryGetAllWeightLog,
+  queryGetWeightByDate,
 };

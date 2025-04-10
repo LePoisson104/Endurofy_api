@@ -7,7 +7,7 @@ import verifyJWT from "../middlewares/verify.JWT";
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 router.get(
   "/get-weight-log-by-date/:userId",
@@ -15,6 +15,13 @@ router.get(
   weightLogValidation.validateGetWeightLogByDate,
   handleValidationErrors,
   weightLogControllers.getWeightLogByDate
+);
+
+router.get(
+  "/get-weekly-weight-difference/:userId",
+  userValidation.validateUserId,
+  handleValidationErrors,
+  weightLogControllers.getWeeklyWeightDifference
 );
 
 router.post(

@@ -7,6 +7,51 @@ import {
 } from "../interfaces/weight-log.interface";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
+import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
+
+const getWeeklyWeightDifference = async (
+  userId: string
+): Promise<{ data: { weeklyDifference: string } }> => {
+  const now = new Date();
+  const startOfCurrentWeek = startOfWeek(now, { weekStartsOn: 1 })
+    .toISOString()
+    .split("T")[0];
+  const endOfCurrentWeek = endOfWeek(now, { weekStartsOn: 0 })
+    .toISOString()
+    .split("T")[0];
+  const startOfLastWeek = subWeeks(startOfCurrentWeek, 1)
+    .toISOString()
+    .split("T")[0];
+  const endOfLastWeek = subWeeks(endOfCurrentWeek, 1)
+    .toISOString()
+    .split("T")[0];
+
+  const currentWeekWeightLogs = await WeightLogs.queryGetWeightByDate(
+    userId,
+    startOfCurrentWeek,
+    endOfCurrentWeek
+  );
+  const lastWeekWeightLogs = await WeightLogs.queryGetWeightByDate(
+    userId,
+    startOfLastWeek,
+    endOfLastWeek
+  );
+
+  const currentWeekAvgWeight =
+    currentWeekWeightLogs.reduce(
+      (acc: number, curr: any) => acc + Number(curr.weight),
+      0
+    ) / currentWeekWeightLogs.length;
+  const lastWeekAvgWeight =
+    lastWeekWeightLogs.reduce(
+      (acc: number, curr: any) => acc + Number(curr.weight),
+      0
+    ) / lastWeekWeightLogs.length;
+
+  const weeklyDifference = currentWeekAvgWeight - lastWeekAvgWeight;
+
+  return { data: { weeklyDifference: weeklyDifference.toFixed(2) } };
+};
 
 const getWeightLogByRange = async (
   userId: string,
@@ -98,15 +143,9 @@ const createWeightLog = async (
       ]
     );
 
-    // Update current weight if the log date is today
-    console.log(
-      new Date().toString() === new Date(weightLogPayload.logDate).toString()
-    );
-    console.log(new Date().toString());
-    console.log("2025-04-09".toString());
-
     if (
-      new Date(weightLogPayload.logDate).toString() === new Date().toString()
+      weightLogPayload.logDate.toString() ===
+      new Date().toLocaleDateString("en-CA")
     ) {
       await connection.execute(
         "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
@@ -294,4 +333,5 @@ export default {
   getWeightLogByRange,
   deleteWeightLog,
   updateWeightLog,
+  getWeeklyWeightDifference,
 };

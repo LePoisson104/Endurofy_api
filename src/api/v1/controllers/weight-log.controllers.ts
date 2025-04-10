@@ -27,6 +27,20 @@ const getWeightLogByDate = async (
   }
 };
 
+const getWeeklyWeightDifference = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  try {
+    const result = await weightLogServices.getWeeklyWeightDifference(userId);
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const createWeightLog = async (
   req: Request,
   res: Response,
@@ -86,6 +100,7 @@ const deleteWeightLog = async (
 export default {
   createWeightLog,
   getWeightLogByDate,
+  getWeeklyWeightDifference,
   deleteWeightLog,
   updateWeightLog,
 };

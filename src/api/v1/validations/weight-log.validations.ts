@@ -22,8 +22,8 @@ const validateWeightLogPayload = [
     .isDate()
     .withMessage("Date must be a valid date")
     .custom((value) => {
-      const today = new Date().toString();
-      const inputDate = new Date(value).toString();
+      const today = new Date().toLocaleDateString("en-CA");
+      const inputDate = new Date(value).toISOString().split("T")[0];
 
       if (inputDate > today) {
         throw new Error("Date cannot be in the future");
