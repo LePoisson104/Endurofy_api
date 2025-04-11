@@ -114,8 +114,8 @@ const createWeightLog = async (
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
-  if (weightLogPayload.notes.length > 50) {
-    throw new AppError("Notes cannot be more than 50 characters", 400);
+  if (weightLogPayload.notes.length > 60) {
+    throw new AppError("Notes cannot be more than 60 characters", 400);
   }
 
   const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
@@ -196,8 +196,8 @@ const updateWeightLog = async (
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
-  if (weightLogPayload.notes.length > 50) {
-    throw new AppError("Notes cannot be more than 50 characters", 400);
+  if (weightLogPayload.notes.length > 60) {
+    throw new AppError("Notes cannot be more than 60 characters", 400);
   }
 
   const weightLog = await WeightLogs.queryGetWeightLog(userId, weightLogId);
