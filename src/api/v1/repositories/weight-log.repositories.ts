@@ -43,17 +43,19 @@ const queryGetWeightLogByDate = async (
 ): Promise<any> => {
   try {
     const query = `
-      SELECT 
-        wl.weight_log_id,
-        wl.weight,
-        wl.weight_unit,
-        wl.calories_intake,
-        wl.log_date,
-        wln.notes
-      FROM weight_log wl
-      LEFT JOIN weight_log_notes wln ON wl.weight_log_id = wln.weight_log_id
-      WHERE wl.user_id = ? AND wl.log_date BETWEEN ? AND ?
-    `;
+  SELECT 
+    wl.weight_log_id,
+    wl.weight,
+    wl.weight_unit,
+    wl.calories_intake,
+    wl.log_date,
+    wln.notes
+  FROM weight_log wl
+  LEFT JOIN weight_log_notes wln ON wl.weight_log_id = wln.weight_log_id
+  WHERE wl.user_id = ? AND wl.log_date >= ? AND wl.log_date < DATE_ADD(?, INTERVAL 1 DAY)
+  ORDER BY wl.log_date DESC
+`;
+
     const [result] = await pool.execute(query, [userId, startDate, endDate]);
     return result;
   } catch (err) {

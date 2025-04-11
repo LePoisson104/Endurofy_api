@@ -60,19 +60,147 @@ const getWeightLogByRange = async (
   options?: "all" | "date"
 ): Promise<{ data: { weightLogs: WeightLogResponse[] } }> => {
   let weightLogs;
+  let additionalWeekLogs = [];
 
   if (options === "all") {
+    // For "all" option, we don't need to fetch additional week
     weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
   } else if (options === "date" && startDate && endDate) {
-    weightLogs = await WeightLogs.queryGetWeightLogByDate(
+    // First, find the start of the week for the earliest day in the requested range
+    const requestStartDate = new Date(startDate);
+
+    // Find the start of the earliest week in our request range
+    const earliestWeekStart = startOfWeek(requestStartDate, {
+      weekStartsOn: 0,
+    });
+
+    // Now get the start of the week before that, so we can calculate the weekly rate
+    // for the earliest week in our requested range
+    const extendedStartDate = new Date(earliestWeekStart);
+    extendedStartDate.setDate(extendedStartDate.getDate() - 7);
+
+    // If our request already includes days from a previous week, we need to get
+    // one more week before that to calculate rates for the partial week
+
+    // Query with extended date range
+    const extendedWeightLogs = await WeightLogs.queryGetWeightLogByDate(
       userId,
-      startDate,
+      extendedStartDate,
       endDate
     );
+
+    // Separate the logs into the requested range and the additional week
+    weightLogs = extendedWeightLogs.filter((log: any) => {
+      const logDate = new Date(log.log_date).toISOString().split("T")[0];
+      const startDateObj = new Date(startDate).toISOString().split("T")[0];
+      const endDateObj = new Date(endDate).toISOString().split("T")[0];
+
+      return logDate >= startDateObj && logDate <= endDateObj;
+    });
+
+    additionalWeekLogs = extendedWeightLogs.filter((log: any) => {
+      const logDate = new Date(log.log_date).toISOString().split("T")[0];
+      const startDateObj = new Date(extendedStartDate)
+        .toISOString()
+        .split("T")[0];
+      const dayBeforeEndDate = new Date(startDate); // Clone the endDate
+      dayBeforeEndDate.setDate(dayBeforeEndDate.getDate() - 1);
+      const endDateObj = dayBeforeEndDate.toISOString().split("T")[0];
+
+      return logDate >= startDateObj && logDate <= endDateObj;
+    });
+
+    // If no logs in the requested range, return empty array
+    if (weightLogs.length === 0) {
+      return { data: { weightLogs: [] } };
+    }
+
+    // Group all logs by week for weekly rate calculation
+    const logsByWeek: { [weekKey: string]: any[] } = {};
+
+    extendedWeightLogs.forEach((log: any) => {
+      const logDate = new Date(log.log_date);
+      // Use Sunday as the start of the week to ensure 7 days per week
+      const weekStart = startOfWeek(logDate, { weekStartsOn: 1 })
+        .toISOString()
+        .split("T")[0];
+
+      if (!logsByWeek[weekStart]) {
+        logsByWeek[weekStart] = [];
+      }
+
+      logsByWeek[weekStart].push(log);
+    });
+
+    // Calculate average weight for each week
+    const weeklyAverages: { [weekKey: string]: number } = {};
+
+    Object.keys(logsByWeek).forEach((weekKey) => {
+      const logsInWeek = logsByWeek[weekKey];
+      const totalWeight = logsInWeek.reduce(
+        (sum: number, log: any) => sum + Number(log.weight),
+        0
+      );
+      weeklyAverages[weekKey] = totalWeight / logsInWeek.length;
+    });
+
+    // Sort week keys chronologically
+    const sortedWeekKeys = Object.keys(weeklyAverages).sort((a, b) => {
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      return dateA.getTime() - dateB.getTime();
+    });
+    // Process only the logs within the requested date range
+    const filteredLogs = weightLogs.sort(
+      (a: any, b: any) =>
+        new Date(a.log_date).getTime() - new Date(b.log_date).getTime()
+    );
+
+    const weightLogsWithRateChange = [];
+    for (let i = filteredLogs.length - 1; i >= 0; i--) {
+      const currLog = filteredLogs[i];
+      let weightChange = 0;
+
+      // Calculate daily weight change if not the first log
+      if (i > 0) {
+        const prevLog = filteredLogs[i - 1];
+        weightChange =
+          Math.round((Number(currLog.weight) - Number(prevLog.weight)) * 100) /
+          100;
+      }
+
+      // Calculate weekly rate
+      const currDate = new Date(currLog.log_date);
+
+      const currWeekStart = startOfWeek(currDate, { weekStartsOn: 1 })
+        .toISOString()
+        .split("T")[0];
+
+      // Find the previous week's start date
+      const currWeekIndex = sortedWeekKeys.indexOf(currWeekStart);
+      let weeklyRate = 0;
+
+      if (currWeekIndex > 0) {
+        const prevWeekStart = sortedWeekKeys[currWeekIndex - 1];
+        const currWeekAvg = weeklyAverages[currWeekStart];
+        const prevWeekAvg = weeklyAverages[prevWeekStart];
+
+        weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
+      }
+
+      weightLogsWithRateChange.push({
+        ...currLog,
+        weightChange,
+        weeklyRate,
+      });
+    }
+
+    return { data: { weightLogs: weightLogsWithRateChange } };
   } else {
     throw new AppError("Invalid range type", 400);
   }
 
+  // Handle the "all" option case with existing logic
   if (weightLogs.length === 0) {
     return { data: { weightLogs: [] } };
   }
@@ -82,25 +210,75 @@ const getWeightLogByRange = async (
       new Date(a.log_date).getTime() - new Date(b.log_date).getTime()
   );
 
+  // Group logs by week for weekly rate calculation
+  const logsByWeek: { [weekKey: string]: any[] } = {};
+
+  sortedLogs.forEach((log: any) => {
+    const logDate = new Date(log.log_date);
+    // Use Sunday as the start of the week to ensure 7 days per week
+    const weekStart = startOfWeek(logDate, { weekStartsOn: 1 })
+      .toISOString()
+      .split("T")[0];
+
+    if (!logsByWeek[weekStart]) {
+      logsByWeek[weekStart] = [];
+    }
+
+    logsByWeek[weekStart].push(log);
+  });
+
+  // Calculate average weight for each week
+  const weeklyAverages: { [weekKey: string]: number } = {};
+
+  Object.keys(logsByWeek).forEach((weekKey) => {
+    const logsInWeek = logsByWeek[weekKey];
+    const totalWeight = logsInWeek.reduce(
+      (sum: number, log: any) => sum + Number(log.weight),
+      0
+    );
+    weeklyAverages[weekKey] = totalWeight / logsInWeek.length;
+  });
+
+  // Sort week keys chronologically
+  const sortedWeekKeys = Object.keys(weeklyAverages).sort();
+
   const weightLogsWithRateChange = [];
   for (let i = weightLogs.length - 1; i >= 0; i--) {
     if (i === 0) {
       weightLogsWithRateChange.push({
         ...sortedLogs[i],
-        rateChange: 0,
+        weightChange: 0,
+        weeklyRate: 0,
       });
     } else {
       const prevLog = sortedLogs[i - 1];
       const currLog = sortedLogs[i];
-      const weightChange = Number(currLog.weight) - Number(prevLog.weight);
-      const daysDiff =
-        (new Date(currLog.log_date).getTime() -
-          new Date(prevLog.log_date).getTime()) /
-        (1000 * 60 * 60 * 24); // Convert ms to days
-      const rateChange = Math.round((weightChange / daysDiff) * 100) / 100; // Rate of weight change per day
+      const weightChange =
+        Math.round((Number(currLog.weight) - Number(prevLog.weight)) * 100) /
+        100;
+
+      // Calculate weekly rate
+      const currDate = new Date(currLog.log_date);
+      const currWeekStart = startOfWeek(currDate, { weekStartsOn: 1 })
+        .toISOString()
+        .split("T")[0];
+
+      // Find the previous week's start date
+      const currWeekIndex = sortedWeekKeys.indexOf(currWeekStart);
+      let weeklyRate = 0;
+
+      if (currWeekIndex > 0) {
+        const prevWeekStart = sortedWeekKeys[currWeekIndex - 1];
+        const currWeekAvg = weeklyAverages[currWeekStart];
+        const prevWeekAvg = weeklyAverages[prevWeekStart];
+
+        weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
+      }
+
       weightLogsWithRateChange.push({
         ...currLog,
-        rateChange,
+        weightChange,
+        weeklyRate,
       });
     }
   }
@@ -114,8 +292,8 @@ const createWeightLog = async (
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
-  if (weightLogPayload.notes.length > 60) {
-    throw new AppError("Notes cannot be more than 60 characters", 400);
+  if (weightLogPayload.notes.length > 50) {
+    throw new AppError("Notes cannot be more than 50 characters", 400);
   }
 
   const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
@@ -196,8 +374,8 @@ const updateWeightLog = async (
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
-  if (weightLogPayload.notes.length > 60) {
-    throw new AppError("Notes cannot be more than 60 characters", 400);
+  if (weightLogPayload.notes.length > 50) {
+    throw new AppError("Notes cannot be more than 50 characters", 400);
   }
 
   const weightLog = await WeightLogs.queryGetWeightLog(userId, weightLogId);
