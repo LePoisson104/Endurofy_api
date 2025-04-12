@@ -151,13 +151,23 @@ const getWeightLogByRange = async (
       return dateA.getTime() - dateB.getTime();
     });
     // Process only the logs within the requested date range
-    const filteredLogs = weightLogs.sort(
+    let filteredLogs = weightLogs.sort(
       (a: any, b: any) =>
         new Date(a.log_date).getTime() - new Date(b.log_date).getTime()
     );
 
+    // add and additional day from the extendedWeightLogs to the filteredlogs to calculate the daily rate of the starting day
+    let additonalFlag = false;
+
+    if (additionalWeekLogs.length > 0) {
+      filteredLogs = [additionalWeekLogs[0], ...filteredLogs];
+      additonalFlag = true;
+    }
+
+    let iteration = additonalFlag ? 1 : 0;
+
     const weightLogsWithRateChange = [];
-    for (let i = filteredLogs.length - 1; i >= 0; i--) {
+    for (let i = filteredLogs.length - 1; i >= iteration; i--) {
       const currLog = filteredLogs[i];
       let weightChange = 0;
 
