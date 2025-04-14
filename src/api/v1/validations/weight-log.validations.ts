@@ -47,6 +47,10 @@ const validateGetWeightLogByDate = [
     .withMessage("Options is required!")
     .isIn(["all", "date"])
     .withMessage("Options must be either all or date"),
+  query("withRates")
+    .notEmpty()
+    .isIn(["true", "false"])
+    .withMessage("With rates must be either true or false"),
 ];
 
 const validateWeightLogId = [

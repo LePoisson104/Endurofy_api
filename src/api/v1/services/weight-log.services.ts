@@ -59,7 +59,8 @@ const getWeightLogByRange = async (
   userId: string,
   startDate?: Date,
   endDate?: Date,
-  options?: "all" | "date"
+  options?: "all" | "date",
+  withRates?: string
 ): Promise<{ data: { weightLogs: WeightLogResponse[] } }> => {
   let weightLogs;
   let additionalWeekLogs = [];
@@ -67,7 +68,20 @@ const getWeightLogByRange = async (
   if (options === "all") {
     // For "all" option, we don't need to fetch additional week
     weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
+
+    if (withRates !== "true") {
+      return { data: { weightLogs: weightLogs } };
+    }
   } else if (options === "date" && startDate && endDate) {
+    if (withRates !== "true") {
+      console.log("here");
+      weightLogs = await WeightLogs.queryGetWeightLogByDate(
+        userId,
+        startDate,
+        endDate
+      );
+      return { data: { weightLogs: weightLogs } };
+    }
     // First, find the start of the week for the earliest day in the requested range
     const requestStartDate = new Date(startDate);
 

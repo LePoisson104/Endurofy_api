@@ -14,12 +14,14 @@ const getWeightLogByDate = async (
   const startDate = new Date(req.query.startDate as string);
   const endDate = new Date(req.query.endDate as string);
   const options = req.query.options as string;
+  const withRates = req.query.withRates as string;
   try {
     const result = await weightLogServices.getWeightLogByRange(
       userId,
       startDate,
       endDate,
-      options as "all" | "date"
+      options as "all" | "date",
+      withRates
     );
     sendSuccess(res, result.data.weightLogs);
   } catch (err) {
