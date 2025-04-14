@@ -16,7 +16,9 @@ const getWeeklyWeightDifference = async (
   const startOfCurrentWeek = startOfWeek(now, { weekStartsOn: 1 })
     .toISOString()
     .split("T")[0];
-  const endOfCurrentWeek = endOfWeek(now, { weekStartsOn: 0 })
+  const endOfCurrentWeek = endOfWeek(startOfCurrentWeek, {
+    weekStartsOn: 0,
+  })
     .toISOString()
     .split("T")[0];
   const startOfLastWeek = subWeeks(startOfCurrentWeek, 1)
@@ -500,6 +502,55 @@ const updateWeightLog = async (
   }
 };
 
+const convertAllWeightLogsByUnits = async (
+  userId: string,
+  weightUnit: string
+): Promise<{ data: { status: string } }> => {
+  const weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
+  const connection = await pool.getConnection();
+
+  const usersWeightUnit = await connection.execute(
+    "SELECT weight_unit FROM users_profile WHERE user_id = ?",
+    [userId]
+  );
+
+  const userWeightUnit = (usersWeightUnit as any[])[0].weight_unit;
+
+  if (userWeightUnit !== weightUnit) {
+    throw new AppError(
+      "The given weight unit does not match with the user's profile weight unit",
+      400
+    );
+  }
+
+  const newWeightValues = [];
+
+  if (weightUnit === "kg") {
+    // convert all weight logs to kg
+  } else if (weightUnit === "lb") {
+    // convert all weight logs to lb
+  }
+
+  try {
+    await connection.beginTransaction();
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error converting weight logs: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Database error while converting weight logs", 500);
+  } finally {
+    connection.release();
+  }
+
+  return {
+    data: { status: `Successfully converted all weight logs to ${weightUnit}` },
+  };
+};
+
 const deleteWeightLog = async (
   weightLogId: string,
   userId: string
@@ -522,4 +573,5 @@ export default {
   deleteWeightLog,
   updateWeightLog,
   getWeeklyWeightDifference,
+  convertAllWeightLogsByUnits,
 };
