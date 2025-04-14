@@ -40,6 +40,14 @@ router.patch(
   weightLogControllers.updateWeightLog
 );
 
+router.patch(
+  "/convert-all-weight-logs-by-units/:userId",
+  userValidation.validateUserId,
+  weightLogValidation.validateConvertAllWeightLogsByUnits,
+  handleValidationErrors,
+  weightLogControllers.convertAllWeightLogsByUnits
+);
+
 router.delete(
   "/delete-weight-log/:userId/:weightLogId",
   userValidation.validateUserId,

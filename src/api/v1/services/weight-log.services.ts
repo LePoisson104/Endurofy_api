@@ -39,6 +39,10 @@ const getWeeklyWeightDifference = async (
     endOfLastWeek
   );
 
+  if (currentWeekWeightLogs.length === 0 || lastWeekWeightLogs.length === 0) {
+    return { data: { weeklyDifference: "0.00" } };
+  }
+
   const currentWeekAvgWeight =
     currentWeekWeightLogs.reduce(
       (acc: number, curr: any) => acc + Number(curr.weight),
@@ -74,7 +78,6 @@ const getWeightLogByRange = async (
     }
   } else if (options === "date" && startDate && endDate) {
     if (withRates !== "true") {
-      console.log("here");
       weightLogs = await WeightLogs.queryGetWeightLogByDate(
         userId,
         startDate,
@@ -522,31 +525,73 @@ const convertAllWeightLogsByUnits = async (
 ): Promise<{ data: { status: string } }> => {
   const weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
   const connection = await pool.getConnection();
+  const newWeightValues = [];
 
-  const usersWeightUnit = await connection.execute(
-    "SELECT weight_unit FROM users_profile WHERE user_id = ?",
+  if (weightLogs.length === 0) {
+    return {
+      data: { status: "No weight logs found" },
+    };
+  }
+
+  const [usersWeightUnit] = (await connection.execute(
+    "SELECT current_weight_unit FROM users_profile WHERE user_id = ?",
     [userId]
-  );
+  )) as any[];
 
-  const userWeightUnit = (usersWeightUnit as any[])[0].weight_unit;
-
-  if (userWeightUnit !== weightUnit) {
+  if (usersWeightUnit[0].current_weight_unit !== weightUnit) {
     throw new AppError(
       "The given weight unit does not match with the user's profile weight unit",
       400
     );
   }
 
-  const newWeightValues = [];
+  if (usersWeightUnit[0].current_weight_unit === weightLogs[0].weight_unit) {
+    return {
+      data: {
+        status:
+          "The given weight unit is already the user's profile weight unit",
+      },
+    };
+  }
 
   if (weightUnit === "kg") {
     // convert all weight logs to kg
+    for (const log of weightLogs) {
+      if (log.weight_unit === "lb") {
+        // Convert lb to kg (1 lb = 0.45359237 kg)
+        const newWeight = Number(log.weight) * 0.45359237;
+        newWeightValues.push({
+          weight_log_id: log.weight_log_id,
+          weight: newWeight.toFixed(2),
+          weight_unit: "kg",
+        });
+      }
+    }
   } else if (weightUnit === "lb") {
     // convert all weight logs to lb
+    for (const log of weightLogs) {
+      if (log.weight_unit === "kg") {
+        // Convert kg to lb (1 kg = 2.20462262 lb)
+        const newWeight = Number(log.weight) * 2.20462262;
+        newWeightValues.push({
+          weight_log_id: log.weight_log_id,
+          weight: newWeight.toFixed(2),
+          weight_unit: "lb",
+        });
+      }
+    }
   }
 
   try {
     await connection.beginTransaction();
+
+    // Update each weight log with the new unit and converted weight
+    for (const newValue of newWeightValues) {
+      await connection.execute(
+        "UPDATE weight_log SET weight = ?, weight_unit = ? WHERE weight_log_id = ?",
+        [newValue.weight, newValue.weight_unit, newValue.weight_log_id]
+      );
+    }
 
     await connection.commit();
   } catch (err) {

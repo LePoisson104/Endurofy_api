@@ -83,6 +83,25 @@ const updateWeightLog = async (
   }
 };
 
+const convertAllWeightLogsByUnits = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const { weightUnit } = req.body;
+
+  try {
+    const result = await weightLogServices.convertAllWeightLogsByUnits(
+      userId,
+      weightUnit
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteWeightLog = async (
   req: Request,
   res: Response,
@@ -105,4 +124,5 @@ export default {
   getWeeklyWeightDifference,
   deleteWeightLog,
   updateWeightLog,
+  convertAllWeightLogsByUnits,
 };

@@ -90,9 +90,23 @@ const validateUpdateWeightLog = [
   body("notes").optional().isString().withMessage("Notes must be a string"),
 ];
 
+const validateConvertAllWeightLogsByUnits = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User id is required!")
+    .isUUID()
+    .withMessage("User id must be a valid UUID"),
+  body("weightUnit")
+    .notEmpty()
+    .withMessage("Weight unit is required!")
+    .isIn(["kg", "lb"])
+    .withMessage("Weight unit must be either kg or lb"),
+];
+
 export default {
   validateWeightLogPayload,
   validateGetWeightLogByDate,
   validateWeightLogId,
   validateUpdateWeightLog,
+  validateConvertAllWeightLogsByUnits,
 };

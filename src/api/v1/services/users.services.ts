@@ -286,8 +286,11 @@ const updateUsersProfile = async (
   ) {
     updateProfilePayload.profile_status = "complete";
   }
-
+  updateProfilePayload.current_weight = updateProfilePayload.starting_weight;
+  updateProfilePayload.current_weight_unit =
+    updateProfilePayload.starting_weight_unit;
   updateProfilePayload.updated_at = new Date();
+
   await Users.queryUpdateUsersProfile(userId, updateProfilePayload);
 
   return {
