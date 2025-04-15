@@ -519,97 +519,6 @@ const updateWeightLog = async (
   }
 };
 
-const convertAllWeightLogsByUnits = async (
-  userId: string,
-  weightUnit: string
-): Promise<{ data: { status: string } }> => {
-  const weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
-  const connection = await pool.getConnection();
-  const newWeightValues = [];
-
-  if (weightLogs.length === 0) {
-    return {
-      data: { status: "No weight logs found" },
-    };
-  }
-
-  const [usersWeightUnit] = (await connection.execute(
-    "SELECT current_weight_unit FROM users_profile WHERE user_id = ?",
-    [userId]
-  )) as any[];
-
-  if (usersWeightUnit[0].current_weight_unit !== weightUnit) {
-    throw new AppError(
-      "The given weight unit does not match with the user's profile weight unit",
-      400
-    );
-  }
-
-  if (usersWeightUnit[0].current_weight_unit === weightLogs[0].weight_unit) {
-    return {
-      data: {
-        status:
-          "The given weight unit is already the user's profile weight unit",
-      },
-    };
-  }
-
-  if (weightUnit === "kg") {
-    // convert all weight logs to kg
-    for (const log of weightLogs) {
-      if (log.weight_unit === "lb") {
-        // Convert lb to kg (1 lb = 0.45359237 kg)
-        const newWeight = Number(log.weight) * 0.45359237;
-        newWeightValues.push({
-          weight_log_id: log.weight_log_id,
-          weight: newWeight.toFixed(2),
-          weight_unit: "kg",
-        });
-      }
-    }
-  } else if (weightUnit === "lb") {
-    // convert all weight logs to lb
-    for (const log of weightLogs) {
-      if (log.weight_unit === "kg") {
-        // Convert kg to lb (1 kg = 2.20462262 lb)
-        const newWeight = Number(log.weight) * 2.20462262;
-        newWeightValues.push({
-          weight_log_id: log.weight_log_id,
-          weight: newWeight.toFixed(2),
-          weight_unit: "lb",
-        });
-      }
-    }
-  }
-
-  try {
-    await connection.beginTransaction();
-
-    // Update each weight log with the new unit and converted weight
-    for (const newValue of newWeightValues) {
-      await connection.execute(
-        "UPDATE weight_log SET weight = ?, weight_unit = ? WHERE weight_log_id = ?",
-        [newValue.weight, newValue.weight_unit, newValue.weight_log_id]
-      );
-    }
-
-    await connection.commit();
-  } catch (err) {
-    await connection.rollback();
-    await Logger.logEvents(
-      `Error converting weight logs: ${err}`,
-      "errLog.log"
-    );
-    throw new AppError("Database error while converting weight logs", 500);
-  } finally {
-    connection.release();
-  }
-
-  return {
-    data: { status: `Successfully converted all weight logs to ${weightUnit}` },
-  };
-};
-
 const deleteWeightLog = async (
   weightLogId: string,
   userId: string
@@ -632,5 +541,4 @@ export default {
   deleteWeightLog,
   updateWeightLog,
   getWeeklyWeightDifference,
-  convertAllWeightLogsByUnits,
 };

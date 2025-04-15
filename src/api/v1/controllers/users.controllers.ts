@@ -111,6 +111,25 @@ const updateUsersProfile = async (
   }
 };
 
+const updateUsersProfileAndConvertWeightLogs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const updateProfilePayload: UserProfileUpdatePayload = req.body;
+
+  try {
+    const result = await usersServices.updateUsersProfileAndConvertWeightLogs(
+      userId,
+      updateProfilePayload
+    );
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteAccount = async (
   req: Request,
   res: Response,
@@ -134,4 +153,5 @@ export default {
   updateUsersEmail,
   verifyUpdateEmail,
   updateUsersProfile,
+  updateUsersProfileAndConvertWeightLogs,
 };

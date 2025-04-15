@@ -11,6 +11,7 @@ import { generateOTP } from "../helpers/generateOTP";
 import pool from "../../../config/db.config";
 import { sendOTPVerification } from "./sendOTPVerification.service";
 import Logger from "../utils/logger";
+import WeightLogs from "../repositories/weight-log.repositories";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Get User's Info
@@ -301,6 +302,145 @@ const updateUsersProfile = async (
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Update User's Profile and convert all weight logs to new weight unit
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+const updateUsersProfileAndConvertWeightLogs = async (
+  userId: string,
+  updateProfilePayload: UserProfileUpdatePayload
+): Promise<{ data: { message: string } }> => {
+  if (
+    !updateProfilePayload.starting_weight ||
+    !updateProfilePayload.weight_goal ||
+    !updateProfilePayload.goal ||
+    !updateProfilePayload.starting_weight_unit ||
+    !updateProfilePayload.weight_goal_unit ||
+    !updateProfilePayload.current_weight ||
+    !updateProfilePayload.current_weight_unit ||
+    !updateProfilePayload.height ||
+    !updateProfilePayload.height_unit ||
+    !updateProfilePayload.gender ||
+    !updateProfilePayload.activity_level
+  ) {
+    throw new AppError("All fields are required", 400);
+  }
+
+  const isMetricUnits =
+    updateProfilePayload.starting_weight_unit === "kg" &&
+    updateProfilePayload.current_weight_unit === "kg" &&
+    updateProfilePayload.height_unit === "cm" &&
+    updateProfilePayload.weight_goal_unit === "kg";
+
+  const isUSUnits =
+    updateProfilePayload.starting_weight_unit === "lb" &&
+    updateProfilePayload.current_weight_unit === "lb" &&
+    updateProfilePayload.height_unit === "ft" &&
+    updateProfilePayload.weight_goal_unit === "lb";
+
+  if (
+    updateProfilePayload.starting_weight < updateProfilePayload.weight_goal &&
+    updateProfilePayload.goal === "lose"
+  ) {
+    throw new AppError(
+      "Starting weight cannot be greater than weight goal when losing weight",
+      400
+    );
+  }
+
+  if (
+    updateProfilePayload.starting_weight > updateProfilePayload.weight_goal &&
+    updateProfilePayload.goal === "gain"
+  ) {
+    throw new AppError(
+      "Starting weight cannot be less than weight goal when gaining weight",
+      400
+    );
+  }
+
+  if (!isMetricUnits && !isUSUnits) {
+    throw new AppError(
+      "Make sure your height and weight units are either all in US units or all in metric units",
+      400
+    );
+  }
+
+  const connection = await pool.getConnection();
+
+  updateProfilePayload.current_weight = updateProfilePayload.starting_weight;
+  updateProfilePayload.current_weight_unit =
+    updateProfilePayload.starting_weight_unit;
+  updateProfilePayload.updated_at = new Date();
+
+  const weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
+  const newWeightValues = [];
+
+  if (updateProfilePayload.current_weight_unit === "kg") {
+    // convert all weight logs to kg
+    for (const log of weightLogs) {
+      if (log.weight_unit === "lb") {
+        // Convert lb to kg (1 lb = 0.45359237 kg)
+        const newWeight = Number(log.weight) * 0.45359237;
+        newWeightValues.push({
+          weight_log_id: log.weight_log_id,
+          weight: newWeight.toFixed(2),
+          weight_unit: "kg",
+        });
+      }
+    }
+  } else if (updateProfilePayload.current_weight_unit === "lb") {
+    // convert all weight logs to lb
+    for (const log of weightLogs) {
+      if (log.weight_unit === "kg") {
+        // Convert kg to lb (1 kg = 2.20462262 lb)
+        const newWeight = Number(log.weight) * 2.20462262;
+        newWeightValues.push({
+          weight_log_id: log.weight_log_id,
+          weight: newWeight.toFixed(2),
+          weight_unit: "lb",
+        });
+      }
+    }
+  }
+
+  try {
+    await connection.beginTransaction();
+
+    const updateFields = Object.keys(updateProfilePayload)
+      .map((key) => `${key} = ?`)
+      .join(", ");
+
+    const values = Object.values(updateProfilePayload);
+    values.push(userId); // Add userId for WHERE clause
+
+    const query = `UPDATE users_profile SET ${updateFields} WHERE user_id = ?`;
+
+    await connection.execute(query, values);
+
+    for (const newValue of newWeightValues) {
+      await connection.execute(
+        "UPDATE weight_log SET weight = ?, weight_unit = ? WHERE weight_log_id = ?",
+        [newValue.weight, newValue.weight_unit, newValue.weight_log_id]
+      );
+    }
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error updating user's profile: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Error updating user's profile", 500);
+  } finally {
+    connection.release();
+  }
+
+  return {
+    data: {
+      message: "Profile updated successfully",
+    },
+  };
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Update Password
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 const updateUsersPassword = async (
@@ -384,4 +524,5 @@ export default {
   initiateEmailChange,
   verifyUpdateEmail,
   updateUsersProfile,
+  updateUsersProfileAndConvertWeightLogs,
 };

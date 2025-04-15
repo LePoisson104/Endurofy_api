@@ -59,4 +59,11 @@ router.patch(
   userControllers.updateUsersProfile
 );
 
+router.patch(
+  "/update-profile-and-convert-weight-logs/:userId",
+  userValidation.validateUserUpdateProfile,
+  handleValidationErrors,
+  userControllers.updateUsersProfileAndConvertWeightLogs
+);
+
 export default router;
