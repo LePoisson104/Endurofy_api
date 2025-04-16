@@ -9,6 +9,20 @@ import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
 
+const getWeightLogDatesByRange = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<{ data: { weightLogDates: Date[] } }> => {
+  const weightLogDates = await WeightLogs.queryGetWeightLogDatesByRange(
+    userId,
+    startDate,
+    endDate
+  );
+
+  return { data: { weightLogDates: weightLogDates } };
+};
+
 const getWeeklyWeightDifference = async (
   userId: string
 ): Promise<{ data: { weeklyDifference: string } }> => {
@@ -541,4 +555,5 @@ export default {
   deleteWeightLog,
   updateWeightLog,
   getWeeklyWeightDifference,
+  getWeightLogDatesByRange,
 };

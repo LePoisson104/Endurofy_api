@@ -103,10 +103,29 @@ const validateConvertAllWeightLogsByUnits = [
     .withMessage("Weight unit must be either kg or lb"),
 ];
 
+const validateGetWeightLogDatesByRange = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User id is required!")
+    .isUUID()
+    .withMessage("User id must be a valid UUID"),
+  query("startDate")
+    .notEmpty()
+    .withMessage("Start date is required!")
+    .isDate()
+    .withMessage("Start date must be a valid date"),
+  query("endDate")
+    .notEmpty()
+    .withMessage("End date is required!")
+    .isDate()
+    .withMessage("End date must be a valid date"),
+];
+
 export default {
   validateWeightLogPayload,
   validateGetWeightLogByDate,
   validateWeightLogId,
   validateUpdateWeightLog,
   validateConvertAllWeightLogsByUnits,
+  validateGetWeightLogDatesByRange,
 };

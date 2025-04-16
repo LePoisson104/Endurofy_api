@@ -36,6 +36,27 @@ const queryGetWeightLog = async (
   }
 };
 
+const queryGetWeightLogDatesByRange = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<any> => {
+  const query = `SELECT log_date FROM weight_log WHERE user_id = ? AND log_date BETWEEN ? AND ? ORDER BY log_date DESC;`;
+  try {
+    const [result] = await pool.execute(query, [userId, startDate, endDate]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error getting weight log dates by range: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while getting weight log dates by range",
+      500
+    );
+  }
+};
+
 const queryGetWeightLogByDate = async (
   userId: string,
   startDate: Date,
@@ -125,4 +146,5 @@ export default {
   queryGetWeightLog,
   queryGetAllWeightLog,
   queryGetWeightByDate,
+  queryGetWeightLogDatesByRange,
 };

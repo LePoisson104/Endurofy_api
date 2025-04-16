@@ -18,6 +18,14 @@ router.get(
 );
 
 router.get(
+  "/get-weight-log-dates-by-range/:userId",
+  userValidation.validateUserId,
+  weightLogValidation.validateGetWeightLogDatesByRange,
+  handleValidationErrors,
+  weightLogControllers.getWeightLogDatesByRange
+);
+
+router.get(
   "/get-weekly-weight-difference/:userId",
   userValidation.validateUserId,
   handleValidationErrors,
