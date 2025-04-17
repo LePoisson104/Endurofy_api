@@ -202,14 +202,31 @@ const getWeightLogByRange = async (
     const weightLogsWithRateChange = [];
     for (let i = filteredLogs.length - 1; i >= iteration; i--) {
       const currLog = filteredLogs[i];
+      const prevLog = filteredLogs[i - 1];
       let weightChange = 0;
 
-      // Calculate daily weight change if not the first log
-      if (i > 0) {
-        const prevLog = filteredLogs[i - 1];
-        weightChange =
-          Math.round((Number(currLog.weight) - Number(prevLog.weight)) * 100) /
-          100;
+      if (prevLog) {
+        const previousLogDate = new Date(
+          prevLog.log_date.getFullYear(),
+          prevLog.log_date.getMonth(),
+          prevLog.log_date.getDate()
+        );
+        const currentLogDate = new Date(
+          currLog.log_date.getFullYear(),
+          currLog.log_date.getMonth(),
+          currLog.log_date.getDate()
+        );
+        if (
+          currentLogDate.getTime() - previousLogDate.getTime() ===
+          24 * 60 * 60 * 1000
+        ) {
+          weightChange =
+            Math.round(
+              (Number(currLog.weight) - Number(prevLog.weight)) * 100
+            ) / 100;
+        } else {
+          weightChange = 0;
+        }
       }
 
       // Calculate weekly rate
@@ -223,13 +240,11 @@ const getWeightLogByRange = async (
       const currWeekIndex = sortedWeekKeys.indexOf(currWeekStart);
       let weeklyRate = 0;
 
-      if (currWeekIndex > 0) {
-        const prevWeekStart = sortedWeekKeys[currWeekIndex - 1];
-        const currWeekAvg = weeklyAverages[currWeekStart];
-        const prevWeekAvg = weeklyAverages[prevWeekStart];
+      const prevWeekStart = sortedWeekKeys[currWeekIndex - 1];
+      const currWeekAvg = weeklyAverages[currWeekStart];
+      const prevWeekAvg = weeklyAverages[prevWeekStart];
 
-        weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
-      }
+      weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
 
       weightLogsWithRateChange.push({
         ...currLog,
@@ -296,26 +311,56 @@ const getWeightLogByRange = async (
     } else {
       const prevLog = sortedLogs[i - 1];
       const currLog = sortedLogs[i];
-      const weightChange =
-        Math.round((Number(currLog.weight) - Number(prevLog.weight)) * 100) /
-        100;
+      let weightChange = 0;
+
+      if (prevLog) {
+        const previousLogDate = new Date(
+          prevLog.log_date.getFullYear(),
+          prevLog.log_date.getMonth(),
+          prevLog.log_date.getDate()
+        );
+        const currentLogDate = new Date(
+          currLog.log_date.getFullYear(),
+          currLog.log_date.getMonth(),
+          currLog.log_date.getDate()
+        );
+        if (
+          currentLogDate.getTime() - previousLogDate.getTime() ===
+          24 * 60 * 60 * 1000
+        ) {
+          weightChange =
+            Math.round(
+              (Number(currLog.weight) - Number(prevLog.weight)) * 100
+            ) / 100;
+        } else {
+          weightChange = 0;
+        }
+      }
 
       // Calculate weekly rate
       const currDate = new Date(currLog.log_date);
       const currWeekStart = startOfWeek(currDate, { weekStartsOn: 1 })
         .toISOString()
         .split("T")[0];
-
-      // Find the previous week's start date
       const currWeekIndex = sortedWeekKeys.indexOf(currWeekStart);
+      const prevWeekStart = sortedWeekKeys[currWeekIndex - 1];
+
       let weeklyRate = 0;
 
-      if (currWeekIndex > 0) {
-        const prevWeekStart = sortedWeekKeys[currWeekIndex - 1];
-        const currWeekAvg = weeklyAverages[currWeekStart];
-        const prevWeekAvg = weeklyAverages[prevWeekStart];
+      if (prevWeekStart) {
+        const currWeekDate = new Date(currWeekStart);
+        const prevWeekDate = new Date(prevWeekStart);
 
-        weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
+        if (
+          currWeekDate.getTime() - prevWeekDate.getTime() ===
+          7 * 24 * 60 * 60 * 1000
+        ) {
+          const currWeekAvg = weeklyAverages[currWeekStart];
+          const prevWeekAvg = weeklyAverages[prevWeekStart];
+          weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
+        } else {
+          weeklyRate = 0;
+        }
       }
 
       weightLogsWithRateChange.push({
