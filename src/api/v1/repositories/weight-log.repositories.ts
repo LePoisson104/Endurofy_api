@@ -1,7 +1,9 @@
 import pool from "../../../config/db.config";
+import { WeightLogPayload } from "../interfaces/weight-log.interface";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
+// check to see if the weight log is already exists
 const queryIsWeightLogExists = async (
   userId: string,
   date: Date
@@ -22,6 +24,7 @@ const queryIsWeightLogExists = async (
   }
 };
 
+// this is for update weight log check if the paylaod date match with the log date of the weight log.
 const queryGetWeightLog = async (
   userId: string,
   weightLogId: string
@@ -36,6 +39,7 @@ const queryGetWeightLog = async (
   }
 };
 
+// this getting only the dates for the calendar
 const queryGetWeightLogDatesByRange = async (
   userId: string,
   startDate: Date,
@@ -57,25 +61,15 @@ const queryGetWeightLogDatesByRange = async (
   }
 };
 
+// this getting the weight log by date and calculate the rate of the weight log
 const queryGetWeightLogByDate = async (
   userId: string,
   startDate: Date,
   endDate: Date
 ): Promise<any> => {
   try {
-    const query = `
-  SELECT 
-    wl.weight_log_id,
-    wl.weight,
-    wl.weight_unit,
-    wl.calories_intake,
-    wl.log_date,
-    wln.notes
-  FROM weight_log wl
-  LEFT JOIN weight_log_notes wln ON wl.weight_log_id = wln.weight_log_id
-  WHERE wl.user_id = ? AND wl.log_date >= ? AND wl.log_date < DATE_ADD(?, INTERVAL 1 DAY)
-  ORDER BY wl.log_date DESC
-`;
+    const query =
+      "SELECT * FROM weight_log WHERE user_id = ? AND log_date >= ? AND log_date < DATE_ADD(?, INTERVAL 1 DAY) ORDER BY log_date DESC";
 
     const [result] = await pool.execute(query, [userId, startDate, endDate]);
     return result;
@@ -87,19 +81,8 @@ const queryGetWeightLogByDate = async (
 
 const queryGetAllWeightLog = async (userId: string): Promise<any> => {
   try {
-    const query = `
-      SELECT 
-        wl.weight_log_id,
-        wl.weight,
-        wl.weight_unit,
-        wl.calories_intake,
-        wl.log_date,
-        wln.notes
-      FROM weight_log wl
-      LEFT JOIN weight_log_notes wln ON wl.weight_log_id = wln.weight_log_id
-      WHERE wl.user_id = ?
-      ORDER BY wl.log_date DESC
-    `;
+    const query =
+      "SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC";
     const [result] = await pool.execute(query, [userId]);
     return result;
   } catch (err) {
@@ -108,6 +91,7 @@ const queryGetAllWeightLog = async (userId: string): Promise<any> => {
   }
 };
 
+// this is to calculate the weekly rate relative to the current week
 const queryGetWeightByDate = async (
   userId: string,
   startDate: string,
@@ -122,6 +106,52 @@ const queryGetWeightByDate = async (
   } catch (err) {
     Logger.logEvents(`Error getting weight by date: ${err}`, "errLog.log");
     throw new AppError("Database error while getting weight by date", 500);
+  }
+};
+
+const queryCreateWeightLog = async (
+  weightLogId: string,
+  userId: string,
+  weightLogPayload: WeightLogPayload
+): Promise<any> => {
+  try {
+    const query = `INSERT INTO weight_log (weight_log_id, user_id, weight, weight_unit, calories_intake, notes, log_date) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const [result] = await pool.execute(query, [
+      weightLogId,
+      userId,
+      weightLogPayload.weight,
+      weightLogPayload.weightUnit,
+      weightLogPayload.caloriesIntake,
+      weightLogPayload.notes,
+      weightLogPayload.logDate,
+    ]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error creating weight log: ${err}`, "errLog.log");
+    throw new AppError("Database error while creating weight log", 500);
+  }
+};
+
+const queryUpdateWeightLog = async (
+  weightLogId: string,
+  userId: string,
+  weightLogPayload: WeightLogPayload
+): Promise<any> => {
+  try {
+    const query = `UPDATE weight_log SET weight = ?, weight_unit = ?, calories_intake = ?, notes = ?, log_date = ? WHERE weight_log_id = ? AND user_id = ?`;
+    const [result] = await pool.execute(query, [
+      weightLogPayload.weight,
+      weightLogPayload.weightUnit,
+      weightLogPayload.caloriesIntake,
+      weightLogPayload.notes,
+      weightLogPayload.logDate,
+      weightLogId,
+      userId,
+    ]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error updating weight log: ${err}`, "errLog.log");
+    throw new AppError("Database error while updating weight log", 500);
   }
 };
 
@@ -141,10 +171,12 @@ const queryDeleteWeightLog = async (
 
 export default {
   queryIsWeightLogExists,
+  queryGetWeightLog,
   queryGetWeightLogByDate,
   queryDeleteWeightLog,
-  queryGetWeightLog,
   queryGetAllWeightLog,
   queryGetWeightByDate,
   queryGetWeightLogDatesByRange,
+  queryCreateWeightLog,
+  queryUpdateWeightLog,
 };

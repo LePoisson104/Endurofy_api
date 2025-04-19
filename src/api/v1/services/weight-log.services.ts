@@ -5,8 +5,6 @@ import {
   WeightLogResponse,
   WeightLogPayload,
 } from "../interfaces/weight-log.interface";
-import pool from "../../../config/db.config";
-import Logger from "../utils/logger";
 import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
 
 const getWeightLogDatesByRange = async (
@@ -86,7 +84,6 @@ const getWeightLogByRange = async (
   if (options === "all") {
     // For "all" option, we don't need to fetch additional week
     weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
-
     if (withRates !== "true") {
       return { data: { weightLogs: weightLogs } };
     }
@@ -97,6 +94,7 @@ const getWeightLogByRange = async (
         startDate,
         endDate
       );
+
       return { data: { weightLogs: weightLogs } };
     }
     // First, find the start of the week for the earliest day in the requested range
@@ -378,8 +376,6 @@ const createWeightLog = async (
   userId: string,
   weightLogPayload: WeightLogPayload
 ): Promise<{ data: { message: string } }> => {
-  const connection = await pool.getConnection();
-
   if (weightLogPayload.notes.length > 50) {
     throw new AppError("Notes cannot be more than 50 characters", 400);
   }
@@ -393,66 +389,15 @@ const createWeightLog = async (
     throw new AppError("Weight log already exists for this date", 400);
   }
 
-  try {
-    await connection.beginTransaction();
-    const weightLogId = uuidv4();
+  const weightLogId = uuidv4();
 
-    await connection.execute(
-      "INSERT INTO weight_log (weight_log_id, user_id, weight, weight_unit, calories_intake, log_date) VALUES (?, ?, ?, ?, ?, ?)",
-      [
-        weightLogId,
-        userId,
-        weightLogPayload.weight,
-        weightLogPayload.weightUnit,
-        weightLogPayload.caloriesIntake,
-        weightLogPayload.logDate,
-      ]
-    );
+  await WeightLogs.queryCreateWeightLog(weightLogId, userId, weightLogPayload);
 
-    if (
-      weightLogPayload.logDate.toString() ===
-      new Date().toLocaleDateString("en-CA")
-    ) {
-      await connection.execute(
-        "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
-        [weightLogPayload.weight, weightLogPayload.weightUnit, userId]
-      );
-    }
-
-    if (
-      weightLogPayload.notes === "" ||
-      weightLogPayload.notes === null ||
-      weightLogPayload.notes === undefined
-    ) {
-      await connection.commit();
-      return {
-        data: {
-          message: "Weight log created successfully",
-        },
-      };
-    }
-
-    const noteId = uuidv4();
-
-    await connection.execute(
-      "INSERT INTO weight_log_notes (note_id, weight_log_id, notes) VALUES (?, ?, ?)",
-      [noteId, weightLogId, weightLogPayload.notes]
-    );
-
-    await connection.commit();
-
-    return {
-      data: {
-        message: "Weight log created successfully",
-      },
-    };
-  } catch (err) {
-    await connection.rollback();
-    await Logger.logEvents(`Error creating weight log: ${err}`, "errLog.log");
-    throw new AppError("Database error while creating weight log", 500);
-  } finally {
-    connection.release();
-  }
+  return {
+    data: {
+      message: "Weight log created successfully",
+    },
+  };
 };
 
 const updateWeightLog = async (
@@ -460,8 +405,6 @@ const updateWeightLog = async (
   userId: string,
   weightLogPayload: WeightLogPayload
 ): Promise<{ data: { message: string } }> => {
-  const connection = await pool.getConnection();
-
   if (weightLogPayload.notes.length > 50) {
     throw new AppError("Notes cannot be more than 50 characters", 400);
   }
@@ -488,94 +431,13 @@ const updateWeightLog = async (
     }
   }
 
-  try {
-    await connection.beginTransaction();
+  await WeightLogs.queryUpdateWeightLog(weightLogId, userId, weightLogPayload);
 
-    await connection.execute(
-      "UPDATE weight_log SET weight = ?, weight_unit = ?, calories_intake = ?, log_date = ? WHERE weight_log_id = ?",
-      [
-        weightLogPayload.weight,
-        weightLogPayload.weightUnit,
-        weightLogPayload.caloriesIntake,
-        weightLogPayload.logDate,
-        weightLogId,
-      ]
-    );
-
-    // update current weight if the log date is today
-    if (
-      new Date(weightLogPayload.logDate).toISOString().split("T")[0] ===
-      new Date().toISOString().split("T")[0]
-    ) {
-      await connection.execute(
-        "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
-        [weightLogPayload.weight, weightLogPayload.weightUnit, userId]
-      );
-    }
-
-    const [result] = await connection.execute(
-      "SELECT * FROM weight_log_notes WHERE weight_log_id = ?",
-      [weightLogId]
-    );
-
-    const isWeightLogNoteExists = (result as any[]).length > 0;
-
-    // if note exists and new notes is empty, delete the note
-    if (
-      isWeightLogNoteExists &&
-      (weightLogPayload.notes === "" ||
-        weightLogPayload.notes === null ||
-        weightLogPayload.notes === undefined)
-    ) {
-      await connection.execute(
-        "DELETE FROM weight_log_notes WHERE weight_log_id = ?",
-        [weightLogId]
-      );
-      await connection.commit();
-      return {
-        data: {
-          message: "Weight log updated successfully",
-        },
-      };
-    }
-
-    // if note does not exist and new notes is not empty, create a new note
-    if (!isWeightLogNoteExists && weightLogPayload.notes) {
-      const noteId = uuidv4();
-      await connection.execute(
-        "INSERT INTO weight_log_notes (note_id, weight_log_id, notes) VALUES (?, ?, ?)",
-        [noteId, weightLogId, weightLogPayload.notes]
-      );
-      await connection.commit();
-      return {
-        data: {
-          message: "Weight log updated successfully",
-        },
-      };
-    }
-
-    // if note exists and new notes is not empty, update the note
-    if (isWeightLogNoteExists && weightLogPayload.notes) {
-      await connection.execute(
-        "UPDATE weight_log_notes SET notes = ? WHERE weight_log_id = ?",
-        [weightLogPayload.notes, weightLogId]
-      );
-    }
-
-    await connection.commit();
-
-    return {
-      data: {
-        message: "Weight log updated successfully",
-      },
-    };
-  } catch (err) {
-    await connection.rollback();
-    await Logger.logEvents(`Error updating weight log: ${err}`, "errLog.log");
-    throw new AppError("Database error while updating weight log", 500);
-  } finally {
-    connection.release();
-  }
+  return {
+    data: {
+      message: "Weight log updated successfully",
+    },
+  };
 };
 
 const deleteWeightLog = async (
