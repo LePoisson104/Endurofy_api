@@ -163,18 +163,18 @@ const verifyUpdateEmail = async (
   )[0];
 
   if (!otpRecord) {
-    throw new AppError("No OTP found", 404);
+    throw new AppError("No verification code found", 404);
   }
 
   // Validate OTP expiration
   if (parseInt(otpRecord.expires_at) < Date.now()) {
-    throw new AppError("OTP expired", 400);
+    throw new AppError("Verification code has expired", 400);
   }
 
   // Validate OTP hash
   const match = await bcrypt.compare(otp, otpRecord.hashed_otp);
   if (!match) {
-    throw new AppError("Invalid OTP", 400);
+    throw new AppError("Invalid verification code", 400);
   }
 
   try {

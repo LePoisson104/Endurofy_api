@@ -86,7 +86,7 @@ const verifyOTP = async (
 
     return {
       success: true,
-      message: "OTP verified successfully",
+      message: "Verification code verified successfully",
     };
   } catch (err) {
     await connection.rollback();
@@ -130,15 +130,15 @@ const resendOTP = async (
     await sendOTPVerification(email, otp, "15 minutes", false);
   } catch (emailError) {
     await Logger.logEvents(
-      `Error sending OTP email: ${emailError}`,
+      `Error sending verification code: ${emailError}`,
       "errLog.log"
     );
-    throw new AppError("Error sending OTP email", 500);
+    throw new AppError("Error sending verification code", 500);
   }
 
   return {
     success: true,
-    message: "OTP sent successfully",
+    message: "Verification code sent successfully",
   };
 };
 
@@ -208,10 +208,10 @@ const signup = async (
       await sendOTPVerification(email, otp, "15 minutes", false);
     } catch (emailError) {
       await Logger.logEvents(
-        `Error sending OTP email: ${emailError}`,
+        `Error sending verification code: ${emailError}`,
         "errLog.log"
       );
-      throw new AppError("Error sending OTP email", 500);
+      throw new AppError("Error sending verification code", 500);
     }
 
     return {
