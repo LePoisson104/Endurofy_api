@@ -6,6 +6,7 @@ export interface WorkoutProgramRequest {
 
 export interface WorkoutDay {
   day: number;
+  dayName: string;
   exercises: Exercise[];
 }
 
