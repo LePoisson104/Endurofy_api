@@ -5,6 +5,21 @@ import { sendSuccess } from "../utils/response.utils";
 import { WorkoutProgramRequest } from "../interfaces/workout-program.interface";
 import workoutProgramServices from "../services/workout-program.services";
 
+const getWorkoutProgram = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+
+  try {
+    const result = await workoutProgramServices.getWorkoutProgram(userId);
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const createWorkoutProgram = async (
   req: Request,
   res: Response,
@@ -27,4 +42,5 @@ const createWorkoutProgram = async (
 
 export default {
   createWorkoutProgram,
+  getWorkoutProgram,
 };

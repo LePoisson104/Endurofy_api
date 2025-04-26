@@ -2,6 +2,39 @@ import { v4 as uuidv4 } from "uuid";
 import { WorkoutProgramRequest } from "../interfaces/workout-program.interface";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
+import WorkoutPrograms from "../repositories/workout-program.repositories";
+import { WorkoutDay } from "../interfaces/workout-program.interface";
+const getWorkoutProgram = async (
+  userId: string
+): Promise<{ data: { programs: WorkoutProgramRequest[] } }> => {
+  const workoutProgram = await WorkoutPrograms.queryGetWorkoutProgram(userId);
+  const workoutDays = await WorkoutPrograms.queryGetWorkoutProgramDays(
+    workoutProgram[0].program_id
+  );
+  const workoutExercises = [];
+  for (const day of workoutDays) {
+    const exercises = await WorkoutPrograms.queryGetProgramDaysExercises(
+      day.program_day_id
+    );
+    workoutExercises.push(exercises);
+  }
+
+  //   const constructWorkoutProgram = {
+  //     programName: workoutProgram[0].program_name,
+  //     description: workoutProgram[0].description,
+  //     workoutDays: workoutDays.map((day: WorkoutDay) => ({
+  //       day: day.day_number,
+  //       dayName: day.day_name,
+  //       exercises: workoutExercises,
+  //     })),
+  //   };
+
+  return {
+    data: {
+      programs: [],
+    },
+  };
+};
 
 const createWorkoutProgram = async (
   userId: string,
@@ -63,4 +96,5 @@ const createWorkoutProgram = async (
 
 export default {
   createWorkoutProgram,
+  getWorkoutProgram,
 };
