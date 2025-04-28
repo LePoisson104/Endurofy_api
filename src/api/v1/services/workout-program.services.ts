@@ -3,35 +3,84 @@ import { WorkoutProgramRequest } from "../interfaces/workout-program.interface";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import WorkoutPrograms from "../repositories/workout-program.repositories";
-import { WorkoutDay } from "../interfaces/workout-program.interface";
-const getWorkoutProgram = async (
+import {
+  WorkoutDayRepo,
+  ExerciseRepo,
+} from "../interfaces/workout-program.interface";
+
+const getAllWorkoutPrograms = async (
   userId: string
 ): Promise<{ data: { programs: WorkoutProgramRequest[] } }> => {
-  const workoutProgram = await WorkoutPrograms.queryGetWorkoutProgram(userId);
-  const workoutDays = await WorkoutPrograms.queryGetWorkoutProgramDays(
-    workoutProgram[0].program_id
-  );
-  const workoutExercises = [];
-  for (const day of workoutDays) {
-    const exercises = await WorkoutPrograms.queryGetProgramDaysExercises(
-      day.program_day_id
-    );
-    workoutExercises.push(exercises);
+  const workoutPrograms = await WorkoutPrograms.queryGetWorkoutProgram(userId);
+
+  if (!workoutPrograms || workoutPrograms.length === 0) {
+    return {
+      data: {
+        programs: [],
+      },
+    };
   }
 
-  //   const constructWorkoutProgram = {
-  //     programName: workoutProgram[0].program_name,
-  //     description: workoutProgram[0].description,
-  //     workoutDays: workoutDays.map((day: WorkoutDay) => ({
-  //       day: day.day_number,
-  //       dayName: day.day_name,
-  //       exercises: workoutExercises,
-  //     })),
-  //   };
+  const allPrograms = await Promise.all(
+    workoutPrograms.map(
+      async (program: {
+        program_id: string;
+        program_name: string;
+        description: string;
+        created_at: string;
+      }) => {
+        const workoutDays = await WorkoutPrograms.queryGetWorkoutProgramDays(
+          program.program_id
+        );
+
+        const workoutExercises: ExerciseRepo[] = [];
+
+        for (const day of workoutDays) {
+          const exercises = await WorkoutPrograms.queryGetProgramDaysExercises(
+            day.program_day_id
+          );
+          workoutExercises.push(exercises);
+        }
+
+        return {
+          programId: program.program_id,
+          programName: program.program_name,
+          description: program.description,
+          createdAt: program.created_at,
+          workoutDays: workoutDays
+            .sort(
+              (a: WorkoutDayRepo, b: WorkoutDayRepo) =>
+                a.day_number - b.day_number
+            )
+            .map((day: WorkoutDayRepo) => {
+              const dayIndex = workoutDays.indexOf(day);
+              const dayExercises = Array.isArray(workoutExercises[dayIndex])
+                ? workoutExercises[dayIndex]
+                : [];
+
+              return {
+                dayId: day.program_day_id,
+                dayNumber: day.day_number,
+                dayName: day.day_name,
+                exercises: dayExercises.map((exercise: ExerciseRepo) => ({
+                  exerciseId: exercise.program_exercise_id,
+                  exerciseName: exercise.exercise_name,
+                  bodyPart: exercise.body_part,
+                  action: exercise.action,
+                  sets: exercise.sets,
+                  minReps: exercise.min_reps,
+                  maxReps: exercise.max_reps,
+                })),
+              };
+            }),
+        };
+      }
+    )
+  );
 
   return {
     data: {
-      programs: [],
+      programs: allPrograms,
     },
   };
 };
@@ -96,5 +145,5 @@ const createWorkoutProgram = async (
 
 export default {
   createWorkoutProgram,
-  getWorkoutProgram,
+  getAllWorkoutPrograms,
 };

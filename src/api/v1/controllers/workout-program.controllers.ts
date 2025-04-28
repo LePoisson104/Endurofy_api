@@ -13,8 +13,8 @@ const getWorkoutProgram = async (
   const userId = req.params.userId;
 
   try {
-    const result = await workoutProgramServices.getWorkoutProgram(userId);
-    sendSuccess(res, result);
+    const result = await workoutProgramServices.getAllWorkoutPrograms(userId);
+    sendSuccess(res, result.data);
   } catch (err) {
     controllerErrorResponse(res, err as CustomError);
   }
