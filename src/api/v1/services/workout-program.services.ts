@@ -28,6 +28,7 @@ const getAllWorkoutPrograms = async (
         program_name: string;
         description: string;
         created_at: string;
+        updated_at: string;
       }) => {
         const workoutDays = await WorkoutPrograms.queryGetWorkoutProgramDays(
           program.program_id
@@ -47,6 +48,7 @@ const getAllWorkoutPrograms = async (
           programName: program.program_name,
           description: program.description,
           createdAt: program.created_at,
+          updatedAt: program.updated_at,
           workoutDays: workoutDays
             .sort(
               (a: WorkoutDayRepo, b: WorkoutDayRepo) =>
