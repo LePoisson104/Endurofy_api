@@ -27,17 +27,17 @@ const createWorkoutProgram = async (
 ): Promise<void> => {
   const userId = req.params.userId;
   const workoutProgram = req.body as WorkoutProgramRequest;
+  console.log(workoutProgram);
+  // try {
+  //   const result = await workoutProgramServices.createWorkoutProgram(
+  //     userId,
+  //     workoutProgram
+  //   );
 
-  try {
-    const result = await workoutProgramServices.createWorkoutProgram(
-      userId,
-      workoutProgram
-    );
-
-    sendSuccess(res, result);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
-  }
+  //   sendSuccess(res, result);
+  // } catch (err) {
+  //   controllerErrorResponse(res, err as CustomError);
+  // }
 };
 
 export default {

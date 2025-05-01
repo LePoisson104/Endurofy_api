@@ -68,10 +68,11 @@ const getAllWorkoutPrograms = async (
                   exerciseId: exercise.program_exercise_id,
                   exerciseName: exercise.exercise_name,
                   bodyPart: exercise.body_part,
-                  action: exercise.action,
+                  laterality: exercise.laterality,
                   sets: exercise.sets,
                   minReps: exercise.min_reps,
                   maxReps: exercise.max_reps,
+                  exerciseOrder: exercise.exercise_order,
                 })),
               };
             }),
@@ -114,16 +115,17 @@ const createWorkoutProgram = async (
       for (const exercise of day.exercises) {
         const exerciseId = uuidv4();
         await connection.execute(
-          "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, action, sets, min_reps, max_reps) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
           [
             exerciseId,
             dayId,
             exercise.exerciseName,
             exercise.bodyPart,
-            exercise.action,
+            exercise.laterality,
             exercise.sets,
             exercise.minReps,
             exercise.maxReps,
+            exercise.exerciseOrder,
           ]
         );
       }

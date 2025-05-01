@@ -13,10 +13,11 @@ export interface WorkoutDay {
 export interface Exercise {
   exerciseName: string;
   bodyPart: string;
-  action: "bilateral" | "unilateral";
+  laterality: "bilateral" | "unilateral";
   sets: number;
   minReps: number;
   maxReps: number;
+  exerciseOrder: number;
 }
 
 export interface WorkoutDayRepo {
@@ -32,8 +33,9 @@ export interface ExerciseRepo {
   program_day_id: string;
   exercise_name: string;
   body_part: string;
-  action: "bilateral" | "unilateral";
+  laterality: "bilateral" | "unilateral";
   sets: number;
   min_reps: number;
   max_reps: number;
+  exercise_order: number;
 }
