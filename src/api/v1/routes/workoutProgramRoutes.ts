@@ -23,4 +23,12 @@ router.post(
   workoutProgramControllers.createWorkoutProgram
 );
 
+router.delete(
+  "/delete-workout-program/:userId/:programId",
+  userValidation.validateUserId,
+  workoutProgramValidations.validateProgramId,
+  handleValidationErrors,
+  workoutProgramControllers.deleteWorkoutProgram
+);
+
 export default router;

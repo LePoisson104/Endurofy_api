@@ -109,52 +109,6 @@ const queryGetWeightByDate = async (
   }
 };
 
-const queryCreateWeightLog = async (
-  weightLogId: string,
-  userId: string,
-  weightLogPayload: WeightLogPayload
-): Promise<any> => {
-  try {
-    const query = `INSERT INTO weight_log (weight_log_id, user_id, weight, weight_unit, calories_intake, notes, log_date) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const [result] = await pool.execute(query, [
-      weightLogId,
-      userId,
-      weightLogPayload.weight,
-      weightLogPayload.weightUnit,
-      weightLogPayload.caloriesIntake,
-      weightLogPayload.notes,
-      weightLogPayload.logDate,
-    ]);
-    return result;
-  } catch (err) {
-    Logger.logEvents(`Error creating weight log: ${err}`, "errLog.log");
-    throw new AppError("Database error while creating weight log", 500);
-  }
-};
-
-const queryUpdateWeightLog = async (
-  weightLogId: string,
-  userId: string,
-  weightLogPayload: WeightLogPayload
-): Promise<any> => {
-  try {
-    const query = `UPDATE weight_log SET weight = ?, weight_unit = ?, calories_intake = ?, notes = ?, log_date = ? WHERE weight_log_id = ? AND user_id = ?`;
-    const [result] = await pool.execute(query, [
-      weightLogPayload.weight,
-      weightLogPayload.weightUnit,
-      weightLogPayload.caloriesIntake,
-      weightLogPayload.notes,
-      weightLogPayload.logDate,
-      weightLogId,
-      userId,
-    ]);
-    return result;
-  } catch (err) {
-    Logger.logEvents(`Error updating weight log: ${err}`, "errLog.log");
-    throw new AppError("Database error while updating weight log", 500);
-  }
-};
-
 const queryDeleteWeightLog = async (
   weightLogId: string,
   userId: string
@@ -177,6 +131,4 @@ export default {
   queryGetAllWeightLog,
   queryGetWeightByDate,
   queryGetWeightLogDatesByRange,
-  queryCreateWeightLog,
-  queryUpdateWeightLog,
 };

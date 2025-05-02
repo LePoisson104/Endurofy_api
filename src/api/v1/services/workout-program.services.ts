@@ -110,7 +110,7 @@ const createWorkoutProgram = async (
       const dayId = uuidv4();
       await connection.execute(
         "INSERT INTO program_days (program_day_id, program_id, day_name, day_number) VALUES (?, ?, ?, ?)",
-        [dayId, workoutProgramId, day.dayName, day.day]
+        [dayId, workoutProgramId, day.dayName, day.dayNumber]
       );
       for (const exercise of day.exercises) {
         const exerciseId = uuidv4();
@@ -147,7 +147,20 @@ const createWorkoutProgram = async (
   };
 };
 
+const deleteWorkoutProgram = async (
+  userId: string,
+  programId: string
+): Promise<{ data: { message: string } }> => {
+  await WorkoutPrograms.queryDeleteWorkoutProgram(userId, programId);
+  return {
+    data: {
+      message: "Workout program deleted successfully",
+    },
+  };
+};
+
 export default {
   createWorkoutProgram,
   getAllWorkoutPrograms,
+  deleteWorkoutProgram,
 };

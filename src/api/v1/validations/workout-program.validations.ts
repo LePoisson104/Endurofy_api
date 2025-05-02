@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 const validateWorkoutProgramRequest = [
   body("programName").notEmpty().withMessage("Program name is required"),
@@ -9,7 +9,7 @@ const validateWorkoutProgramRequest = [
     .isArray({ min: 1 })
     .withMessage("At least one workout day is required"),
 
-  body("workoutDays.*.day")
+  body("workoutDays.*.dayNumber")
     .isInt({ min: 1 })
     .withMessage("Day must be a number greater than 0"),
 
@@ -27,9 +27,9 @@ const validateWorkoutProgramRequest = [
     .notEmpty()
     .withMessage("Body part is required"),
 
-  body("workoutDays.*.exercises.*.action")
+  body("workoutDays.*.exercises.*.laterality")
     .isIn(["bilateral", "unilateral"])
-    .withMessage("Action must be 'bilateral' or 'unilateral'"),
+    .withMessage("Laterality must be 'bilateral' or 'unilateral'"),
 
   body("workoutDays.*.exercises.*.sets")
     .isInt({ min: 1 })
@@ -52,4 +52,8 @@ const validateWorkoutProgramRequest = [
   }),
 ];
 
-export default { validateWorkoutProgramRequest };
+const validateProgramId = [
+  param("programId").notEmpty().withMessage("Program ID is required"),
+];
+
+export default { validateWorkoutProgramRequest, validateProgramId };

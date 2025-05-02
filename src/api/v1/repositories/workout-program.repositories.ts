@@ -49,8 +49,23 @@ const queryGetProgramDaysExercises = async (
   }
 };
 
+const queryDeleteWorkoutProgram = async (
+  userId: string,
+  programId: string
+): Promise<any> => {
+  try {
+    const query = "DELETE FROM programs WHERE user_id = ? AND program_id = ?";
+    const [result] = await pool.execute(query, [userId, programId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error deleting workout program: ${err}`, "errLog.log");
+    throw new AppError("Database error while deleting workout program", 500);
+  }
+};
+
 export default {
   queryGetWorkoutProgram,
   queryGetWorkoutProgramDays,
   queryGetProgramDaysExercises,
+  queryDeleteWorkoutProgram,
 };
