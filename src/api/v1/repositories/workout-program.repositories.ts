@@ -63,9 +63,53 @@ const queryDeleteWorkoutProgram = async (
   }
 };
 
+const queryDeleteWorkoutProgramDay = async (
+  programId: string,
+  dayId: string
+): Promise<any> => {
+  try {
+    const query =
+      "DELETE FROM program_days WHERE program_id = ? AND program_day_id = ?";
+    const [result] = await pool.execute(query, [programId, dayId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error deleting workout program day: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while deleting workout program day",
+      500
+    );
+  }
+};
+
+const queryDeleteWorkoutProgramExercise = async (
+  dayId: string,
+  exerciseId: string
+): Promise<any> => {
+  try {
+    const query =
+      "DELETE FROM program_exercises WHERE program_day_id = ? AND program_exercise_id = ?";
+    const [result] = await pool.execute(query, [dayId, exerciseId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error deleting workout program exercise: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while deleting workout program exercise",
+      500
+    );
+  }
+};
+
 export default {
   queryGetWorkoutProgram,
   queryGetWorkoutProgramDays,
   queryGetProgramDaysExercises,
   queryDeleteWorkoutProgram,
+  queryDeleteWorkoutProgramDay,
+  queryDeleteWorkoutProgramExercise,
 };

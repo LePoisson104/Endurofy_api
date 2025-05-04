@@ -298,10 +298,22 @@ const updateUsersProfile = async (
     updateProfilePayload.activity_level
   ) {
     updateProfilePayload.profile_status = "complete";
+    updateProfilePayload.current_weight = updateProfilePayload.starting_weight;
+    updateProfilePayload.current_weight_unit =
+      updateProfilePayload.starting_weight_unit;
+  } else {
+    const usersProfile = await Users.queryGetUsersProfile(userId);
+
+    if (
+      usersProfile[0].starting_weight !== updateProfilePayload.starting_weight
+    ) {
+      updateProfilePayload.current_weight =
+        updateProfilePayload.starting_weight;
+      updateProfilePayload.current_weight_unit =
+        updateProfilePayload.starting_weight_unit;
+    }
   }
-  updateProfilePayload.current_weight = updateProfilePayload.starting_weight;
-  updateProfilePayload.current_weight_unit =
-    updateProfilePayload.starting_weight_unit;
+
   updateProfilePayload.updated_at = new Date();
 
   await Users.queryUpdateUsersProfile(userId, updateProfilePayload);

@@ -20,6 +20,15 @@ export interface Exercise {
   exerciseOrder: number;
 }
 
+export interface WorkoutProgramRepo {
+  program_id: string;
+  user_id: string;
+  program_name: string;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface WorkoutDayRepo {
   program_day_id: string;
   program_id: string;

@@ -6,6 +6,7 @@ import WorkoutPrograms from "../repositories/workout-program.repositories";
 import {
   WorkoutDayRepo,
   ExerciseRepo,
+  WorkoutProgramRepo,
 } from "../interfaces/workout-program.interface";
 
 const getAllWorkoutPrograms = async (
@@ -147,6 +148,42 @@ const createWorkoutProgram = async (
   };
 };
 
+const updateWorkoutProgramDescription = async (
+  userId: string,
+  programId: string,
+  payload: WorkoutProgramRepo
+): Promise<{ data: { message: string } }> => {
+  return {
+    data: {
+      message: "Workout program description updated successfully",
+    },
+  };
+};
+
+const updateWorkoutProgramDay = async (
+  programId: string,
+  dayId: string,
+  payload: WorkoutDayRepo
+): Promise<{ data: { message: string } }> => {
+  return {
+    data: {
+      message: "Workout program description updated successfully",
+    },
+  };
+};
+
+const updateWorkoutProgramExercises = async (
+  dayId: string,
+  exerciseId: string,
+  payload: ExerciseRepo
+): Promise<{ data: { message: string } }> => {
+  return {
+    data: {
+      message: "Workout program description updated successfully",
+    },
+  };
+};
+
 const deleteWorkoutProgram = async (
   userId: string,
   programId: string
@@ -159,8 +196,39 @@ const deleteWorkoutProgram = async (
   };
 };
 
+const deleteWorkoutProgramDay = async (
+  programId: string,
+  dayId: string
+): Promise<{ data: { message: string } }> => {
+  await WorkoutPrograms.queryDeleteWorkoutProgramDay(programId, dayId);
+
+  return {
+    data: {
+      message: "Workout program day deleted successfully",
+    },
+  };
+};
+
+const deleteWorkoutProgramExercise = async (
+  dayId: string,
+  exerciseId: string
+): Promise<{ data: { message: string } }> => {
+  await WorkoutPrograms.queryDeleteWorkoutProgramExercise(dayId, exerciseId);
+
+  return {
+    data: {
+      message: "Exercise deleted successfully",
+    },
+  };
+};
+
 export default {
   createWorkoutProgram,
   getAllWorkoutPrograms,
   deleteWorkoutProgram,
+  updateWorkoutProgramDescription,
+  updateWorkoutProgramDay,
+  updateWorkoutProgramExercises,
+  deleteWorkoutProgramDay,
+  deleteWorkoutProgramExercise,
 };
