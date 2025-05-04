@@ -34,13 +34,12 @@ const getAllWorkoutPrograms = async (
           program.program_id
         );
 
-        const workoutExercises: ExerciseRepo[] = [];
-
+        const workoutExercisesMap: { [key: string]: ExerciseRepo[] } = {};
         for (const day of workoutDays) {
           const exercises = await WorkoutPrograms.queryGetProgramDaysExercises(
             day.program_day_id
           );
-          workoutExercises.push(exercises);
+          workoutExercisesMap[day.program_day_id] = exercises;
         }
 
         return {
@@ -55,9 +54,10 @@ const getAllWorkoutPrograms = async (
                 a.day_number - b.day_number
             )
             .map((day: WorkoutDayRepo) => {
-              const dayIndex = workoutDays.indexOf(day);
-              const dayExercises = Array.isArray(workoutExercises[dayIndex])
-                ? workoutExercises[dayIndex]
+              const dayExercises = Array.isArray(
+                workoutExercisesMap[day.program_day_id]
+              )
+                ? workoutExercisesMap[day.program_day_id]
                 : [];
 
               return {

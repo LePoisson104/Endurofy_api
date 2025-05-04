@@ -411,8 +411,8 @@ const createWeightLog = async (
     );
 
     if (
-      new Date(weightLogPayload.logDate).toISOString().split("T")[0] ===
-      new Date().toISOString().split("T")[0]
+      weightLogPayload.logDate.toString() ===
+      new Date().toLocaleDateString("en-ca")
     ) {
       await connection.execute(
         "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
@@ -453,7 +453,7 @@ const updateWeightLog = async (
   // if the weight log date is not the same as the payload date, check if the date already exists
   if (
     weightLog &&
-    new Date(weightLogPayload.logDate).toISOString().split("T")[0] !==
+    weightLogPayload.logDate.toString() !==
       weightLog[0].log_date.toISOString().split("T")[0]
   ) {
     const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
@@ -483,8 +483,8 @@ const updateWeightLog = async (
     );
 
     if (
-      new Date(weightLogPayload.logDate).toISOString().split("T")[0] ===
-      new Date().toISOString().split("T")[0]
+      weightLogPayload.logDate.toString() ===
+      new Date().toLocaleDateString("en-ca")
     ) {
       await connection.execute(
         "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
