@@ -26,22 +26,22 @@ router.post(
 router.patch(
   "/update-workout-program-description/:userId/:programId",
   workoutProgramValidations.validateProgramId,
-  workoutProgramValidations.validateWorkoutProgramRequest,
+  workoutProgramValidations.validateUpdateWorkoutProgramDescriptionRequest,
   handleValidationErrors,
   workoutProgramControllers.updateWorkoutProgramDescription
 );
 
 router.patch(
   "/update-workout-program-day/:programId/:dayId",
-  workoutProgramValidations.validateWorkoutProgramRequest,
+  workoutProgramValidations.validateProgramId,
   workoutProgramValidations.validateDayId,
+  workoutProgramValidations.validateUpdateWorkoutProgramDayRequest,
   handleValidationErrors,
   workoutProgramControllers.updateWorkoutProgramDay
 );
 
 router.patch(
   "/update-workout-program-exercises/:dayId/:exerciseId",
-  workoutProgramValidations.validateWorkoutProgramRequest,
   workoutProgramValidations.validateDayId,
   workoutProgramValidations.validateExerciseId,
   handleValidationErrors,

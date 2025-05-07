@@ -46,7 +46,8 @@ const updateWorkoutProgramDescription = async (
 ): Promise<void> => {
   const userId = req.params.userId;
   const programId = req.params.programId;
-  const { payload } = req.body;
+  const payload = req.body;
+  console.log(payload);
   try {
     const result = await workoutProgramServices.updateWorkoutProgramDescription(
       userId,
@@ -67,7 +68,7 @@ const updateWorkoutProgramDay = async (
 ): Promise<void> => {
   const programId = req.params.programId;
   const dayId = req.params.dayId;
-  const { payload } = req.body;
+  const payload = req.body;
   try {
     const result = await workoutProgramServices.updateWorkoutProgramDay(
       programId,

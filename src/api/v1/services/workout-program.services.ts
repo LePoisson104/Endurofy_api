@@ -8,6 +8,7 @@ import {
   ExerciseRepo,
   WorkoutProgramRepo,
 } from "../interfaces/workout-program.interface";
+import { AppError } from "../middlewares/error.handlers";
 
 const getAllWorkoutPrograms = async (
   userId: string
@@ -151,8 +152,20 @@ const createWorkoutProgram = async (
 const updateWorkoutProgramDescription = async (
   userId: string,
   programId: string,
-  payload: WorkoutProgramRepo
+  payload: { programName: string; description: string }
 ): Promise<{ data: { message: string } }> => {
+  const { programName, description } = payload;
+  const result = await WorkoutPrograms.queryUpdateWorkoutProgramDescription(
+    userId,
+    programId,
+    programName,
+    description
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Program not found", 404);
+  }
+
   return {
     data: {
       message: "Workout program description updated successfully",
@@ -163,11 +176,22 @@ const updateWorkoutProgramDescription = async (
 const updateWorkoutProgramDay = async (
   programId: string,
   dayId: string,
-  payload: WorkoutDayRepo
+  payload: { dayName: string }
 ): Promise<{ data: { message: string } }> => {
+  const { dayName } = payload;
+  const result = await WorkoutPrograms.queryUpdateWorkoutProgramDay(
+    programId,
+    dayId,
+    dayName
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Program day not found", 404);
+  }
+
   return {
     data: {
-      message: "Workout program description updated successfully",
+      message: "Workout program day updated successfully",
     },
   };
 };
@@ -188,7 +212,14 @@ const deleteWorkoutProgram = async (
   userId: string,
   programId: string
 ): Promise<{ data: { message: string } }> => {
-  await WorkoutPrograms.queryDeleteWorkoutProgram(userId, programId);
+  const result = await WorkoutPrograms.queryDeleteWorkoutProgram(
+    userId,
+    programId
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Program not found", 404);
+  }
   return {
     data: {
       message: "Workout program deleted successfully",
@@ -200,7 +231,14 @@ const deleteWorkoutProgramDay = async (
   programId: string,
   dayId: string
 ): Promise<{ data: { message: string } }> => {
-  await WorkoutPrograms.queryDeleteWorkoutProgramDay(programId, dayId);
+  const result = await WorkoutPrograms.queryDeleteWorkoutProgramDay(
+    programId,
+    dayId
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Program day not found", 404);
+  }
 
   return {
     data: {
@@ -213,7 +251,14 @@ const deleteWorkoutProgramExercise = async (
   dayId: string,
   exerciseId: string
 ): Promise<{ data: { message: string } }> => {
-  await WorkoutPrograms.queryDeleteWorkoutProgramExercise(dayId, exerciseId);
+  const result = await WorkoutPrograms.queryDeleteWorkoutProgramExercise(
+    dayId,
+    exerciseId
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Exercise not found", 404);
+  }
 
   return {
     data: {

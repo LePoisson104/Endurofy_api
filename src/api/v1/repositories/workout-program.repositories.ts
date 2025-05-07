@@ -49,6 +49,56 @@ const queryGetProgramDaysExercises = async (
   }
 };
 
+const queryUpdateWorkoutProgramDescription = async (
+  userId: string,
+  programId: string,
+  programName: string,
+  description: string
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE programs SET program_name = ?, description = ? WHERE user_id = ? AND program_id = ?";
+    const [result] = await pool.execute(query, [
+      programName,
+      description,
+      userId,
+      programId,
+    ]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error updating workout program description: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while updating workout program description",
+      500
+    );
+  }
+};
+
+const queryUpdateWorkoutProgramDay = async (
+  programId: string,
+  dayId: string,
+  dayName: string
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE program_days SET day_name = ? WHERE program_id = ? AND program_day_id = ?";
+    const [result] = await pool.execute(query, [dayName, programId, dayId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error updating workout program day: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while updating workout program day",
+      500
+    );
+  }
+};
+
 const queryDeleteWorkoutProgram = async (
   userId: string,
   programId: string
@@ -112,4 +162,6 @@ export default {
   queryDeleteWorkoutProgram,
   queryDeleteWorkoutProgramDay,
   queryDeleteWorkoutProgramExercise,
+  queryUpdateWorkoutProgramDescription,
+  queryUpdateWorkoutProgramDay,
 };

@@ -64,9 +64,20 @@ const validateExerciseId = [
   param("exerciseId").notEmpty().withMessage("Exercise ID is required"),
 ];
 
+const validateUpdateWorkoutProgramDescriptionRequest = [
+  body("programName").notEmpty().withMessage("Program name is required"),
+  body("description").optional().isString(),
+];
+
+const validateUpdateWorkoutProgramDayRequest = [
+  body("dayName").notEmpty().withMessage("Day name is required"),
+];
+
 export default {
   validateWorkoutProgramRequest,
   validateProgramId,
   validateDayId,
   validateExerciseId,
+  validateUpdateWorkoutProgramDescriptionRequest,
+  validateUpdateWorkoutProgramDayRequest,
 };
