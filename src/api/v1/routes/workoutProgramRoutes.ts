@@ -41,11 +41,12 @@ router.patch(
 );
 
 router.patch(
-  "/update-workout-program-exercises/:dayId/:exerciseId",
+  "/update-workout-program-exercise/:dayId/:exerciseId",
   workoutProgramValidations.validateDayId,
   workoutProgramValidations.validateExerciseId,
+  workoutProgramValidations.validateUpdateWorkoutProgramExerciseRequest,
   handleValidationErrors,
-  workoutProgramControllers.updateWorkoutProgramExercises
+  workoutProgramControllers.updateWorkoutProgramExercise
 );
 
 router.delete(

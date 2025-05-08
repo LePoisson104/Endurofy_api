@@ -196,11 +196,44 @@ const updateWorkoutProgramDay = async (
   };
 };
 
-const updateWorkoutProgramExercises = async (
+const updateWorkoutProgramExercise = async (
   dayId: string,
   exerciseId: string,
-  payload: ExerciseRepo
+  payload: {
+    exerciseName: string;
+    bodyPart: string;
+    laterality: string;
+    sets: number;
+    minReps: number;
+    maxReps: number;
+    exerciseOrder: number;
+  }
 ): Promise<{ data: { message: string } }> => {
+  const {
+    exerciseName,
+    bodyPart,
+    laterality,
+    sets,
+    minReps,
+    maxReps,
+    exerciseOrder,
+  } = payload;
+  const result = await WorkoutPrograms.queryUpdateWorkoutProgramExercise(
+    dayId,
+    exerciseId,
+    exerciseName,
+    bodyPart,
+    laterality,
+    sets,
+    minReps,
+    maxReps,
+    exerciseOrder
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Exercise not found", 404);
+  }
+
   return {
     data: {
       message: "Workout program description updated successfully",
@@ -273,7 +306,7 @@ export default {
   deleteWorkoutProgram,
   updateWorkoutProgramDescription,
   updateWorkoutProgramDay,
-  updateWorkoutProgramExercises,
+  updateWorkoutProgramExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
 };

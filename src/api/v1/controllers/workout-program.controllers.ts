@@ -82,16 +82,19 @@ const updateWorkoutProgramDay = async (
   }
 };
 
-const updateWorkoutProgramExercises = async (
+const updateWorkoutProgramExercise = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   const dayId = req.params.dayId;
   const exerciseId = req.params.exerciseId;
-  const { payload } = req.body;
+  const payload = req.body;
+  console.log(payload);
+  console.log(dayId);
+  console.log(exerciseId);
   try {
-    const result = await workoutProgramServices.updateWorkoutProgramExercises(
+    const result = await workoutProgramServices.updateWorkoutProgramExercise(
       dayId,
       exerciseId,
       payload
@@ -166,7 +169,7 @@ export default {
   deleteWorkoutProgram,
   updateWorkoutProgramDescription,
   updateWorkoutProgramDay,
-  updateWorkoutProgramExercises,
+  updateWorkoutProgramExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
 };
