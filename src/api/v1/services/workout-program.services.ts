@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
-import { WorkoutProgramRequest } from "../interfaces/workout-program.interface";
+import {
+  ExerciseRequest,
+  WorkoutProgramRequest,
+} from "../interfaces/workout-program.interface";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import WorkoutPrograms from "../repositories/workout-program.repositories";
 import {
   WorkoutDayRepo,
   ExerciseRepo,
-  WorkoutProgramRepo,
 } from "../interfaces/workout-program.interface";
 import { AppError } from "../middlewares/error.handlers";
 
@@ -145,6 +147,30 @@ const createWorkoutProgram = async (
   return {
     data: {
       message: "Workout program created successfully",
+    },
+  };
+};
+
+const addExercise = async (
+  programId: string,
+  dayId: string,
+  exercise: ExerciseRequest
+): Promise<{ data: { message: string } }> => {
+  const isProgramAndProgramDayExists =
+    await WorkoutPrograms.queryIfProgramAndProgramDayExists(programId, dayId);
+
+  if (!isProgramAndProgramDayExists) {
+    throw new AppError("Program or program day not found", 404);
+  }
+
+  const exerciseId = uuidv4();
+  await WorkoutPrograms.queryAddExercise(dayId, exerciseId, exercise);
+
+  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+
+  return {
+    data: {
+      message: "Exercise added successfully",
     },
   };
 };
@@ -319,6 +345,7 @@ export default {
   updateWorkoutProgramDescription,
   updateWorkoutProgramDay,
   updateWorkoutProgramExercise,
+  addExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
 };

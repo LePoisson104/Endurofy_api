@@ -1,4 +1,8 @@
 import pool from "../../../config/db.config";
+import {
+  ExerciseRepo,
+  ExerciseRequest,
+} from "../interfaces/workout-program.interface";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
@@ -49,6 +53,32 @@ const queryGetProgramDaysExercises = async (
   }
 };
 
+const queryAddExercise = async (
+  dayId: string,
+  exerciseId: string,
+  exercise: ExerciseRequest
+): Promise<any> => {
+  try {
+    const query =
+      "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const [result] = await pool.execute(query, [
+      exerciseId,
+      dayId,
+      exercise.exerciseName,
+      exercise.bodyPart,
+      exercise.laterality,
+      exercise.sets,
+      exercise.minReps,
+      exercise.maxReps,
+      exercise.exerciseOrder,
+    ]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error adding exercise: ${err}`, "errLog.log");
+    throw new AppError("Database error while adding exercise", 500);
+  }
+};
+
 const queryUpdateWorkoutProgramDescription = async (
   userId: string,
   programId: string,
@@ -94,6 +124,30 @@ const queryUpdateWorkoutProgramDay = async (
     );
     throw new AppError(
       "Database error while updating workout program day",
+      500
+    );
+  }
+};
+
+const queryIfProgramAndProgramDayExists = async (
+  programId: string,
+  dayId: string
+): Promise<any> => {
+  try {
+    const query =
+      "SELECT * FROM program_days WHERE program_id = ? AND program_day_id = ?";
+    const [result] = await pool.execute(query, [programId, dayId]);
+    if ((result as any[]).length === 0) {
+      return false;
+    }
+    return true;
+  } catch (err) {
+    Logger.logEvents(
+      `Error checking if program day exists: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while checking if program day exists",
       500
     );
   }
@@ -223,4 +277,6 @@ export default {
   queryUpdateWorkoutProgramDay,
   queryUpdateWorkoutProgramExercise,
   queryUpdateWorkoutProgramUpdatedAt,
+  queryAddExercise,
+  queryIfProgramAndProgramDayExists,
 };

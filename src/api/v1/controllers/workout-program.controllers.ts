@@ -39,6 +39,26 @@ const createWorkoutProgram = async (
   }
 };
 
+const addExercise = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const programId = req.params.programId;
+  const dayId = req.params.dayId;
+  const exercise = req.body;
+  try {
+    const result = await workoutProgramServices.addExercise(
+      programId,
+      dayId,
+      exercise
+    );
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const updateWorkoutProgramDescription = async (
   req: Request,
   res: Response,
@@ -175,4 +195,5 @@ export default {
   updateWorkoutProgramExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
+  addExercise,
 };

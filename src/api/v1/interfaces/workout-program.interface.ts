@@ -48,3 +48,14 @@ export interface ExerciseRepo {
   max_reps: number;
   exercise_order: number;
 }
+
+export interface ExerciseRequest {
+  dayId: string;
+  exerciseName: string;
+  bodyPart: string;
+  laterality: "bilateral" | "unilateral";
+  sets: number;
+  minReps: number;
+  maxReps: number;
+  exerciseOrder: number;
+}

@@ -23,6 +23,14 @@ router.post(
   workoutProgramControllers.createWorkoutProgram
 );
 
+router.post(
+  "/add-exercise/:programId/:dayId",
+  workoutProgramValidations.validateProgramId,
+  workoutProgramValidations.validateDayId,
+  handleValidationErrors,
+  workoutProgramControllers.addExercise
+);
+
 router.patch(
   "/update-workout-program-description/:userId/:programId",
   workoutProgramValidations.validateProgramId,
