@@ -193,6 +193,25 @@ const queryDeleteWorkoutProgramExercise = async (
   }
 };
 
+const queryUpdateWorkoutProgramUpdatedAt = async (
+  programId: string
+): Promise<any> => {
+  try {
+    const query = "UPDATE programs SET updated_at = NOW() WHERE program_id = ?";
+    const [result] = await pool.execute(query, [programId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error updating workout program updated at: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while updating workout program updated at",
+      500
+    );
+  }
+};
+
 export default {
   queryGetWorkoutProgram,
   queryGetWorkoutProgramDays,
@@ -203,4 +222,5 @@ export default {
   queryUpdateWorkoutProgramDescription,
   queryUpdateWorkoutProgramDay,
   queryUpdateWorkoutProgramExercise,
+  queryUpdateWorkoutProgramUpdatedAt,
 };

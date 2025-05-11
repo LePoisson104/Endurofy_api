@@ -41,7 +41,8 @@ router.patch(
 );
 
 router.patch(
-  "/update-workout-program-exercise/:dayId/:exerciseId",
+  "/update-workout-program-exercise/:programId/:dayId/:exerciseId",
+  workoutProgramValidations.validateProgramId,
   workoutProgramValidations.validateDayId,
   workoutProgramValidations.validateExerciseId,
   workoutProgramValidations.validateUpdateWorkoutProgramExerciseRequest,
@@ -66,7 +67,8 @@ router.delete(
 );
 
 router.delete(
-  "/delete-workout-program-exercise/:dayId/:exerciseId",
+  "/delete-workout-program-exercise/:programId/:dayId/:exerciseId",
+  workoutProgramValidations.validateProgramId,
   workoutProgramValidations.validateDayId,
   workoutProgramValidations.validateExerciseId,
   handleValidationErrors,

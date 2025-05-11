@@ -89,14 +89,14 @@ const updateWorkoutProgramExercise = async (
 ): Promise<void> => {
   const dayId = req.params.dayId;
   const exerciseId = req.params.exerciseId;
+  const programId = req.params.programId;
   const payload = req.body;
-  console.log(payload);
-  console.log(dayId);
-  console.log(exerciseId);
+
   try {
     const result = await workoutProgramServices.updateWorkoutProgramExercise(
       dayId,
       exerciseId,
+      programId,
       payload
     );
 
@@ -149,10 +149,13 @@ const deleteWorkoutProgramExercise = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  const programId = req.params.programId;
   const dayId = req.params.dayId;
   const exerciseId = req.params.exerciseId;
+
   try {
     const result = await workoutProgramServices.deleteWorkoutProgramExercise(
+      programId,
       dayId,
       exerciseId
     );
