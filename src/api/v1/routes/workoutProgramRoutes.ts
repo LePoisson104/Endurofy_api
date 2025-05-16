@@ -31,6 +31,22 @@ router.post(
   workoutProgramControllers.addExercise
 );
 
+router.post(
+  "/add-program-day/:programId",
+  workoutProgramValidations.validateProgramId,
+  workoutProgramValidations.validateUpdateWorkoutProgramDayRequest,
+  handleValidationErrors,
+  workoutProgramControllers.addProgramDay
+);
+
+router.patch(
+  "/reorder-exercise-order/:programId/:dayId",
+  workoutProgramValidations.validateProgramId,
+  workoutProgramValidations.validateDayId,
+  handleValidationErrors,
+  workoutProgramControllers.reorderExerciseOrder
+);
+
 router.patch(
   "/update-workout-program-description/:userId/:programId",
   workoutProgramValidations.validateProgramId,

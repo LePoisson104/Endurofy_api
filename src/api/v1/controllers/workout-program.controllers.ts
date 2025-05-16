@@ -59,6 +59,24 @@ const addExercise = async (
   }
 };
 
+const addProgramDay = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const programId = req.params.programId;
+  const payload = req.body;
+  try {
+    const result = await workoutProgramServices.addProgramDay(
+      programId,
+      payload
+    );
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const updateWorkoutProgramDescription = async (
   req: Request,
   res: Response,
@@ -117,6 +135,28 @@ const updateWorkoutProgramExercise = async (
       dayId,
       exerciseId,
       programId,
+      payload
+    );
+
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const reorderExerciseOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const programId = req.params.programId;
+  const dayId = req.params.dayId;
+  const payload = req.body;
+
+  try {
+    const result = await workoutProgramServices.reorderExerciseOrder(
+      programId,
+      dayId,
       payload
     );
 
@@ -196,4 +236,6 @@ export default {
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
   addExercise,
+  addProgramDay,
+  reorderExerciseOrder,
 };

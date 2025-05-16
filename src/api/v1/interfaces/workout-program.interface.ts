@@ -51,6 +51,7 @@ export interface ExerciseRepo {
 
 export interface ExerciseRequest {
   dayId: string;
+  exerciseId: string;
   exerciseName: string;
   bodyPart: string;
   laterality: "bilateral" | "unilateral";

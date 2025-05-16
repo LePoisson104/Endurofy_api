@@ -71,6 +71,10 @@ const validateUpdateWorkoutProgramDescriptionRequest = [
 
 const validateUpdateWorkoutProgramDayRequest = [
   body("dayName").notEmpty().withMessage("Day name is required"),
+  body("dayNumber")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Day number is required"),
 ];
 
 const validateUpdateWorkoutProgramExerciseRequest = [

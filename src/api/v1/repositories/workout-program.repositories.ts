@@ -79,6 +79,28 @@ const queryAddExercise = async (
   }
 };
 
+const queryAddProgramDay = async (
+  programId: string,
+  dayId: string,
+  dayName: string,
+  dayNumber: number
+): Promise<any> => {
+  try {
+    const query =
+      "INSERT INTO program_days (program_day_id, program_id, day_number, day_name) VALUES (?, ?, ?, ?)";
+    const [result] = await pool.execute(query, [
+      dayId,
+      programId,
+      dayNumber,
+      dayName,
+    ]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error adding program day: ${err}`, "errLog.log");
+    throw new AppError("Database error while adding program day", 500);
+  }
+};
+
 const queryUpdateWorkoutProgramDescription = async (
   userId: string,
   programId: string,
@@ -126,6 +148,26 @@ const queryUpdateWorkoutProgramDay = async (
       "Database error while updating workout program day",
       500
     );
+  }
+};
+
+const queryReorderExerciseOrder = async (
+  dayId: string,
+  exerciseId: string,
+  exerciseOrder: number
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE program_exercises SET exercise_order = ? WHERE program_day_id = ? AND program_exercise_id = ?";
+    const [result] = await pool.execute(query, [
+      exerciseOrder,
+      dayId,
+      exerciseId,
+    ]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error reordering exercise order: ${err}`, "errLog.log");
+    throw new AppError("Database error while reordering exercise order", 500);
   }
 };
 
@@ -279,4 +321,6 @@ export default {
   queryUpdateWorkoutProgramUpdatedAt,
   queryAddExercise,
   queryIfProgramAndProgramDayExists,
+  queryAddProgramDay,
+  queryReorderExerciseOrder,
 };

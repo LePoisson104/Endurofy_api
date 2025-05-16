@@ -175,6 +175,28 @@ const addExercise = async (
   };
 };
 
+const addProgramDay = async (
+  programId: string,
+  payload: { dayName: string; dayNumber: number }
+): Promise<{ data: { message: string } }> => {
+  const { dayName, dayNumber } = payload;
+  const dayId = uuidv4();
+
+  await WorkoutPrograms.queryAddProgramDay(
+    programId,
+    dayId,
+    dayName,
+    dayNumber
+  );
+  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+
+  return {
+    data: {
+      message: "Program day added successfully",
+    },
+  };
+};
+
 const updateWorkoutProgramDescription = async (
   userId: string,
   programId: string,
@@ -274,6 +296,26 @@ const updateWorkoutProgramExercise = async (
   };
 };
 
+const reorderExerciseOrder = async (
+  programId: string,
+  dayId: string,
+  payload: ExerciseRequest[]
+): Promise<{ data: { message: string } }> => {
+  for (const exercise of payload) {
+    await WorkoutPrograms.queryReorderExerciseOrder(
+      dayId,
+      exercise.exerciseId,
+      exercise.exerciseOrder
+    );
+  }
+
+  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+
+  return {
+    data: { message: "Exercise order updated successfully" },
+  };
+};
+
 const deleteWorkoutProgram = async (
   userId: string,
   programId: string
@@ -320,17 +362,48 @@ const deleteWorkoutProgramExercise = async (
   dayId: string,
   exerciseId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await WorkoutPrograms.queryDeleteWorkoutProgramExercise(
-    dayId,
-    exerciseId
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Exercise not found", 404);
+  try {
+    await connection.beginTransaction();
+
+    // First get the exercise_order of the exercise being deleted
+    const [deletedExercise] = await connection.execute(
+      "SELECT exercise_order FROM program_exercises WHERE program_exercise_id = ? AND program_day_id = ?",
+      [exerciseId, dayId]
+    );
+
+    if ((deletedExercise as any[]).length === 0) {
+      throw new AppError("Exercise not found", 404);
+    }
+
+    const deletedOrder = (deletedExercise as any[])[0].exercise_order;
+
+    // Delete the exercise
+    await connection.execute(
+      "DELETE FROM program_exercises WHERE program_exercise_id = ? AND program_day_id = ?",
+      [exerciseId, dayId]
+    );
+
+    // Update the order of all exercises that come after the deleted one
+    await connection.execute(
+      "UPDATE program_exercises SET exercise_order = exercise_order - 1 WHERE program_day_id = ? AND exercise_order > ?",
+      [dayId, deletedOrder]
+    );
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error deleting workout program exercise: ${err}`,
+      "errLog.log"
+    );
+    throw err;
+  } finally {
+    connection.release();
   }
-
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
-
   return {
     data: {
       message: "Exercise deleted successfully",
@@ -348,4 +421,6 @@ export default {
   addExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
+  reorderExerciseOrder,
+  addProgramDay,
 };
