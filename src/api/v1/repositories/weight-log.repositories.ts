@@ -39,6 +39,17 @@ const queryGetWeightLog = async (
   }
 };
 
+const queryGetLatestWeightLog = async (userId: string): Promise<any> => {
+  try {
+    const query = `SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC LIMIT 1`;
+    const [result] = await pool.execute(query, [userId]);
+    return result;
+  } catch (error) {
+    Logger.logEvents(`Error getting latest weight log: ${error}`, "errLog.log");
+    throw new AppError("Database error while getting latest weight log", 500);
+  }
+};
+
 // this getting only the dates for the calendar
 const queryGetWeightLogDatesByRange = async (
   userId: string,
@@ -131,4 +142,5 @@ export default {
   queryGetAllWeightLog,
   queryGetWeightByDate,
   queryGetWeightLogDatesByRange,
+  queryGetLatestWeightLog,
 };

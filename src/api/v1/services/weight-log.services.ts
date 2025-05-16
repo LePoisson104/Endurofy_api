@@ -390,6 +390,9 @@ const createWeightLog = async (
   if (isWeightLogExists) {
     throw new AppError("Weight log already exists for this date", 400);
   }
+
+  const latestWeightLog = await WeightLogs.queryGetLatestWeightLog(userId);
+
   const connection = await pool.getConnection();
 
   try {
@@ -412,7 +415,9 @@ const createWeightLog = async (
 
     if (
       weightLogPayload.logDate.toString() ===
-      new Date().toLocaleDateString("en-ca")
+        new Date().toLocaleDateString("en-ca") ||
+      weightLogPayload.logDate.toString() >
+        new Date(latestWeightLog[0].log_date).toISOString().split("T")[0]
     ) {
       await connection.execute(
         "UPDATE users_profile SET current_weight = ?, current_weight_unit = ? WHERE user_id = ?",
