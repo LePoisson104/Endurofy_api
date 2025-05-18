@@ -31,6 +31,7 @@ const getAllWorkoutPrograms = async (
         program_id: string;
         program_name: string;
         description: string;
+        program_type: string;
         created_at: string;
         updated_at: string;
       }) => {
@@ -50,6 +51,7 @@ const getAllWorkoutPrograms = async (
           programId: program.program_id,
           programName: program.program_name,
           description: program.description,
+          programType: program.program_type,
           createdAt: program.created_at,
           updatedAt: program.updated_at,
           workoutDays: workoutDays
@@ -101,12 +103,13 @@ const createWorkoutProgram = async (
   try {
     const workoutProgramId = uuidv4();
     await connection.execute(
-      "INSERT INTO programs (program_id, user_id, program_name, description) VALUES (?, ?, ?, ?)",
+      "INSERT INTO programs (program_id, user_id, program_name, description, program_type) VALUES (?, ?, ?, ?, ?)",
       [
         workoutProgramId,
         userId,
         workoutProgram.programName,
         workoutProgram.description,
+        workoutProgram.programType,
       ]
     );
 

@@ -5,6 +5,12 @@ const validateWorkoutProgramRequest = [
 
   body("description").optional().isString(),
 
+  body("programType")
+    .notEmpty()
+    .withMessage("Program type is required")
+    .isIn(["dayOfWeek", "custom"])
+    .withMessage("Program type must be 'dayOfWeek' or 'custom'"),
+
   body("workoutDays")
     .isArray({ min: 1 })
     .withMessage("At least one workout day is required"),
