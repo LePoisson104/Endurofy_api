@@ -80,12 +80,15 @@ export const controllerErrorResponse = async (
   };
 
   // In a real application, you would want to log this error
-  console.error({
-    code: err.code,
-    message: err.message,
-    stack: err.stack,
-    details: err.details,
-  });
+  Logger.logEvents(
+    `Controller Error: ${JSON.stringify({
+      code: err.code,
+      message: err.message,
+      stack: err.stack,
+      details: err.details,
+    })}`,
+    "errLog.log"
+  );
 
   await Logger.logEvents(
     `Controller Error: ${JSON.stringify(errorResponse)}`,

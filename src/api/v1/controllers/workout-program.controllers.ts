@@ -85,7 +85,7 @@ const updateWorkoutProgramDescription = async (
   const userId = req.params.userId;
   const programId = req.params.programId;
   const payload = req.body;
-  console.log(payload);
+
   try {
     const result = await workoutProgramServices.updateWorkoutProgramDescription(
       userId,
