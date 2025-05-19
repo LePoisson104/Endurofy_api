@@ -246,21 +246,21 @@ const updateUsersProfile = async (
     updateProfilePayload.weight_goal_unit === "lb";
 
   if (
-    updateProfilePayload.starting_weight < updateProfilePayload.weight_goal &&
+    updateProfilePayload.starting_weight <= updateProfilePayload.weight_goal &&
     updateProfilePayload.goal === "lose"
   ) {
     throw new AppError(
-      "Starting weight cannot be greater than weight goal when losing weight",
+      "Starting weight cannot be greater than or equal to weight goal when losing weight",
       400
     );
   }
 
   if (
-    updateProfilePayload.starting_weight > updateProfilePayload.weight_goal &&
+    updateProfilePayload.starting_weight >= updateProfilePayload.weight_goal &&
     updateProfilePayload.goal === "gain"
   ) {
     throw new AppError(
-      "Starting weight cannot be less than weight goal when gaining weight",
+      "Starting weight cannot be less than or equal to weight goal when gaining weight",
       400
     );
   }
