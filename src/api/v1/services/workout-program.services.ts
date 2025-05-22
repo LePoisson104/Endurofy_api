@@ -32,6 +32,7 @@ const getAllWorkoutPrograms = async (
         program_name: string;
         description: string;
         program_type: string;
+        is_active: boolean;
         created_at: string;
         updated_at: string;
       }) => {
@@ -52,6 +53,7 @@ const getAllWorkoutPrograms = async (
           programName: program.program_name,
           description: program.description,
           programType: program.program_type,
+          isActive: program.is_active,
           createdAt: program.created_at,
           updatedAt: program.updated_at,
           workoutDays: workoutDays
