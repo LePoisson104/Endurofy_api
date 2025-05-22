@@ -1,8 +1,5 @@
 import pool from "../../../config/db.config";
-import {
-  ExerciseRepo,
-  ExerciseRequest,
-} from "../interfaces/workout-program.interface";
+import { ExerciseRequest } from "../interfaces/workout-program.interface";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
@@ -308,6 +305,53 @@ const queryUpdateWorkoutProgramUpdatedAt = async (
   }
 };
 
+const querySetProgramAsInactive = async (
+  userId: string,
+  programId: string
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE programs SET is_active = 0 WHERE user_id = ? AND program_id = ?";
+    const [result] = await pool.execute(query, [userId, programId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error setting program as inactive: ${err}`, "errLog.log");
+    throw new AppError("Database error while setting program as inactive", 500);
+  }
+};
+
+const querySetAllAsInactive = async (userId: string): Promise<any> => {
+  try {
+    const query = "UPDATE programs SET is_active = 0 WHERE user_id = ?";
+    const [result] = await pool.execute(query, [userId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(
+      `Error setting all programs as inactive: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while setting all programs as inactive",
+      500
+    );
+  }
+};
+
+const querySetProgramAsActive = async (
+  userId: string,
+  programId: string
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE programs SET is_active = 1 WHERE user_id = ? AND program_id = ?";
+    const [result] = await pool.execute(query, [userId, programId]);
+    return result;
+  } catch (err) {
+    Logger.logEvents(`Error setting program as active: ${err}`, "errLog.log");
+    throw new AppError("Database error while setting program as active", 500);
+  }
+};
+
 export default {
   queryGetWorkoutProgram,
   queryGetWorkoutProgramDays,
@@ -323,4 +367,7 @@ export default {
   queryIfProgramAndProgramDayExists,
   queryAddProgramDay,
   queryReorderExerciseOrder,
+  querySetProgramAsInactive,
+  querySetAllAsInactive,
+  querySetProgramAsActive,
 };

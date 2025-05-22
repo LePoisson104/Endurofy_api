@@ -144,6 +144,42 @@ const updateWorkoutProgramExercise = async (
   }
 };
 
+const setProgramAsActive = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const programId = req.params.programId;
+  try {
+    const result = await workoutProgramServices.setProgramAsActive(
+      userId,
+      programId
+    );
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const setProgramAsInactive = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const programId = req.params.programId;
+  try {
+    const result = await workoutProgramServices.setProgramAsInactive(
+      userId,
+      programId
+    );
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const reorderExerciseOrder = async (
   req: Request,
   res: Response,
@@ -238,4 +274,6 @@ export default {
   addExercise,
   addProgramDay,
   reorderExerciseOrder,
+  setProgramAsActive,
+  setProgramAsInactive,
 };

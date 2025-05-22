@@ -321,6 +321,52 @@ const reorderExerciseOrder = async (
   };
 };
 
+const setProgramAsActive = async (
+  userId: string,
+  programId: string
+): Promise<{ data: { message: string } }> => {
+  const result = await WorkoutPrograms.querySetAllAsInactive(userId);
+
+  if (result.affectedRows === 0) {
+    throw new AppError("User not found", 404);
+  }
+
+  const result2 = await WorkoutPrograms.querySetProgramAsActive(
+    userId,
+    programId
+  );
+
+  if (result2.affectedRows === 0) {
+    throw new AppError("Program not found", 404);
+  }
+
+  return {
+    data: {
+      message: "Program set as active successfully",
+    },
+  };
+};
+
+const setProgramAsInactive = async (
+  userId: string,
+  programId: string
+): Promise<{ data: { message: string } }> => {
+  const result = await WorkoutPrograms.querySetProgramAsInactive(
+    userId,
+    programId
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Program not found", 404);
+  }
+
+  return {
+    data: {
+      message: "Program set as inactive successfully",
+    },
+  };
+};
+
 const deleteWorkoutProgram = async (
   userId: string,
   programId: string
@@ -428,4 +474,6 @@ export default {
   deleteWorkoutProgramExercise,
   reorderExerciseOrder,
   addProgramDay,
+  setProgramAsActive,
+  setProgramAsInactive,
 };

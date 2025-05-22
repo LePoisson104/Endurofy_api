@@ -74,6 +74,22 @@ router.patch(
   workoutProgramControllers.updateWorkoutProgramExercise
 );
 
+router.patch(
+  "/set-program-as-active/:userId/:programId",
+  workoutProgramValidations.validateProgramId,
+  userValidation.validateUserId,
+  handleValidationErrors,
+  workoutProgramControllers.setProgramAsActive
+);
+
+router.patch(
+  "/set-program-as-inactive/:userId/:programId",
+  workoutProgramValidations.validateProgramId,
+  userValidation.validateUserId,
+  handleValidationErrors,
+  workoutProgramControllers.setProgramAsInactive
+);
+
 router.delete(
   "/delete-workout-program/:userId/:programId",
   userValidation.validateUserId,
