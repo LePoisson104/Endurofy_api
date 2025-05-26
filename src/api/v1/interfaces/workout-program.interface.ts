@@ -2,6 +2,7 @@ export interface WorkoutProgramRequest {
   programName: string;
   description?: string;
   programType: "dayOfWeek" | "custom";
+  startingDate?: string;
   workoutDays: WorkoutDay[];
 }
 
@@ -27,6 +28,7 @@ export interface WorkoutProgramRepo {
   program_name: string;
   description: string;
   program_type: "dayOfWeek" | "custom";
+  starting_date: string;
   created_at: Date;
   updated_at: Date;
 }

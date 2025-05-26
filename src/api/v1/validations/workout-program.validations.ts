@@ -11,6 +11,12 @@ const validateWorkoutProgramRequest = [
     .isIn(["dayOfWeek", "custom"])
     .withMessage("Program type must be 'dayOfWeek' or 'custom'"),
 
+  body("startingDate")
+    .optional()
+    .isString()
+    .isDate()
+    .withMessage("Invalid starting date format"),
+
   body("workoutDays")
     .isArray({ min: 1 })
     .withMessage("At least one workout day is required"),

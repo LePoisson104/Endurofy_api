@@ -35,6 +35,7 @@ const getAllWorkoutPrograms = async (
         is_active: boolean;
         created_at: string;
         updated_at: string;
+        starting_date: string;
       }) => {
         const workoutDays = await WorkoutPrograms.queryGetWorkoutProgramDays(
           program.program_id
@@ -56,6 +57,7 @@ const getAllWorkoutPrograms = async (
           isActive: program.is_active,
           createdAt: program.created_at,
           updatedAt: program.updated_at,
+          startingDate: program.starting_date,
           workoutDays: workoutDays
             .sort(
               (a: WorkoutDayRepo, b: WorkoutDayRepo) =>
@@ -105,13 +107,14 @@ const createWorkoutProgram = async (
   try {
     const workoutProgramId = uuidv4();
     await connection.execute(
-      "INSERT INTO programs (program_id, user_id, program_name, description, program_type) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO programs (program_id, user_id, program_name, description, program_type, starting_date) VALUES (?, ?, ?, ?, ?, ?)",
       [
         workoutProgramId,
         userId,
         workoutProgram.programName,
         workoutProgram.description,
         workoutProgram.programType,
+        workoutProgram.startingDate,
       ]
     );
 
