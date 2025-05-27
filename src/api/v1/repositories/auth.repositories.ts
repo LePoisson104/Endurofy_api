@@ -57,7 +57,7 @@ const queryCreateOtp = async (
 
 const queryGetUserCredentials = async (email: string): Promise<User[]> => {
   const query =
-    "SELECT user_id, email, hashed_password, first_name, last_name, verified FROM users WHERE email = ?";
+    "SELECT user_id, email, hashed_password, first_name, last_name, verified, pending_email FROM users WHERE email = ?";
   try {
     const [result] = await pool.execute(query, [email]);
     return result as User[];
@@ -67,6 +67,17 @@ const queryGetUserCredentials = async (email: string): Promise<User[]> => {
       "errLog.log"
     );
     throw new AppError("Database error while fetching user credentials", 500);
+  }
+};
+
+const queryGetUserById = async (userId: string): Promise<User[]> => {
+  const query = "SELECT * FROM users WHERE user_id = ?";
+  try {
+    const [result] = await pool.execute(query, [userId]);
+    return result as User[];
+  } catch (err) {
+    await Logger.logEvents(`Error getting user by id: ${err}`, "errLog.log");
+    throw new AppError("Database error while fetching user by id", 500);
   }
 };
 
@@ -125,6 +136,7 @@ const queryDeleteOTP = async (userId: string): Promise<any> => {
 export default {
   queryCreateNewUser,
   queryGetUserCredentials,
+  queryGetUserById,
   queryGetOTP,
   queryUpdateOTP,
   queryDeleteOTP,

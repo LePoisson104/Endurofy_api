@@ -114,8 +114,13 @@ const resendOTP = async (
   email: string
 ): Promise<OTPServiceResponse> => {
   const getOTP = await Auth.queryGetOTP(userId);
+  const user = await Auth.queryGetUserById(userId);
 
-  if (getOTP.length === 0) {
+  if (user.length === 0) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (getOTP.length === 0 && user[0].pending_email !== email) {
     throw new AppError(
       "Either account has already been verified or you have not signed up",
       404
@@ -128,7 +133,11 @@ const resendOTP = async (
   const expiresAt = (Date.now() + AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000) // 15 minutes
     .toString();
 
-  await Auth.queryUpdateOTP(userId, hashedOTP, createdAt, expiresAt);
+  if (getOTP.length > 0) {
+    await Auth.queryUpdateOTP(userId, hashedOTP, createdAt, expiresAt);
+  } else if (user[0].pending_email === email) {
+    await Auth.queryCreateOtp(userId, email, hashedOTP, createdAt, expiresAt);
+  }
 
   // Send OTP email after successful transaction
   try {
@@ -166,6 +175,12 @@ const forgotPassword = async (
     Date.now() +
     AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
   ).toString();
+
+  const getOTP = await Auth.queryGetOTP(user[0].user_id);
+
+  if (getOTP.length > 0) {
+    await Auth.queryDeleteOTP(user[0].user_id);
+  }
 
   await Auth.queryCreateOtp(
     user[0].user_id,

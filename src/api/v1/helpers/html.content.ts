@@ -315,9 +315,6 @@ export const passwordResetEmail = (
                             border-radius: 6px;
                             font-size: 16px;
                             font-weight: bold;
-                            &:hover {
-                                background-color: #0056b3;
-                            }
                             ">
                             Reset Password
                         </a>
