@@ -6,7 +6,10 @@ import { AppError } from "../middlewares/error.handlers";
 import { Response } from "express";
 import { DecodedToken } from "../interfaces/decoded.interface";
 import { generateOTP } from "../helpers/generateOTP";
-import { sendOTPVerification } from "./sendOTPVerification.service";
+import {
+  sendOTPVerification,
+  sendPasswordResetEmail,
+} from "./sendOTPVerification.service";
 import { TokenPayload, CookieOptions } from "../interfaces/auth.interfaces";
 import {
   AuthServiceResponse,
@@ -14,6 +17,8 @@ import {
 } from "../interfaces/service.interfaces";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
+import Users from "../repositories/users.repositories";
+
 // Constants
 const AUTH_CONSTANTS = {
   SALT_ROUNDS: 10,
@@ -25,8 +30,8 @@ const AUTH_CONSTANTS = {
 
 const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
-  secure: false,
-  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -139,6 +144,111 @@ const resendOTP = async (
   return {
     success: true,
     message: "Verification code sent successfully",
+  };
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Forgot Password
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+const forgotPassword = async (
+  email: string
+): Promise<{ data: { message: string } }> => {
+  const user = await Auth.queryGetUserCredentials(email);
+
+  if (user.length === 0) {
+    throw new AppError("User not found", 404);
+  }
+
+  const otp = generateOTP();
+  const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
+  const createdAt = Date.now().toString();
+  const expiresAt = (
+    Date.now() +
+    AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
+  ).toString();
+
+  await Auth.queryCreateOtp(
+    user[0].user_id,
+    email,
+    hashedOTP,
+    createdAt,
+    expiresAt
+  );
+
+  const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${otp}`;
+
+  try {
+    await sendPasswordResetEmail(
+      user[0].first_name,
+      email,
+      resetPasswordLink,
+      "15 minutes"
+    );
+  } catch (emailError) {
+    await Logger.logEvents(
+      `Error sending verification code: ${emailError}`,
+      "errLog.log"
+    );
+    throw new AppError("Error sending verification code", 500);
+  }
+
+  return {
+    data: {
+      message: "Reset password email sent successfully",
+    },
+  };
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Reset password
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+const resetPassword = async (
+  email: string,
+  otp: string,
+  password: string
+): Promise<{ data: { message: string } }> => {
+  const user = await Auth.queryGetUserCredentials(email);
+
+  if (user.length === 0) {
+    throw new AppError("User not found", 404);
+  }
+
+  const getOTP = await Auth.queryGetOTP(user[0].user_id);
+
+  if (getOTP.length === 0) {
+    throw new AppError("No otp found", 404);
+  }
+
+  const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
+
+  if (!match) {
+    throw new AppError("Invalid OTP", 400);
+  }
+
+  if (parseInt(getOTP[0].expires_at) < Date.now()) {
+    throw new AppError("OTP has expired", 400);
+  }
+
+  if (password.length < 8) {
+    throw new AppError("Password must be at least 8 characters long", 400);
+  }
+  const hashedPassword = await bcrypt.hash(
+    password,
+    AUTH_CONSTANTS.SALT_ROUNDS
+  );
+
+  await Users.queryUpdateUsersPassword(
+    user[0].user_id,
+    hashedPassword,
+    new Date()
+  );
+
+  await Auth.queryDeleteOTP(user[0].user_id);
+
+  return {
+    data: {
+      message: "Password reset successfully",
+    },
   };
 };
 
@@ -381,4 +491,13 @@ const logout = (cookies: { jwt?: string }, res: Response): void => {
   });
 };
 
-export default { signup, login, refresh, logout, verifyOTP, resendOTP };
+export default {
+  signup,
+  login,
+  refresh,
+  logout,
+  verifyOTP,
+  resendOTP,
+  forgotPassword,
+  resetPassword,
+};

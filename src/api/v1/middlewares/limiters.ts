@@ -52,9 +52,16 @@ const deleteAccountAttemptLimiter = createLimiter({
   duration: "15 minutes",
 });
 
+const resetPasswordLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  duration: "15 minutes",
+});
+
 export default {
   loginLimiter,
   signupLimiter,
   otpLimiter,
   deleteAccountAttemptLimiter,
+  resetPasswordLimiter,
 };

@@ -31,6 +31,30 @@ const queryCreateNewUser = async (
   }
 };
 
+const queryCreateOtp = async (
+  userId: string,
+  email: string,
+  hashedOTP: string,
+  createdAt: string,
+  expiresAt: string
+): Promise<any> => {
+  const query =
+    "INSERT INTO otp (user_id, email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?,?)";
+  try {
+    const [result] = await pool.execute(query, [
+      userId,
+      email,
+      hashedOTP,
+      createdAt,
+      expiresAt,
+    ]);
+    return result;
+  } catch (err) {
+    await Logger.logEvents(`Error executing query: ${err}`, "errLog.log");
+    throw new AppError("Database error while creating OTP", 500);
+  }
+};
+
 const queryGetUserCredentials = async (email: string): Promise<User[]> => {
   const query =
     "SELECT user_id, email, hashed_password, first_name, last_name, verified FROM users WHERE email = ?";
@@ -104,4 +128,5 @@ export default {
   queryGetOTP,
   queryUpdateOTP,
   queryDeleteOTP,
+  queryCreateOtp,
 };

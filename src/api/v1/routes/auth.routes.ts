@@ -32,6 +32,21 @@ router
     authControllers.resendOTP
   );
 router
+  .route("/forgot-password")
+  .post(
+    limiters.resetPasswordLimiter,
+    userValidation.validateUsersEmail,
+    handleValidationErrors,
+    authControllers.forgotPassword
+  );
+router
+  .route("/reset-password/:email/:otp")
+  .post(
+    limiters.resetPasswordLimiter,
+    handleValidationErrors,
+    authControllers.resetPassword
+  );
+router
   .route("/login")
   .post(
     limiters.loginLimiter,

@@ -63,6 +63,36 @@ const resendOTP: RequestHandler = async (
   }
 };
 
+const forgotPassword: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+    const result = await authServices.forgotPassword(email);
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const resetPassword: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const email = req.params.email;
+    const otp = req.params.otp;
+    const { password } = req.body;
+    const result = await authServices.resetPassword(email, otp, password);
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const login: RequestHandler = async (
   req: Request,
   res: Response,
@@ -103,4 +133,13 @@ const logout: RequestHandler = async (
   }
 };
 
-export default { signup, login, refresh, logout, verifyOTP, resendOTP };
+export default {
+  signup,
+  login,
+  refresh,
+  logout,
+  verifyOTP,
+  resendOTP,
+  forgotPassword,
+  resetPassword,
+};
