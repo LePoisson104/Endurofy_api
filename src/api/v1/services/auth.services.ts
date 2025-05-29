@@ -168,6 +168,10 @@ const forgotPassword = async (
     throw new AppError("User not found", 404);
   }
 
+  if (user[0].verified === 0) {
+    throw new AppError("User not verified", 400);
+  }
+
   const otp = generateOTP();
   const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
   const createdAt = Date.now().toString();
