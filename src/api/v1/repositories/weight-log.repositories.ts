@@ -1,5 +1,4 @@
 import pool from "../../../config/db.config";
-import { WeightLogPayload } from "../interfaces/weight-log.interface";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
