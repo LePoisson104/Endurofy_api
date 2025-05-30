@@ -89,12 +89,22 @@ const queryGetWeightLogByDate = async (
   }
 };
 
-const queryGetAllWeightLog = async (userId: string): Promise<any> => {
+const queryGetAllWeightLog = async (
+  userId: string,
+  connection?: any
+): Promise<any> => {
   try {
-    const query =
-      "SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC";
-    const [result] = await pool.execute(query, [userId]);
-    return result;
+    if (connection) {
+      const query =
+        "SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC";
+      const [result] = await connection.execute(query, [userId]);
+      return result;
+    } else {
+      const query =
+        "SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC";
+      const [result] = await pool.execute(query, [userId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error getting all weight log: ${err}`, "errLog.log");
     throw new AppError("Database error while getting all weight log", 500);

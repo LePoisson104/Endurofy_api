@@ -312,7 +312,8 @@ const resetPassword = async (
     await Users.queryUpdateUsersPassword(
       user[0].user_id,
       hashedPassword,
-      new Date()
+      new Date(),
+      connection
     );
 
     await Auth.queryDeleteOTP(user[0].user_id, connection);

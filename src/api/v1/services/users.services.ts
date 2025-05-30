@@ -66,12 +66,13 @@ const initiateEmailChange = async (
   const connection = await pool.getConnection();
 
   try {
-    await connection.beginTransaction(); // Start transaction after all checks
-    // Retrieve user credentials
+    await connection.beginTransaction();
+
     const userCredentials = await Auth.queryGetUserCredentials(
       email,
       connection
     );
+
     if (userCredentials.length === 0) {
       throw new AppError("User not found", 404);
     }
@@ -81,6 +82,7 @@ const initiateEmailChange = async (
       password,
       userCredentials[0].hashed_password
     );
+
     if (!isPasswordValid) {
       throw new AppError("Invalid password", 401);
     }
@@ -94,6 +96,7 @@ const initiateEmailChange = async (
     if ((existingEmail as any[]).length > 0) {
       throw new AppError("New email is already in use", 409);
     }
+
     // Generate OTP
     const otp = generateOTP();
     const hashedOTP = await bcrypt.hash(otp, 10);
@@ -126,6 +129,7 @@ const initiateEmailChange = async (
       `Error initiating email change: ${err}`,
       "errLog.log"
     );
+    if (err instanceof AppError) throw err;
     throw new AppError("Error initiating email change", 500);
   } finally {
     connection.release();
@@ -147,46 +151,49 @@ const verifyUpdateEmail = async (
   otp: string
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
-  const [pendingEmailResult] = await connection.execute(
-    "SELECT pending_email FROM users WHERE user_id = ?",
-    [userId]
-  );
-  const pendingEmail = (pendingEmailResult as { pending_email: string }[])[0]
-    ?.pending_email;
-
-  if (!pendingEmail) {
-    throw new AppError("No pending email found", 404);
-  }
-
-  // Retrieve OTP record
-  const [otpResult] = await connection.execute(
-    "SELECT user_id, hashed_otp, expires_at FROM otp WHERE email = ?",
-    [pendingEmail]
-  );
-  const otpRecord = (
-    otpResult as { user_id: string; hashed_otp: string; expires_at: string }[]
-  )[0];
-
-  if (!otpRecord) {
-    throw new AppError("No verification code found", 404);
-  }
-
-  // Validate OTP expiration
-  if (parseInt(otpRecord.expires_at) < Date.now()) {
-    throw new AppError("Verification code has expired", 400);
-  }
-
-  // Validate OTP hash
-  const match = await bcrypt.compare(otp, otpRecord.hashed_otp);
-  if (!match) {
-    throw new AppError("Invalid verification code", 400);
-  }
 
   try {
-    // Retrieve pending email
-
-    // Start transaction for updating email
     await connection.beginTransaction();
+
+    // Check for pending email
+    const [pendingEmailResult] = await connection.execute(
+      "SELECT pending_email FROM users WHERE user_id = ?",
+      [userId]
+    );
+
+    const pendingEmail = (pendingEmailResult as { pending_email: string }[])[0]
+      ?.pending_email;
+
+    if (!pendingEmail) {
+      throw new AppError("No pending email found", 404);
+    }
+
+    // Retrieve OTP record
+    const [otpResult] = await connection.execute(
+      "SELECT user_id, hashed_otp, expires_at FROM otp WHERE email = ?",
+      [pendingEmail]
+    );
+
+    const otpRecord = (
+      otpResult as { user_id: string; hashed_otp: string; expires_at: string }[]
+    )[0];
+
+    if (!otpRecord) {
+      throw new AppError("No verification code found", 404);
+    }
+
+    // Validate OTP expiration
+    if (parseInt(otpRecord.expires_at) < Date.now()) {
+      throw new AppError("Verification code has expired", 400);
+    }
+
+    // Validate OTP hash
+    const match = await bcrypt.compare(otp, otpRecord.hashed_otp);
+    if (!match) {
+      throw new AppError("Invalid verification code", 400);
+    }
+
+    // Update email and clean up OTP
     const updatedAt = new Date();
 
     await connection.execute(
@@ -197,22 +204,25 @@ const verifyUpdateEmail = async (
     await connection.execute("DELETE FROM otp WHERE user_id = ?", [userId]);
 
     await connection.commit();
-
-    return {
-      data: {
-        message: "Email updated successfully",
-      },
-    };
   } catch (err) {
     await connection.rollback();
     await Logger.logEvents(
       `Error verifying update email: ${err}`,
       "errLog.log"
     );
+
+    // Re-throw AppError as-is, wrap other errors
+    if (err instanceof AppError) throw err;
     throw new AppError("Error verifying update email", 500);
   } finally {
     connection.release();
   }
+
+  return {
+    data: {
+      message: "Email updated successfully",
+    },
+  };
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -365,12 +375,19 @@ const updateUsersProfileAndConvertWeightLogs = async (
     updateProfilePayload.height_unit === "ft" &&
     updateProfilePayload.weight_goal_unit === "lb";
 
+  if (!isMetricUnits && !isUSUnits) {
+    throw new AppError(
+      "Make sure your height and weight units are either all in US units or all in metric units",
+      400
+    );
+  }
+
   if (
     updateProfilePayload.starting_weight < updateProfilePayload.weight_goal &&
     updateProfilePayload.goal === "lose"
   ) {
     throw new AppError(
-      "Starting weight cannot be greater than weight goal when losing weight",
+      "Starting weight cannot be less than weight goal when losing weight",
       400
     );
   }
@@ -380,58 +397,52 @@ const updateUsersProfileAndConvertWeightLogs = async (
     updateProfilePayload.goal === "gain"
   ) {
     throw new AppError(
-      "Starting weight cannot be less than weight goal when gaining weight",
-      400
-    );
-  }
-
-  if (!isMetricUnits && !isUSUnits) {
-    throw new AppError(
-      "Make sure your height and weight units are either all in US units or all in metric units",
+      "Starting weight cannot be greater than weight goal when gaining weight",
       400
     );
   }
 
   const connection = await pool.getConnection();
 
-  updateProfilePayload.current_weight = updateProfilePayload.starting_weight;
-  updateProfilePayload.current_weight_unit =
-    updateProfilePayload.starting_weight_unit;
   updateProfilePayload.updated_at = new Date();
-
-  const weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
-  const newWeightValues = [];
-
-  if (updateProfilePayload.current_weight_unit === "kg") {
-    // convert all weight logs to kg
-    for (const log of weightLogs) {
-      if (log.weight_unit === "lb") {
-        // Convert lb to kg (1 lb = 0.45359237 kg)
-        const newWeight = Number(log.weight) * 0.45359237;
-        newWeightValues.push({
-          weight_log_id: log.weight_log_id,
-          weight: newWeight.toFixed(2),
-          weight_unit: "kg",
-        });
-      }
-    }
-  } else if (updateProfilePayload.current_weight_unit === "lb") {
-    // convert all weight logs to lb
-    for (const log of weightLogs) {
-      if (log.weight_unit === "kg") {
-        // Convert kg to lb (1 kg = 2.20462262 lb)
-        const newWeight = Number(log.weight) * 2.20462262;
-        newWeightValues.push({
-          weight_log_id: log.weight_log_id,
-          weight: newWeight.toFixed(2),
-          weight_unit: "lb",
-        });
-      }
-    }
-  }
 
   try {
     await connection.beginTransaction();
+
+    const weightLogs = await WeightLogs.queryGetAllWeightLog(
+      userId,
+      connection
+    );
+
+    const newWeightValues = [];
+
+    if (updateProfilePayload.current_weight_unit === "kg") {
+      // convert all weight logs to kg
+      for (const log of weightLogs) {
+        if (log.weight_unit === "lb") {
+          // Convert lb to kg (1 lb = 0.45359237 kg)
+          const newWeight = Number(log.weight) * 0.45359237;
+          newWeightValues.push({
+            weight_log_id: log.weight_log_id,
+            weight: newWeight.toFixed(2),
+            weight_unit: "kg",
+          });
+        }
+      }
+    } else if (updateProfilePayload.current_weight_unit === "lb") {
+      // convert all weight logs to lb
+      for (const log of weightLogs) {
+        if (log.weight_unit === "kg") {
+          // Convert kg to lb (1 kg = 2.20462262 lb)
+          const newWeight = Number(log.weight) * 2.20462262;
+          newWeightValues.push({
+            weight_log_id: log.weight_log_id,
+            weight: newWeight.toFixed(2),
+            weight_unit: "lb",
+          });
+        }
+      }
+    }
 
     const updateFields = Object.keys(updateProfilePayload)
       .map((key) => `${key} = ?`)
@@ -477,30 +488,57 @@ const updateUsersPassword = async (
   updatePasswordPayload: UserCredentialsUpdatePayload
 ): Promise<{ data: { message: string } }> => {
   const { email, password, newPassword } = updatePasswordPayload;
+  const connection = await pool.getConnection();
 
-  const getCredential = await Auth.queryGetUserCredentials(email);
+  try {
+    await connection.beginTransaction();
 
-  if (getCredential.length === 0) {
-    throw new AppError("User not found", 404);
+    // Get user credentials using the same connection
+    const getCredential = await Auth.queryGetUserCredentials(email, connection);
+
+    if (getCredential.length === 0) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (getCredential[0].user_id !== userId) {
+      throw new AppError("Invalid userId", 400);
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      getCredential[0].hashed_password
+    );
+
+    if (!isPasswordValid) {
+      throw new AppError("Invalid password", 401);
+    }
+
+    // Update password
+    const updateAt = new Date();
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await Users.queryUpdateUsersPassword(
+      userId,
+      hashedPassword,
+      updateAt,
+      connection
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error updating user's password: ${err}`,
+      "errLog.log"
+    );
+
+    // Re-throw AppError as-is, wrap other errors
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error updating user's password", 500);
+  } finally {
+    connection.release();
   }
-
-  if (getCredential[0].user_id !== userId) {
-    throw new AppError("Invalid userId", 400);
-  }
-
-  const isPasswordValid = await bcrypt.compare(
-    password,
-    getCredential[0].hashed_password
-  );
-
-  if (!isPasswordValid) {
-    throw new AppError("Invalid password", 401);
-  }
-
-  const updateAt = new Date();
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-  await Users.queryUpdateUsersPassword(userId, hashedPassword, updateAt);
 
   return {
     data: {
@@ -517,27 +555,43 @@ const deleteAccount = async (
   email: string,
   password: string
 ): Promise<{ data: { message: string } }> => {
-  const getCredential = await Auth.queryGetUserCredentials(email);
+  const connection = await pool.getConnection();
 
-  if (getCredential.length === 0) {
-    throw new AppError("User not found", 404);
+  try {
+    await connection.beginTransaction();
+
+    const getCredential = await Auth.queryGetUserCredentials(email, connection);
+
+    if (getCredential.length === 0) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (getCredential[0].user_id !== userId) {
+      throw new AppError("Invalid userId", 400);
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      getCredential[0].hashed_password
+    );
+
+    if (!isPasswordValid) {
+      throw new AppError("Invalid password", 401);
+    }
+
+    await connection.execute("DELETE FROM users WHERE user_id = ?", [
+      getCredential[0].user_id,
+    ]);
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(`Error deleting user: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error deleting user", 500);
+  } finally {
+    connection.release();
   }
-
-  if (getCredential[0].user_id !== userId) {
-    throw new AppError("Invalid userId", 400);
-  }
-
-  const isPasswordValid = await bcrypt.compare(
-    password,
-    getCredential[0].hashed_password
-  );
-
-  if (!isPasswordValid) {
-    throw new AppError("Invalid password", 401);
-  }
-
-  await Users.queryDeleteUser(getCredential[0].user_id);
-
   return {
     data: {
       message: "User deleted successfully",
