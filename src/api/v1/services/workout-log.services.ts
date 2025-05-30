@@ -28,21 +28,26 @@ const createWorkoutLog = async (
 
   const connection = await pool.getConnection();
 
-  const workoutLogExists = await workoutLogRepository.queryIsWorkoutLogExists(
-    userId,
-    programId,
-    workoutDate
-  );
-
   try {
-    connection.beginTransaction();
+    await connection.beginTransaction();
 
-    const workoutLogId = uuidv4();
-    if (workoutLogExists.length === 0) {
+    let currentWorkoutLogId: string;
+
+    // Check if workout log exists using same connection
+    const workoutLogResult = await workoutLogRepository.queryIsWorkoutLogExists(
+      userId,
+      programId,
+      workoutDate,
+      connection
+    );
+
+    if (workoutLogResult.length === 0) {
+      // Create new workout log
+      currentWorkoutLogId = uuidv4();
       await connection.execute(
         "INSERT INTO workout_logs (workout_log_id, user_id, program_id, title, notes, workout_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
-          workoutLogId,
+          currentWorkoutLogId,
           userId,
           programId,
           title,
@@ -51,30 +56,48 @@ const createWorkoutLog = async (
           "incomplete",
         ]
       );
+    } else {
+      // Use existing workout log
+      currentWorkoutLogId = workoutLogResult[0].workout_log_id;
     }
 
-    const workoutExerciseId = uuidv4();
-    await connection.execute(
-      "INSERT INTO workout_exercises (workout_exercise_id, workout_log_id, program_exercise_id, exercise_name, body_part, laterality, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        workoutExerciseId,
-        workoutLogExists.length > 0
-          ? workoutLogExists[0].workout_log_id
-          : workoutLogId,
-        programExerciseId,
-        exerciseName,
-        bodyPart,
-        laterality,
-        exerciseOrder,
-      ]
-    );
+    let currentWorkoutExerciseId: string;
 
+    // Check if workout exercise exists using same connection
+    const workoutExerciseResult =
+      await workoutLogRepository.queryIsWorkoutExerciseExists(
+        currentWorkoutLogId,
+        programExerciseId,
+        connection
+      );
+
+    if (workoutExerciseResult.length === 0) {
+      // Create new workout exercise
+      currentWorkoutExerciseId = uuidv4();
+      await connection.execute(
+        "INSERT INTO workout_exercises (workout_exercise_id, workout_log_id, program_exercise_id, exercise_name, body_part, laterality, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          currentWorkoutExerciseId,
+          currentWorkoutLogId,
+          programExerciseId,
+          exerciseName,
+          bodyPart,
+          laterality,
+          exerciseOrder,
+        ]
+      );
+    } else {
+      // Use existing workout exercise
+      currentWorkoutExerciseId = workoutExerciseResult[0].workout_exercise_id;
+    }
+
+    // Always create new workout set
     const workoutSetId = uuidv4();
     await connection.execute(
       "INSERT INTO workout_sets (workout_set_id, workout_exercise_id, set_number, reps_left, reps_right, weight, weight_unit) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         workoutSetId,
-        workoutExerciseId,
+        currentWorkoutExerciseId,
         setNumber,
         repsLeft,
         repsRight,
@@ -85,7 +108,7 @@ const createWorkoutLog = async (
 
     await connection.commit();
   } catch (err) {
-    connection.rollback();
+    await connection.rollback();
     Logger.logEvents(`Error creating workout log: ${err}`, "errLog.log");
     throw new AppError("Database error while creating workout log", 500);
   } finally {

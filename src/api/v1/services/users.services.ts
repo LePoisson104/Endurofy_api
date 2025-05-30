@@ -65,33 +65,35 @@ const initiateEmailChange = async (
   const { email, newEmail, password } = updateEmailPayload;
   const connection = await pool.getConnection();
 
-  // Retrieve user credentials
-  const userCredentials = await Auth.queryGetUserCredentials(email);
-  if (userCredentials.length === 0) {
-    throw new AppError("User not found", 404);
-  }
-
-  // Verify password
-  const isPasswordValid = await bcrypt.compare(
-    password,
-    userCredentials[0].hashed_password
-  );
-  if (!isPasswordValid) {
-    throw new AppError("Invalid password", 401);
-  }
-
-  // Check if newEmail is already in use
-  const [existingEmail] = await connection.execute(
-    "SELECT user_id FROM users WHERE email = ?",
-    [newEmail]
-  );
-  if ((existingEmail as any[]).length > 0) {
-    throw new AppError("New email is already in use", 409);
-  }
-
   try {
     await connection.beginTransaction(); // Start transaction after all checks
+    // Retrieve user credentials
+    const userCredentials = await Auth.queryGetUserCredentials(
+      email,
+      connection
+    );
+    if (userCredentials.length === 0) {
+      throw new AppError("User not found", 404);
+    }
 
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      userCredentials[0].hashed_password
+    );
+    if (!isPasswordValid) {
+      throw new AppError("Invalid password", 401);
+    }
+
+    // Check if newEmail is already in use
+    const [existingEmail] = await connection.execute(
+      "SELECT user_id FROM users WHERE email = ?",
+      [newEmail]
+    );
+
+    if ((existingEmail as any[]).length > 0) {
+      throw new AppError("New email is already in use", 409);
+    }
     // Generate OTP
     const otp = generateOTP();
     const hashedOTP = await bcrypt.hash(otp, 10);
@@ -104,10 +106,13 @@ const initiateEmailChange = async (
       [newEmail, userId]
     );
 
-    // Store OTP for verification
-    await connection.execute(
-      "INSERT INTO otp (user_id, email, hashed_otp, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
-      [userId, newEmail, hashedOTP, createdAt, expiresAt]
+    await Auth.queryCreateOtp(
+      userId,
+      newEmail,
+      hashedOTP,
+      createdAt,
+      expiresAt,
+      connection
     );
 
     // Commit transaction
@@ -115,13 +120,6 @@ const initiateEmailChange = async (
 
     // Send OTP email after transaction success
     await sendOTPVerification(newEmail, otp, "24 hours", true);
-
-    return {
-      data: {
-        message:
-          "Email change initiated. Please check your new email for verification code.",
-      },
-    };
   } catch (err) {
     await connection.rollback();
     await Logger.logEvents(
@@ -132,6 +130,13 @@ const initiateEmailChange = async (
   } finally {
     connection.release();
   }
+
+  return {
+    data: {
+      message:
+        "Email change initiated. Please check your new email for verification code.",
+    },
+  };
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -113,47 +113,78 @@ const resendOTP = async (
   userId: string,
   email: string
 ): Promise<OTPServiceResponse> => {
-  const getOTP = await Auth.queryGetOTP(userId);
-  const user = await Auth.queryGetUserById(userId);
+  const connection = await pool.getConnection();
 
-  if (user.length === 0) {
-    throw new AppError("User not found", 404);
-  }
-
-  if (getOTP.length === 0 && user[0].pending_email !== email) {
-    throw new AppError(
-      "Either account has already been verified or you have not signed up",
-      404
-    );
-  }
-
-  const otp = generateOTP();
-  const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
-  const createdAt = Date.now().toString();
-  const expiresAt = (Date.now() + AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000) // 15 minutes
-    .toString();
-
-  if (getOTP.length > 0) {
-    await Auth.queryUpdateOTP(userId, hashedOTP, createdAt, expiresAt);
-  } else if (user[0].pending_email === email) {
-    await Auth.queryCreateOtp(userId, email, hashedOTP, createdAt, expiresAt);
-  }
-
-  // Send OTP email after successful transaction
   try {
-    await sendOTPVerification(email, otp, "15 minutes", false);
-  } catch (emailError) {
-    await Logger.logEvents(
-      `Error sending verification code: ${emailError}`,
-      "errLog.log"
-    );
-    throw new AppError("Error sending verification code", 500);
-  }
+    await connection.beginTransaction();
 
-  return {
-    success: true,
-    message: "Verification code sent successfully",
-  };
+    const getOTP = await Auth.queryGetOTP(userId, connection);
+    const user = await Auth.queryGetUserById(userId, connection);
+
+    if (user.length === 0) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (getOTP.length === 0 && user[0].pending_email !== email) {
+      throw new AppError(
+        "Either account has already been verified or you have not signed up",
+        404
+      );
+    }
+
+    const otp = generateOTP();
+    const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
+    const createdAt = Date.now().toString();
+    const expiresAt = (
+      Date.now() +
+      AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
+    ) // 15 minutes
+      .toString();
+
+    if (getOTP.length > 0) {
+      await Auth.queryUpdateOTP(
+        userId,
+        hashedOTP,
+        createdAt,
+        expiresAt,
+        connection
+      );
+    } else if (user[0].pending_email === email) {
+      await Auth.queryCreateOtp(
+        userId,
+        email,
+        hashedOTP,
+        createdAt,
+        expiresAt,
+        connection
+      );
+    }
+
+    await connection.commit();
+
+    // Send OTP email after successful transaction
+    try {
+      await sendOTPVerification(email, otp, "15 minutes", false);
+    } catch (emailError) {
+      await Logger.logEvents(
+        `Error sending verification code: ${emailError}`,
+        "errLog.log"
+      );
+      throw new AppError("Error sending verification code", 500);
+    }
+
+    return {
+      success: true,
+      message: "Verification code sent successfully",
+    };
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(`Error during OTP resend: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error during OTP resend", 500);
+  } finally {
+    connection.release();
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,53 +193,71 @@ const resendOTP = async (
 const forgotPassword = async (
   email: string
 ): Promise<{ data: { message: string } }> => {
-  const user = await Auth.queryGetUserCredentials(email);
-
-  if (user.length === 0) {
-    throw new AppError("User not found", 404);
-  }
-
-  if (user[0].verified === 0) {
-    throw new AppError("User not verified", 400);
-  }
-
-  const otp = generateOTP();
-  const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
-  const createdAt = Date.now().toString();
-  const expiresAt = (
-    Date.now() +
-    AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
-  ).toString();
-
-  const getOTP = await Auth.queryGetOTP(user[0].user_id);
-
-  if (getOTP.length > 0) {
-    await Auth.queryDeleteOTP(user[0].user_id);
-  }
-
-  await Auth.queryCreateOtp(
-    user[0].user_id,
-    email,
-    hashedOTP,
-    createdAt,
-    expiresAt
-  );
-
-  const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${otp}`;
+  const connection = await pool.getConnection();
 
   try {
-    await sendPasswordResetEmail(
-      user[0].first_name,
+    await connection.beginTransaction();
+    const user = await Auth.queryGetUserCredentials(email, connection);
+
+    if (user.length === 0) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (user[0].verified === 0) {
+      throw new AppError("User not verified", 400);
+    }
+
+    const otp = generateOTP();
+    const hashedOTP = await bcrypt.hash(otp, AUTH_CONSTANTS.SALT_ROUNDS);
+    const createdAt = Date.now().toString();
+    const expiresAt = (
+      Date.now() +
+      AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
+    ).toString();
+
+    const getOTP = await Auth.queryGetOTP(user[0].user_id, connection);
+
+    if (getOTP.length > 0) {
+      await Auth.queryDeleteOTP(user[0].user_id, connection);
+    }
+
+    await Auth.queryCreateOtp(
+      user[0].user_id,
       email,
-      resetPasswordLink,
-      "15 minutes"
+      hashedOTP,
+      createdAt,
+      expiresAt,
+      connection
     );
-  } catch (emailError) {
+
+    const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?email=${email}&token=${otp}`;
+
+    try {
+      await sendPasswordResetEmail(
+        user[0].first_name,
+        email,
+        resetPasswordLink,
+        "15 minutes"
+      );
+    } catch (emailError) {
+      await Logger.logEvents(
+        `Error sending verification code: ${emailError}`,
+        "errLog.log"
+      );
+      throw new AppError("Error sending verification code", 500);
+    }
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
     await Logger.logEvents(
-      `Error sending verification code: ${emailError}`,
+      `Error during forgot password: ${err}`,
       "errLog.log"
     );
-    throw new AppError("Error sending verification code", 500);
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error during forgot password", 500);
+  } finally {
+    connection.release();
   }
 
   return {
@@ -226,43 +275,57 @@ const resetPassword = async (
   otp: string,
   password: string
 ): Promise<{ data: { message: string } }> => {
-  const user = await Auth.queryGetUserCredentials(email);
+  const connection = await pool.getConnection();
 
-  if (user.length === 0) {
-    throw new AppError("User not found", 404);
+  try {
+    await connection.beginTransaction();
+    const user = await Auth.queryGetUserCredentials(email, connection);
+
+    if (user.length === 0) {
+      throw new AppError("User not found", 404);
+    }
+
+    const getOTP = await Auth.queryGetOTP(user[0].user_id, connection);
+
+    if (getOTP.length === 0) {
+      throw new AppError("No otp found", 404);
+    }
+
+    const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
+
+    if (!match) {
+      throw new AppError("Invalid OTP", 400);
+    }
+
+    if (parseInt(getOTP[0].expires_at) < Date.now()) {
+      throw new AppError("OTP has expired", 400);
+    }
+
+    if (password.length < 8) {
+      throw new AppError("Password must be at least 8 characters long", 400);
+    }
+    const hashedPassword = await bcrypt.hash(
+      password,
+      AUTH_CONSTANTS.SALT_ROUNDS
+    );
+
+    await Users.queryUpdateUsersPassword(
+      user[0].user_id,
+      hashedPassword,
+      new Date()
+    );
+
+    await Auth.queryDeleteOTP(user[0].user_id, connection);
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(`Error during reset password: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error during reset password", 500);
+  } finally {
+    connection.release();
   }
-
-  const getOTP = await Auth.queryGetOTP(user[0].user_id);
-
-  if (getOTP.length === 0) {
-    throw new AppError("No otp found", 404);
-  }
-
-  const match = await bcrypt.compare(otp, getOTP[0].hashed_otp);
-
-  if (!match) {
-    throw new AppError("Invalid OTP", 400);
-  }
-
-  if (parseInt(getOTP[0].expires_at) < Date.now()) {
-    throw new AppError("OTP has expired", 400);
-  }
-
-  if (password.length < 8) {
-    throw new AppError("Password must be at least 8 characters long", 400);
-  }
-  const hashedPassword = await bcrypt.hash(
-    password,
-    AUTH_CONSTANTS.SALT_ROUNDS
-  );
-
-  await Users.queryUpdateUsersPassword(
-    user[0].user_id,
-    hashedPassword,
-    new Date()
-  );
-
-  await Auth.queryDeleteOTP(user[0].user_id);
 
   return {
     data: {
