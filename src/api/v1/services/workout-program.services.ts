@@ -105,6 +105,7 @@ const createWorkoutProgram = async (
   const connection = await pool.getConnection();
 
   try {
+    await connection.beginTransaction();
     const workoutProgramId = uuidv4();
     await connection.execute(
       "INSERT INTO programs (program_id, user_id, program_name, description, program_type, starting_date) VALUES (?, ?, ?, ?, ?, ?)",
@@ -142,12 +143,15 @@ const createWorkoutProgram = async (
         );
       }
     }
+    await connection.commit();
   } catch (err) {
     await connection.rollback();
     await Logger.logEvents(
       `Error creating workout program: ${err}`,
       "errLog.log"
     );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error creating workout program", 500);
   } finally {
     connection.release();
   }
@@ -187,17 +191,34 @@ const addProgramDay = async (
   programId: string,
   payload: { dayName: string; dayNumber: number }
 ): Promise<{ data: { message: string } }> => {
-  const { dayName, dayNumber } = payload;
-  const dayId = uuidv4();
+  const connection = await pool.getConnection();
 
-  await WorkoutPrograms.queryAddProgramDay(
-    programId,
-    dayId,
-    dayName,
-    dayNumber
-  );
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+  try {
+    await connection.beginTransaction();
+    const { dayName, dayNumber } = payload;
+    const dayId = uuidv4();
 
+    await WorkoutPrograms.queryAddProgramDay(
+      programId,
+      dayId,
+      dayName,
+      dayNumber,
+      connection
+    );
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
+      programId,
+      connection
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(`Error adding program day: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error adding program day", 500);
+  } finally {
+    connection.release();
+  }
   return {
     data: {
       message: "Program day added successfully",
@@ -211,18 +232,39 @@ const updateWorkoutProgramDescription = async (
   payload: { programName: string; description: string }
 ): Promise<{ data: { message: string } }> => {
   const { programName, description } = payload;
-  const result = await WorkoutPrograms.queryUpdateWorkoutProgramDescription(
-    userId,
-    programId,
-    programName,
-    description
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Program not found", 404);
+  try {
+    await connection.beginTransaction();
+    const result = await WorkoutPrograms.queryUpdateWorkoutProgramDescription(
+      userId,
+      programId,
+      programName,
+      description,
+      connection
+    );
+
+    if (result.affectedRows === 0) {
+      throw new AppError("Program not found", 404);
+    }
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
+      programId,
+      connection
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error updating workout program description: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error updating workout program description", 500);
+  } finally {
+    connection.release();
   }
-
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
 
   return {
     data: {
@@ -236,18 +278,36 @@ const updateWorkoutProgramDay = async (
   dayId: string,
   payload: { dayName: string }
 ): Promise<{ data: { message: string } }> => {
-  const { dayName } = payload;
-  const result = await WorkoutPrograms.queryUpdateWorkoutProgramDay(
-    programId,
-    dayId,
-    dayName
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Program day not found", 404);
+  try {
+    await connection.beginTransaction();
+    const { dayName } = payload;
+    const result = await WorkoutPrograms.queryUpdateWorkoutProgramDay(
+      programId,
+      dayId,
+      dayName,
+      connection
+    );
+
+    if (result.affectedRows === 0) {
+      throw new AppError("Program day not found", 404);
+    }
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error updating workout program day: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error updating workout program day", 500);
+  } finally {
+    connection.release();
   }
-
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
 
   return {
     data: {
@@ -279,23 +339,44 @@ const updateWorkoutProgramExercise = async (
     maxReps,
     exerciseOrder,
   } = payload;
-  const result = await WorkoutPrograms.queryUpdateWorkoutProgramExercise(
-    dayId,
-    exerciseId,
-    exerciseName,
-    bodyPart,
-    laterality,
-    sets,
-    minReps,
-    maxReps,
-    exerciseOrder
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Exercise not found", 404);
+  try {
+    await connection.beginTransaction();
+    const result = await WorkoutPrograms.queryUpdateWorkoutProgramExercise(
+      dayId,
+      exerciseId,
+      exerciseName,
+      bodyPart,
+      laterality,
+      sets,
+      minReps,
+      maxReps,
+      exerciseOrder,
+      connection
+    );
+
+    if (result.affectedRows === 0) {
+      throw new AppError("Exercise not found", 404);
+    }
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
+      programId,
+      connection
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error updating workout program exercise: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error updating workout program exercise", 500);
+  } finally {
+    connection.release();
   }
-
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
 
   return {
     data: {
@@ -309,18 +390,41 @@ const reorderExerciseOrder = async (
   dayId: string,
   payload: ExerciseRequest[]
 ): Promise<{ data: { message: string } }> => {
-  for (const exercise of payload) {
-    await WorkoutPrograms.queryReorderExerciseOrder(
-      dayId,
-      exercise.exerciseId,
-      exercise.exerciseOrder
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    for (const exercise of payload) {
+      await WorkoutPrograms.queryReorderExerciseOrder(
+        dayId,
+        exercise.exerciseId,
+        exercise.exerciseOrder,
+        connection
+      );
+    }
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
+      programId,
+      connection
     );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error reordering exercise order: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error reordering exercise order", 500);
+  } finally {
+    connection.release();
   }
 
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
-
   return {
-    data: { message: "Exercise order updated successfully" },
+    data: {
+      message: "Exercise order updated successfully",
+    },
   };
 };
 
@@ -328,21 +432,41 @@ const setProgramAsActive = async (
   userId: string,
   programId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await WorkoutPrograms.querySetAllAsInactive(userId);
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("User not found", 404);
+  try {
+    await connection.beginTransaction();
+    const result = await WorkoutPrograms.querySetAllAsInactive(
+      userId,
+      connection
+    );
+
+    if (result.affectedRows === 0) {
+      throw new AppError("User not found", 404);
+    }
+
+    const result2 = await WorkoutPrograms.querySetProgramAsActive(
+      userId,
+      programId,
+      connection
+    );
+
+    if (result2.affectedRows === 0) {
+      throw new AppError("Program not found", 404);
+    }
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error setting program as active: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error setting program as active", 500);
+  } finally {
+    connection.release();
   }
-
-  const result2 = await WorkoutPrograms.querySetProgramAsActive(
-    userId,
-    programId
-  );
-
-  if (result2.affectedRows === 0) {
-    throw new AppError("Program not found", 404);
-  }
-
   return {
     data: {
       message: "Program set as active successfully",
@@ -393,17 +517,37 @@ const deleteWorkoutProgramDay = async (
   programId: string,
   dayId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await WorkoutPrograms.queryDeleteWorkoutProgramDay(
-    programId,
-    dayId
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Program day not found", 404);
+  try {
+    await connection.beginTransaction();
+    const result = await WorkoutPrograms.queryDeleteWorkoutProgramDay(
+      programId,
+      dayId,
+      connection
+    );
+
+    if (result.affectedRows === 0) {
+      throw new AppError("Program day not found", 404);
+    }
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
+      programId,
+      connection
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error deleting workout program day: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error deleting workout program day", 500);
+  } finally {
+    connection.release();
   }
-
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
-
   return {
     data: {
       message: "Workout program day deleted successfully",

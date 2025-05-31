@@ -5,12 +5,19 @@ import Logger from "../utils/logger";
 // check to see if the weight log is already exists
 const queryIsWeightLogExists = async (
   userId: string,
-  date: Date
+  date: Date,
+  connection?: any
 ): Promise<any> => {
   try {
-    const query = `SELECT * FROM weight_log WHERE user_id = ? AND log_date = ?`;
-    const [result] = await pool.execute(query, [userId, date]);
-    return (result as any[]).length > 0;
+    if (connection) {
+      const query = `SELECT * FROM weight_log WHERE user_id = ? AND log_date = ?`;
+      const [result] = await connection.execute(query, [userId, date]);
+      return (result as any[]).length > 0;
+    } else {
+      const query = `SELECT * FROM weight_log WHERE user_id = ? AND log_date = ?`;
+      const [result] = await pool.execute(query, [userId, date]);
+      return (result as any[]).length > 0;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error checking if weight log exists: ${err}`,
@@ -26,23 +33,39 @@ const queryIsWeightLogExists = async (
 // this is for update weight log check if the paylaod date match with the log date of the weight log.
 const queryGetWeightLog = async (
   userId: string,
-  weightLogId: string
+  weightLogId: string,
+  connection?: any
 ): Promise<any> => {
   try {
-    const query = `SELECT * FROM weight_log WHERE user_id = ? AND weight_log_id = ?`;
-    const [result] = await pool.execute(query, [userId, weightLogId]);
-    return result;
+    if (connection) {
+      const query = `SELECT * FROM weight_log WHERE user_id = ? AND weight_log_id = ?`;
+      const [result] = await connection.execute(query, [userId, weightLogId]);
+      return result;
+    } else {
+      const query = `SELECT * FROM weight_log WHERE user_id = ? AND weight_log_id = ?`;
+      const [result] = await pool.execute(query, [userId, weightLogId]);
+      return result;
+    }
   } catch (error) {
     Logger.logEvents(`Error getting weight log: ${error}`, "errLog.log");
     throw new AppError("Database error while getting weight log", 500);
   }
 };
 
-const queryGetLatestWeightLog = async (userId: string): Promise<any> => {
+const queryGetLatestWeightLog = async (
+  userId: string,
+  connection?: any
+): Promise<any> => {
   try {
-    const query = `SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC LIMIT 1`;
-    const [result] = await pool.execute(query, [userId]);
-    return result;
+    if (connection) {
+      const query = `SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC LIMIT 1`;
+      const [result] = await connection.execute(query, [userId]);
+      return result;
+    } else {
+      const query = `SELECT * FROM weight_log WHERE user_id = ? ORDER BY log_date DESC LIMIT 1`;
+      const [result] = await pool.execute(query, [userId]);
+      return result;
+    }
   } catch (error) {
     Logger.logEvents(`Error getting latest weight log: ${error}`, "errLog.log");
     throw new AppError("Database error while getting latest weight log", 500);

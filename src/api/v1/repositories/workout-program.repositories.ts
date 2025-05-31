@@ -3,22 +3,38 @@ import { ExerciseRequest } from "../interfaces/workout-program.interface";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
-const queryGetWorkoutProgram = async (userId: string): Promise<any> => {
+const queryGetWorkoutProgram = async (
+  userId: string,
+  connection?: any
+): Promise<any> => {
   try {
     const query = "SELECT * FROM programs WHERE user_id = ?";
-    const [result] = await pool.execute(query, [userId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [userId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [userId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error getting workout program: ${err}`, "errLog.log");
     throw new AppError("Database error while getting workout program", 500);
   }
 };
 
-const queryGetWorkoutProgramDays = async (programId: string): Promise<any> => {
+const queryGetWorkoutProgramDays = async (
+  programId: string,
+  connection?: any
+): Promise<any> => {
   try {
     const query = "SELECT * FROM program_days WHERE program_id = ?";
-    const [result] = await pool.execute(query, [programId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [programId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [programId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error getting workout program days: ${err}`,
@@ -32,12 +48,18 @@ const queryGetWorkoutProgramDays = async (programId: string): Promise<any> => {
 };
 
 const queryGetProgramDaysExercises = async (
-  programDayId: string
+  programDayId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query = "SELECT * FROM program_exercises WHERE program_day_id = ?";
-    const [result] = await pool.execute(query, [programDayId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [programDayId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [programDayId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error getting workout program days exercises: ${err}`,
@@ -53,23 +75,39 @@ const queryGetProgramDaysExercises = async (
 const queryAddExercise = async (
   dayId: string,
   exerciseId: string,
-  exercise: ExerciseRequest
+  exercise: ExerciseRequest,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    const [result] = await pool.execute(query, [
-      exerciseId,
-      dayId,
-      exercise.exerciseName,
-      exercise.bodyPart,
-      exercise.laterality,
-      exercise.sets,
-      exercise.minReps,
-      exercise.maxReps,
-      exercise.exerciseOrder,
-    ]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        exerciseId,
+        dayId,
+        exercise.exerciseName,
+        exercise.bodyPart,
+        exercise.laterality,
+        exercise.sets,
+        exercise.minReps,
+        exercise.maxReps,
+        exercise.exerciseOrder,
+      ]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [
+        exerciseId,
+        dayId,
+        exercise.exerciseName,
+        exercise.bodyPart,
+        exercise.laterality,
+        exercise.sets,
+        exercise.minReps,
+        exercise.maxReps,
+        exercise.exerciseOrder,
+      ]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error adding exercise: ${err}`, "errLog.log");
     throw new AppError("Database error while adding exercise", 500);
@@ -80,18 +118,29 @@ const queryAddProgramDay = async (
   programId: string,
   dayId: string,
   dayName: string,
-  dayNumber: number
+  dayNumber: number,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "INSERT INTO program_days (program_day_id, program_id, day_number, day_name) VALUES (?, ?, ?, ?)";
-    const [result] = await pool.execute(query, [
-      dayId,
-      programId,
-      dayNumber,
-      dayName,
-    ]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        dayId,
+        programId,
+        dayNumber,
+        dayName,
+      ]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [
+        dayId,
+        programId,
+        dayNumber,
+        dayName,
+      ]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error adding program day: ${err}`, "errLog.log");
     throw new AppError("Database error while adding program day", 500);
@@ -102,18 +151,29 @@ const queryUpdateWorkoutProgramDescription = async (
   userId: string,
   programId: string,
   programName: string,
-  description: string
+  description: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "UPDATE programs SET program_name = ?, description = ? WHERE user_id = ? AND program_id = ?";
-    const [result] = await pool.execute(query, [
-      programName,
-      description,
-      userId,
-      programId,
-    ]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        programName,
+        description,
+        userId,
+        programId,
+      ]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [
+        programName,
+        description,
+        userId,
+        programId,
+      ]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error updating workout program description: ${err}`,
@@ -129,13 +189,23 @@ const queryUpdateWorkoutProgramDescription = async (
 const queryUpdateWorkoutProgramDay = async (
   programId: string,
   dayId: string,
-  dayName: string
+  dayName: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "UPDATE program_days SET day_name = ? WHERE program_id = ? AND program_day_id = ?";
-    const [result] = await pool.execute(query, [dayName, programId, dayId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        dayName,
+        programId,
+        dayId,
+      ]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [dayName, programId, dayId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error updating workout program day: ${err}`,
@@ -151,17 +221,27 @@ const queryUpdateWorkoutProgramDay = async (
 const queryReorderExerciseOrder = async (
   dayId: string,
   exerciseId: string,
-  exerciseOrder: number
+  exerciseOrder: number,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "UPDATE program_exercises SET exercise_order = ? WHERE program_day_id = ? AND program_exercise_id = ?";
-    const [result] = await pool.execute(query, [
-      exerciseOrder,
-      dayId,
-      exerciseId,
-    ]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        exerciseOrder,
+        dayId,
+        exerciseId,
+      ]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [
+        exerciseOrder,
+        dayId,
+        exerciseId,
+      ]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error reordering exercise order: ${err}`, "errLog.log");
     throw new AppError("Database error while reordering exercise order", 500);
@@ -170,16 +250,25 @@ const queryReorderExerciseOrder = async (
 
 const queryIfProgramAndProgramDayExists = async (
   programId: string,
-  dayId: string
+  dayId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "SELECT * FROM program_days WHERE program_id = ? AND program_day_id = ?";
-    const [result] = await pool.execute(query, [programId, dayId]);
-    if ((result as any[]).length === 0) {
-      return false;
+    if (connection) {
+      const [result] = await connection.execute(query, [programId, dayId]);
+      if ((result as any[]).length === 0) {
+        return false;
+      }
+      return true;
+    } else {
+      const [result] = await pool.execute(query, [programId, dayId]);
+      if ((result as any[]).length === 0) {
+        return false;
+      }
+      return true;
     }
-    return true;
   } catch (err) {
     Logger.logEvents(
       `Error checking if program day exists: ${err}`,
@@ -201,23 +290,39 @@ const queryUpdateWorkoutProgramExercise = async (
   sets: number,
   minReps: number,
   maxReps: number,
-  exerciseOrder: number
+  exerciseOrder: number,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "UPDATE program_exercises SET exercise_name = ?, body_part = ?, laterality = ?, sets = ?, min_reps = ?, max_reps = ?, exercise_order = ? WHERE program_day_id = ? AND program_exercise_id = ?";
-    const [result] = await pool.execute(query, [
-      exerciseName,
-      bodyPart,
-      laterality,
-      sets,
-      minReps,
-      maxReps,
-      exerciseOrder,
-      dayId,
-      exerciseId,
-    ]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        exerciseName,
+        bodyPart,
+        laterality,
+        sets,
+        minReps,
+        maxReps,
+        exerciseOrder,
+        dayId,
+        exerciseId,
+      ]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [
+        exerciseName,
+        bodyPart,
+        laterality,
+        sets,
+        minReps,
+        maxReps,
+        exerciseOrder,
+        dayId,
+        exerciseId,
+      ]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error updating workout program exercise: ${err}`,
@@ -232,12 +337,18 @@ const queryUpdateWorkoutProgramExercise = async (
 
 const queryDeleteWorkoutProgram = async (
   userId: string,
-  programId: string
+  programId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query = "DELETE FROM programs WHERE user_id = ? AND program_id = ?";
-    const [result] = await pool.execute(query, [userId, programId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [userId, programId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [userId, programId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error deleting workout program: ${err}`, "errLog.log");
     throw new AppError("Database error while deleting workout program", 500);
@@ -246,13 +357,19 @@ const queryDeleteWorkoutProgram = async (
 
 const queryDeleteWorkoutProgramDay = async (
   programId: string,
-  dayId: string
+  dayId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "DELETE FROM program_days WHERE program_id = ? AND program_day_id = ?";
-    const [result] = await pool.execute(query, [programId, dayId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [programId, dayId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [programId, dayId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error deleting workout program day: ${err}`,
@@ -267,13 +384,19 @@ const queryDeleteWorkoutProgramDay = async (
 
 const queryDeleteWorkoutProgramExercise = async (
   dayId: string,
-  exerciseId: string
+  exerciseId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "DELETE FROM program_exercises WHERE program_day_id = ? AND program_exercise_id = ?";
-    const [result] = await pool.execute(query, [dayId, exerciseId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [dayId, exerciseId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [dayId, exerciseId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error deleting workout program exercise: ${err}`,
@@ -287,12 +410,18 @@ const queryDeleteWorkoutProgramExercise = async (
 };
 
 const queryUpdateWorkoutProgramUpdatedAt = async (
-  programId: string
+  programId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query = "UPDATE programs SET updated_at = NOW() WHERE program_id = ?";
-    const [result] = await pool.execute(query, [programId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [programId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [programId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error updating workout program updated at: ${err}`,
@@ -307,24 +436,38 @@ const queryUpdateWorkoutProgramUpdatedAt = async (
 
 const querySetProgramAsInactive = async (
   userId: string,
-  programId: string
+  programId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "UPDATE programs SET is_active = 0 WHERE user_id = ? AND program_id = ?";
-    const [result] = await pool.execute(query, [userId, programId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [userId, programId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [userId, programId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error setting program as inactive: ${err}`, "errLog.log");
     throw new AppError("Database error while setting program as inactive", 500);
   }
 };
 
-const querySetAllAsInactive = async (userId: string): Promise<any> => {
+const querySetAllAsInactive = async (
+  userId: string,
+  connection?: any
+): Promise<any> => {
   try {
     const query = "UPDATE programs SET is_active = 0 WHERE user_id = ?";
-    const [result] = await pool.execute(query, [userId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [userId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [userId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(
       `Error setting all programs as inactive: ${err}`,
@@ -339,13 +482,19 @@ const querySetAllAsInactive = async (userId: string): Promise<any> => {
 
 const querySetProgramAsActive = async (
   userId: string,
-  programId: string
+  programId: string,
+  connection?: any
 ): Promise<any> => {
   try {
     const query =
       "UPDATE programs SET is_active = 1 WHERE user_id = ? AND program_id = ?";
-    const [result] = await pool.execute(query, [userId, programId]);
-    return result;
+    if (connection) {
+      const [result] = await connection.execute(query, [userId, programId]);
+      return result;
+    } else {
+      const [result] = await pool.execute(query, [userId, programId]);
+      return result;
+    }
   } catch (err) {
     Logger.logEvents(`Error setting program as active: ${err}`, "errLog.log");
     throw new AppError("Database error while setting program as active", 500);

@@ -382,21 +382,25 @@ const createWeightLog = async (
     throw new AppError("Notes cannot be more than 50 characters", 400);
   }
 
-  const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
-    userId,
-    weightLogPayload.logDate
-  );
-
-  if (isWeightLogExists) {
-    throw new AppError("Weight log already exists for this date", 400);
-  }
-
-  const latestWeightLog = await WeightLogs.queryGetLatestWeightLog(userId);
-
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
+
+    const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
+      userId,
+      weightLogPayload.logDate,
+      connection
+    );
+
+    if (isWeightLogExists) {
+      throw new AppError("Weight log already exists for this date", 400);
+    }
+
+    const latestWeightLog = await WeightLogs.queryGetLatestWeightLog(
+      userId,
+      connection
+    );
 
     const weightLogId = uuidv4();
 
@@ -434,6 +438,7 @@ const createWeightLog = async (
   } catch (err) {
     await connection.rollback();
     Logger.logEvents(`Error creating weight log: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
     throw new AppError("Database error while creating weight log", 500);
   } finally {
     connection.release();
@@ -449,30 +454,37 @@ const updateWeightLog = async (
     throw new AppError("Notes cannot be more than 50 characters", 400);
   }
 
-  const weightLog = await WeightLogs.queryGetWeightLog(userId, weightLogId);
-
-  if (!weightLog) {
-    throw new AppError("Weight log not found", 404);
-  }
-
-  // if the weight log date is not the same as the payload date, check if the date already exists
-  if (
-    weightLog &&
-    weightLogPayload.logDate.toString() !==
-      weightLog[0].log_date.toISOString().split("T")[0]
-  ) {
-    const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
-      userId,
-      weightLogPayload.logDate
-    );
-
-    if (isWeightLogExists) {
-      throw new AppError("Weight log already exists for this date", 400);
-    }
-  }
   const connection = await pool.getConnection();
+
   try {
     await connection.beginTransaction();
+
+    const weightLog = await WeightLogs.queryGetWeightLog(
+      userId,
+      weightLogId,
+      connection
+    );
+
+    if (!weightLog) {
+      throw new AppError("Weight log not found", 404);
+    }
+
+    // if the weight log date is not the same as the payload date, check if the date already exists
+    if (
+      weightLog &&
+      weightLogPayload.logDate.toString() !==
+        weightLog[0].log_date.toISOString().split("T")[0]
+    ) {
+      const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
+        userId,
+        weightLogPayload.logDate,
+        connection
+      );
+
+      if (isWeightLogExists) {
+        throw new AppError("Weight log already exists for this date", 400);
+      }
+    }
 
     await connection.execute(
       "UPDATE weight_log SET weight = ?, weight_unit = ?, calories_intake = ?, notes = ?, log_date = ? WHERE weight_log_id = ? AND user_id = ?",
@@ -507,6 +519,7 @@ const updateWeightLog = async (
   } catch (err) {
     await connection.rollback();
     Logger.logEvents(`Error updating weight log: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
     throw new AppError("Database error while updating weight log", 500);
   } finally {
     connection.release();
