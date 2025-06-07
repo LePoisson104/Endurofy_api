@@ -122,6 +122,144 @@ const createWorkoutLog = async (
   };
 };
 
+const setWorkoutLogComplete = async (workoutLogId: string, notes: string) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.execute(
+      "UPDATE workout_logs SET status = 'completed', notes = ? WHERE workout_log_id = ?",
+      [notes, workoutLogId]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error updating workout log status: ${err}`, "errLog.log");
+    throw new AppError("Database error while updating workout log status", 500);
+  } finally {
+    connection.release();
+  }
+};
+
+const updateWorkoutLogNotes = async (workoutLogId: string, notes: string) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.execute(
+      "UPDATE workout_logs SET notes = ? WHERE workout_log_id = ?",
+      [notes, workoutLogId]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error updating workout log notes: ${err}`, "errLog.log");
+    throw new AppError("Database error while updating workout log notes", 500);
+  } finally {
+    connection.release();
+  }
+};
+
+const deleteWorkoutLog = async (workoutLogId: string) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.execute(
+      "DELETE FROM workout_logs WHERE workout_log_id = ?",
+      [workoutLogId]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error deleting workout log: ${err}`, "errLog.log");
+    throw new AppError("Database error while deleting workout log", 500);
+  } finally {
+    connection.release();
+  }
+};
+
+const updateWorkoutSet = async (
+  workoutSetId: string,
+  workoutExerciseId: string,
+  workoutSetPayload: {
+    repsLeft: number;
+    repsRight: number;
+    weight: number;
+    weightUnit: string;
+  }
+) => {
+  const { repsLeft, repsRight, weight, weightUnit } = workoutSetPayload;
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    await connection.execute(
+      "UPDATE workout_sets SET reps_left = ?, reps_right = ?, weight = ?, weight_unit = ? WHERE workout_set_id = ? AND workout_exercise_id = ?",
+      [repsLeft, repsRight, weight, weightUnit, workoutSetId, workoutExerciseId]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error updating workout set: ${err}`, "errLog.log");
+    throw new AppError("Database error while updating workout set", 500);
+  } finally {
+    connection.release();
+  }
+};
+
+const deleteWorkoutSet = async (
+  workoutSetId: string,
+  workoutExerciseId: string
+) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.execute(
+      "DELETE FROM workout_sets WHERE workout_set_id = ? AND workout_exercise_id = ?",
+      [workoutSetId, workoutExerciseId]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error deleting workout set: ${err}`, "errLog.log");
+    throw new AppError("Database error while deleting workout set", 500);
+  } finally {
+    connection.release();
+  }
+};
+
+const deleteWorkoutExercise = async (
+  workoutExerciseId: string,
+  workoutLogId: string
+) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.execute(
+      "DELETE FROM workout_exercises WHERE workout_exercise_id = ? AND workout_log_id = ?",
+      [workoutExerciseId, workoutLogId]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error deleting workout exercise: ${err}`, "errLog.log");
+  } finally {
+    connection.release();
+  }
+};
+
 export default {
   createWorkoutLog,
+  updateWorkoutSet,
+  deleteWorkoutSet,
+  deleteWorkoutLog,
+  setWorkoutLogComplete,
+  deleteWorkoutExercise,
+  updateWorkoutLogNotes,
 };
