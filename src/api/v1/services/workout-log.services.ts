@@ -45,13 +45,12 @@ const createWorkoutLog = async (
       // Create new workout log
       currentWorkoutLogId = uuidv4();
       await connection.execute(
-        "INSERT INTO workout_logs (workout_log_id, user_id, program_id, title, notes, workout_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO workout_logs (workout_log_id, user_id, program_id, title, workout_date, status) VALUES (?, ?, ?, ?, ?, ?)",
         [
           currentWorkoutLogId,
           userId,
           programId,
           title,
-          notes,
           workoutDate,
           "incomplete",
         ]
@@ -75,7 +74,7 @@ const createWorkoutLog = async (
       // Create new workout exercise
       currentWorkoutExerciseId = uuidv4();
       await connection.execute(
-        "INSERT INTO workout_exercises (workout_exercise_id, workout_log_id, program_exercise_id, exercise_name, body_part, laterality, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO workout_exercises (workout_exercise_id, workout_log_id, program_exercise_id, exercise_name, body_part, laterality, exercise_order, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
           currentWorkoutExerciseId,
           currentWorkoutLogId,
@@ -84,6 +83,7 @@ const createWorkoutLog = async (
           bodyPart,
           laterality,
           exerciseOrder,
+          notes,
         ]
       );
     } else {
