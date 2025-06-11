@@ -5,7 +5,7 @@ import Logger from "../utils/logger";
 const queryIsWorkoutLogExists = async (
   userId: string,
   programId: string,
-  workoutDate: Date,
+  workoutDate: string,
   connection?: any
 ): Promise<any> => {
   try {
@@ -13,7 +13,6 @@ const queryIsWorkoutLogExists = async (
       "SELECT * FROM workout_logs WHERE user_id = ? AND program_id = ? AND workout_date = ?";
 
     if (connection) {
-      console.log("use connection");
       const [result] = await connection.execute(query, [
         userId,
         programId,
@@ -21,7 +20,6 @@ const queryIsWorkoutLogExists = async (
       ]);
       return result as any[];
     } else {
-      console.log("use pool");
       const [result] = await pool.execute(query, [
         userId,
         programId,
@@ -36,6 +34,46 @@ const queryIsWorkoutLogExists = async (
     );
     throw new AppError(
       "Database error while checking if workout log exists",
+      500
+    );
+  }
+};
+
+const queryWorkoutLogsByDateRange = async (
+  userId: string,
+  programId: string,
+  startDate: string,
+  endDate: string,
+  connection?: any
+): Promise<any> => {
+  try {
+    const query =
+      "SELECT * FROM workout_logs WHERE user_id = ? AND program_id = ? AND workout_date BETWEEN ? AND ? ORDER BY workout_date";
+
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        userId,
+        programId,
+        startDate,
+        endDate,
+      ]);
+      return result as any[];
+    } else {
+      const [result] = await pool.execute(query, [
+        userId,
+        programId,
+        startDate,
+        endDate,
+      ]);
+      return result as any[];
+    }
+  } catch (err) {
+    Logger.logEvents(
+      `Error querying workout logs by date range: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while querying workout logs by date range",
       500
     );
   }
@@ -78,4 +116,5 @@ const queryIsWorkoutExerciseExists = async (
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
+  queryWorkoutLogsByDateRange,
 };

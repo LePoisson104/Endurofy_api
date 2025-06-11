@@ -10,7 +10,12 @@ const router: Router = express.Router();
 
 // router.use(verifyJWT);
 
-router.get("/get-workout-log-by-date/:startDate/:endDate");
+router.get(
+  "/get-workout-log/:userId/:programId/:startDate/:endDate",
+  workoutLogValidations.validateGetWorkoutLogByDate,
+  handleValidationErrors,
+  workoutLogControllers.getWorkoutLogByDate
+);
 
 router.post(
   "/create-workout-log/:userId/:programId",

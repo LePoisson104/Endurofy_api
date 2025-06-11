@@ -1,9 +1,9 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 const validateCreateWorkoutLogRequest = [
-  body("title").notEmpty().withMessage("Title is required"),
+  body("workoutName").notEmpty().withMessage("Workout name is required"),
   body("workoutDate").notEmpty().withMessage("Workout date is required"),
-  body("notes").isString(),
+  body("exerciseNotes").isString(),
   body("setNumber").notEmpty().withMessage("Set number is required"),
   body("repsLeft").notEmpty().withMessage("Reps left is required"),
   body("repsRight").notEmpty().withMessage("Reps right is required"),
@@ -24,6 +24,14 @@ const validateCreateWorkoutLogRequest = [
     .withMessage("Program exercise id is required"),
 ];
 
+const validateGetWorkoutLogByDate = [
+  param("startDate").notEmpty().withMessage("Start date is required"),
+  param("endDate").notEmpty().withMessage("End date is required"),
+  param("startDate").isDate().withMessage("Start date must be a valid date"),
+  param("endDate").isDate().withMessage("End date must be a valid date"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
+  validateGetWorkoutLogByDate,
 };

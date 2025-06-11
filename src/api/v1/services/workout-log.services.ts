@@ -1,9 +1,129 @@
 import { AppError } from "../middlewares/error.handlers";
 import { v4 as uuidv4 } from "uuid";
-import { WorkoutRequestPayload } from "../interfaces/workout-log.interfaces";
+import {
+  WorkoutLogData,
+  WorkoutRequestPayload,
+} from "../interfaces/workout-log.interfaces";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import workoutLogRepository from "../repositories/workout-log.repositories";
+
+const getWorkoutLogData = async (
+  userId: string,
+  programId: string,
+  startDate: string,
+  endDate: string
+): Promise<{ data: WorkoutLogData[] }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    let workoutLogResults;
+
+    // Check if startDate and endDate are the same (single date query)
+    if (startDate === endDate) {
+      // Use the existing single date query method
+      workoutLogResults = await workoutLogRepository.queryIsWorkoutLogExists(
+        userId,
+        programId,
+        startDate,
+        connection
+      );
+    } else {
+      // Use the date range query method
+      workoutLogResults =
+        await workoutLogRepository.queryWorkoutLogsByDateRange(
+          userId,
+          programId,
+          startDate,
+          endDate,
+          connection
+        );
+    }
+
+    if (workoutLogResults.length === 0) {
+      return { data: [] };
+    }
+
+    // Process each workout log
+    const workoutLogsData = await Promise.all(
+      workoutLogResults.map(async (workoutLog: any) => {
+        // Get workout exercises for this workout log using same connection
+        const [workoutExercisesResult] = (await connection.execute(
+          `SELECT 
+            we.workout_exercise_id,
+            we.workout_log_id,
+            we.program_exercise_id,
+            we.exercise_name,
+            we.body_part,
+            we.laterality,
+            we.exercise_order,
+            we.notes
+          FROM workout_exercises we 
+          WHERE we.workout_log_id = ?
+          ORDER BY we.exercise_order`,
+          [workoutLog.workout_log_id]
+        )) as any[];
+
+        // Get workout sets for all exercises using same connection
+        const workoutExercises = await Promise.all(
+          (workoutExercisesResult as any[]).map(async (exercise) => {
+            const [workoutSetsResult] = (await connection.execute(
+              `SELECT 
+                ws.workout_set_id,
+                ws.workout_exercise_id,
+                ws.set_number,
+                ws.reps_left,
+                ws.reps_right,
+                ws.weight,
+                ws.weight_unit
+              FROM workout_sets ws 
+              WHERE ws.workout_exercise_id = ?
+              ORDER BY ws.set_number`,
+              [exercise.workout_exercise_id]
+            )) as any[];
+
+            return {
+              workoutExerciseId: exercise.workout_exercise_id,
+              workoutLogId: exercise.workout_log_id,
+              programExerciseId: exercise.program_exercise_id,
+              exerciseName: exercise.exercise_name,
+              bodyPart: exercise.body_part,
+              laterality: exercise.laterality,
+              exerciseOrder: exercise.exercise_order,
+              notes: exercise.notes,
+              workoutSets: (workoutSetsResult as any[]).map((set) => ({
+                workoutSetId: set.workout_set_id,
+                workoutExerciseId: set.workout_exercise_id,
+                repsLeft: set.reps_left,
+                repsRight: set.reps_right,
+                weight: parseFloat(set.weight),
+                weightUnit: set.weight_unit,
+              })),
+            };
+          })
+        );
+
+        // Construct WorkoutLogData object for this workout log
+        return {
+          workoutLogId: workoutLog.workout_log_id,
+          userId: workoutLog.user_id,
+          programId: workoutLog.program_id,
+          title: workoutLog.title,
+          workoutDate: new Date(workoutLog.workout_date),
+          status: workoutLog.status,
+          workoutExercises: workoutExercises,
+        };
+      })
+    );
+
+    return { data: workoutLogsData };
+  } catch (err) {
+    Logger.logEvents(`Error getting workout log data: ${err}`, "errLog.log");
+    throw new AppError("Error getting workout log data", 500);
+  } finally {
+    connection.release();
+  }
+};
 
 const createWorkoutLog = async (
   userId: string,
@@ -12,9 +132,9 @@ const createWorkoutLog = async (
 ): Promise<{ data: { message: string } }> => {
   const {
     programExerciseId,
-    title,
+    workoutName,
     workoutDate,
-    notes,
+    exerciseNotes,
     exerciseName,
     bodyPart,
     laterality,
@@ -50,7 +170,7 @@ const createWorkoutLog = async (
           currentWorkoutLogId,
           userId,
           programId,
-          title,
+          workoutName,
           workoutDate,
           "incomplete",
         ]
@@ -83,7 +203,7 @@ const createWorkoutLog = async (
           bodyPart,
           laterality,
           exerciseOrder,
-          notes,
+          exerciseNotes,
         ]
       );
     } else {
@@ -136,25 +256,6 @@ const setWorkoutLogComplete = async (workoutLogId: string, notes: string) => {
     await connection.rollback();
     Logger.logEvents(`Error updating workout log status: ${err}`, "errLog.log");
     throw new AppError("Database error while updating workout log status", 500);
-  } finally {
-    connection.release();
-  }
-};
-
-const updateWorkoutLogNotes = async (workoutLogId: string, notes: string) => {
-  const connection = await pool.getConnection();
-
-  try {
-    await connection.execute(
-      "UPDATE workout_logs SET notes = ? WHERE workout_log_id = ?",
-      [notes, workoutLogId]
-    );
-
-    await connection.commit();
-  } catch (err) {
-    await connection.rollback();
-    Logger.logEvents(`Error updating workout log notes: ${err}`, "errLog.log");
-    throw new AppError("Database error while updating workout log notes", 500);
   } finally {
     connection.release();
   }
@@ -256,10 +357,10 @@ const deleteWorkoutExercise = async (
 
 export default {
   createWorkoutLog,
+  setWorkoutLogComplete,
+  deleteWorkoutLog,
   updateWorkoutSet,
   deleteWorkoutSet,
-  deleteWorkoutLog,
-  setWorkoutLogComplete,
   deleteWorkoutExercise,
-  updateWorkoutLogNotes,
+  getWorkoutLogData,
 };
