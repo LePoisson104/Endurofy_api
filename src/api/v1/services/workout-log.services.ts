@@ -92,6 +92,7 @@ const getWorkoutLogData = async (
               exerciseOrder: exercise.exercise_order,
               notes: exercise.notes,
               workoutSets: (workoutSetsResult as any[]).map((set) => ({
+                setNumber: set.set_number,
                 workoutSetId: set.workout_set_id,
                 workoutExerciseId: set.workout_exercise_id,
                 repsLeft: set.reps_left,
