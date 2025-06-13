@@ -31,7 +31,39 @@ const validateGetWorkoutLogByDate = [
   param("endDate").isDate().withMessage("End date must be a valid date"),
 ];
 
+const validateDeleteWorkoutSet = [
+  param("workoutSetId")
+    .isUUID()
+    .withMessage("Invalid workout set id format")
+    .notEmpty()
+    .withMessage("Workout set id is required"),
+  param("workoutExerciseId")
+    .isUUID()
+    .withMessage("Invalid workout exercise id format")
+    .notEmpty()
+    .withMessage("Workout exercise id is required"),
+  param("workoutLogId")
+    .isUUID()
+    .withMessage("Invalid workout log id format")
+    .notEmpty()
+    .withMessage("Workout log id is required"),
+];
+
+const validateAddExerciseNote = [
+  param("workoutExerciseId")
+    .isUUID()
+    .withMessage("Invalid workout exercise id format")
+    .notEmpty()
+    .withMessage("Workout exercise id is required"),
+  body("exerciseNotes")
+    .optional()
+    .isString()
+    .withMessage("Exercise note must be a string"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
+  validateDeleteWorkoutSet,
+  validateAddExerciseNote,
 };

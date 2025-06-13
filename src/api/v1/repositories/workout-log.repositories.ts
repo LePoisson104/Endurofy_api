@@ -79,6 +79,25 @@ const queryWorkoutLogsByDateRange = async (
   }
 };
 
+const queryUpdateExerciseNotes = async (
+  workoutExerciseId: string,
+  exerciseNotes: string
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE workout_exercises SET notes = ? WHERE workout_exercise_id = ?";
+
+    const [result] = await pool.execute(query, [
+      exerciseNotes,
+      workoutExerciseId,
+    ]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error updating exercise notes: ${err}`, "errLog.log");
+    throw new AppError("Database error while updating exercise notes", 500);
+  }
+};
+
 const queryIsWorkoutExerciseExists = async (
   workoutLogId: string,
   programExerciseId: string,
@@ -117,4 +136,5 @@ export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
   queryWorkoutLogsByDateRange,
+  queryUpdateExerciseNotes,
 };

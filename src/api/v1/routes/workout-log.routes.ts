@@ -8,7 +8,7 @@ import workoutLogValidations from "../validations/workout-log.validations";
 
 const router: Router = express.Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.get(
   "/get-workout-log/:userId/:programId/:startDate/:endDate",
@@ -24,6 +24,20 @@ router.post(
   workoutLogValidations.validateCreateWorkoutLogRequest,
   handleValidationErrors,
   workoutLogControllers.createWorkoutLog
+);
+
+router.delete(
+  "/delete-workout-set/:workoutSetId/:workoutExerciseId/:workoutLogId",
+  workoutLogValidations.validateDeleteWorkoutSet,
+  handleValidationErrors,
+  workoutLogControllers.deleteWorkoutSetWithCascade
+);
+
+router.patch(
+  "/update-exercise-notes/:workoutExerciseId",
+  workoutLogValidations.validateAddExerciseNote,
+  handleValidationErrors,
+  workoutLogControllers.updateExerciseNotes
 );
 
 export default router;

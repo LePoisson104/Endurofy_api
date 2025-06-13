@@ -92,9 +92,9 @@ const getWorkoutLogData = async (
               exerciseOrder: exercise.exercise_order,
               notes: exercise.notes,
               workoutSets: (workoutSetsResult as any[]).map((set) => ({
-                setNumber: set.set_number,
                 workoutSetId: set.workout_set_id,
                 workoutExerciseId: set.workout_exercise_id,
+                setNumber: set.set_number,
                 repsLeft: set.reps_left,
                 repsRight: set.reps_right,
                 weight: parseFloat(set.weight),
@@ -281,6 +281,26 @@ const deleteWorkoutLog = async (workoutLogId: string) => {
   }
 };
 
+const updateExerciseNotes = async (
+  workoutExerciseId: string,
+  exerciseNotes: string
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.queryUpdateExerciseNotes(
+    workoutExerciseId,
+    exerciseNotes
+  );
+
+  if (result.length === 0) {
+    throw new AppError("Invalid workout exercise id", 400);
+  }
+
+  return {
+    data: {
+      message: "Exercise notes updated successfully",
+    },
+  };
+};
+
 const updateWorkoutSet = async (
   workoutSetId: string,
   workoutExerciseId: string,
@@ -313,44 +333,71 @@ const updateWorkoutSet = async (
   }
 };
 
-const deleteWorkoutSet = async (
+const deleteWorkoutSetWithCascade = async (
   workoutSetId: string,
-  workoutExerciseId: string
-) => {
+  workoutExerciseId: string,
+  workoutLogId: string
+): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
   try {
+    await connection.beginTransaction();
+
+    // Step 1: Delete the workout set
     await connection.execute(
       "DELETE FROM workout_sets WHERE workout_set_id = ? AND workout_exercise_id = ?",
       [workoutSetId, workoutExerciseId]
     );
 
+    // Step 2: Check if there are any other sets for this exercise
+    const [remainingSetsResult] = (await connection.execute(
+      "SELECT COUNT(*) as count FROM workout_sets WHERE workout_exercise_id = ?",
+      [workoutExerciseId]
+    )) as any[];
+
+    const remainingSetsCount = remainingSetsResult[0].count;
+
+    // If no more sets exist for this exercise, delete the exercise
+    if (remainingSetsCount === 0) {
+      await connection.execute(
+        "DELETE FROM workout_exercises WHERE workout_exercise_id = ?",
+        [workoutExerciseId]
+      );
+
+      // Step 3: Check if there are any other exercises for this workout log
+      const [remainingExercisesResult] = (await connection.execute(
+        "SELECT COUNT(*) as count FROM workout_exercises WHERE workout_log_id = ?",
+        [workoutLogId]
+      )) as any[];
+
+      const remainingExercisesCount = remainingExercisesResult[0].count;
+
+      // If no more exercises exist for this workout log, delete the workout log
+      if (remainingExercisesCount === 0) {
+        await connection.execute(
+          "DELETE FROM workout_logs WHERE workout_log_id = ?",
+          [workoutLogId]
+        );
+      }
+    }
+
     await connection.commit();
+
+    return {
+      data: {
+        message: "Workout set deleted successfully with cascade cleanup",
+      },
+    };
   } catch (err) {
     await connection.rollback();
-    Logger.logEvents(`Error deleting workout set: ${err}`, "errLog.log");
-    throw new AppError("Database error while deleting workout set", 500);
-  } finally {
-    connection.release();
-  }
-};
-
-const deleteWorkoutExercise = async (
-  workoutExerciseId: string,
-  workoutLogId: string
-) => {
-  const connection = await pool.getConnection();
-
-  try {
-    await connection.execute(
-      "DELETE FROM workout_exercises WHERE workout_exercise_id = ? AND workout_log_id = ?",
-      [workoutExerciseId, workoutLogId]
+    Logger.logEvents(
+      `Error deleting workout set with cascade: ${err}`,
+      "errLog.log"
     );
-
-    await connection.commit();
-  } catch (err) {
-    await connection.rollback();
-    Logger.logEvents(`Error deleting workout exercise: ${err}`, "errLog.log");
+    throw new AppError(
+      "Database error while deleting workout set with cascade",
+      500
+    );
   } finally {
     connection.release();
   }
@@ -361,7 +408,7 @@ export default {
   setWorkoutLogComplete,
   deleteWorkoutLog,
   updateWorkoutSet,
-  deleteWorkoutSet,
-  deleteWorkoutExercise,
+  deleteWorkoutSetWithCascade,
   getWorkoutLogData,
+  updateExerciseNotes,
 };
