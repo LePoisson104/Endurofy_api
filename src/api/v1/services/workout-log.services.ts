@@ -8,6 +8,22 @@ import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import workoutLogRepository from "../repositories/workout-log.repositories";
 
+const getWorkoutLogDates = async (
+  userId: string,
+  programId: string,
+  startDate: string,
+  endDate: string
+): Promise<{ data: WorkoutLogData[] }> => {
+  const workoutLogDates = await workoutLogRepository.queryGetWorkoutLogDates(
+    userId,
+    programId,
+    startDate,
+    endDate
+  );
+
+  return { data: workoutLogDates };
+};
+
 const getWorkoutLogData = async (
   userId: string,
   programId: string,
@@ -285,6 +301,10 @@ const updateExerciseNotes = async (
   workoutExerciseId: string,
   exerciseNotes: string
 ): Promise<{ data: { message: string } }> => {
+  if (exerciseNotes.length > 200) {
+    throw new AppError("Exercise notes must be less than 200 characters", 400);
+  }
+
   const result = await workoutLogRepository.queryUpdateExerciseNotes(
     workoutExerciseId,
     exerciseNotes
@@ -305,32 +325,32 @@ const updateWorkoutSet = async (
   workoutSetId: string,
   workoutExerciseId: string,
   workoutSetPayload: {
-    repsLeft: number;
-    repsRight: number;
+    leftReps: number;
+    rightReps: number;
     weight: number;
     weightUnit: string;
   }
-) => {
-  const { repsLeft, repsRight, weight, weightUnit } = workoutSetPayload;
+): Promise<{ data: { message: string } }> => {
+  const { leftReps, rightReps, weight, weightUnit } = workoutSetPayload;
 
-  const connection = await pool.getConnection();
+  const result = await workoutLogRepository.queryUpdateWorkoutSet(
+    workoutSetId,
+    workoutExerciseId,
+    leftReps,
+    rightReps,
+    weight,
+    weightUnit
+  );
 
-  try {
-    await connection.beginTransaction();
-
-    await connection.execute(
-      "UPDATE workout_sets SET reps_left = ?, reps_right = ?, weight = ?, weight_unit = ? WHERE workout_set_id = ? AND workout_exercise_id = ?",
-      [repsLeft, repsRight, weight, weightUnit, workoutSetId, workoutExerciseId]
-    );
-
-    await connection.commit();
-  } catch (err) {
-    await connection.rollback();
-    Logger.logEvents(`Error updating workout set: ${err}`, "errLog.log");
-    throw new AppError("Database error while updating workout set", 500);
-  } finally {
-    connection.release();
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout set id", 400);
   }
+
+  return {
+    data: {
+      message: "Workout set updated successfully",
+    },
+  };
 };
 
 const deleteWorkoutSetWithCascade = async (
@@ -411,4 +431,5 @@ export default {
   deleteWorkoutSetWithCascade,
   getWorkoutLogData,
   updateExerciseNotes,
+  getWorkoutLogDates,
 };

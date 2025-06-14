@@ -27,6 +27,29 @@ const getWorkoutLogByDate = async (
   }
 };
 
+const getWorkoutLogDates = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const programId = req.params.programId;
+  const startDate = req.params.startDate;
+  const endDate = req.params.endDate;
+
+  try {
+    const result = await workoutLogServices.getWorkoutLogDates(
+      userId,
+      programId,
+      startDate,
+      endDate
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const createWorkoutLog = async (
   req: Request,
   res: Response,
@@ -67,6 +90,27 @@ const updateExerciseNotes = async (
   }
 };
 
+const updateWorkoutSet = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const workoutSetId = req.params.workoutSetId;
+  const workoutExerciseId = req.params.workoutExerciseId;
+  const workoutSetPayload = req.body;
+
+  try {
+    const result = await workoutLogServices.updateWorkoutSet(
+      workoutSetId,
+      workoutExerciseId,
+      workoutSetPayload
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteWorkoutSetWithCascade = async (
   req: Request,
   res: Response,
@@ -91,6 +135,8 @@ const deleteWorkoutSetWithCascade = async (
 export default {
   createWorkoutLog,
   getWorkoutLogByDate,
+  getWorkoutLogDates,
   deleteWorkoutSetWithCascade,
   updateExerciseNotes,
+  updateWorkoutSet,
 };

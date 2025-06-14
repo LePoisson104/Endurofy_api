@@ -61,9 +61,39 @@ const validateAddExerciseNote = [
     .withMessage("Exercise note must be a string"),
 ];
 
+const validateUpdateWorkoutSet = [
+  param("workoutSetId")
+    .isUUID()
+    .withMessage("Invalid workout set id format")
+    .notEmpty()
+    .withMessage("Workout set id is required"),
+  param("workoutExerciseId")
+    .isUUID()
+    .withMessage("Invalid workout exercise id format")
+    .notEmpty()
+    .withMessage("Workout exercise id is required"),
+
+  body("leftReps")
+    .isInt({ min: 1 })
+    .withMessage("Reps left must be a number greater than 0"),
+
+  body("rightReps")
+    .isInt({ min: 1 })
+    .withMessage("Reps right must be a number greater than 0"),
+
+  body("weight")
+    .isFloat({ min: 0.1 })
+    .withMessage("Weight must be a number greater than 0"),
+
+  body("weightUnit")
+    .isIn(["kg", "lb"])
+    .withMessage("Weight unit must be either kg or lb"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
   validateDeleteWorkoutSet,
   validateAddExerciseNote,
+  validateUpdateWorkoutSet,
 };

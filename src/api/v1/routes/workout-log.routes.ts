@@ -17,6 +17,13 @@ router.get(
   workoutLogControllers.getWorkoutLogByDate
 );
 
+router.get(
+  "/get-workout-log-dates/:userId/:programId/:startDate/:endDate",
+  workoutLogValidations.validateGetWorkoutLogByDate,
+  handleValidationErrors,
+  workoutLogControllers.getWorkoutLogDates
+);
+
 router.post(
   "/create-workout-log/:userId/:programId",
   userValidation.validateUserId,
@@ -38,6 +45,13 @@ router.patch(
   workoutLogValidations.validateAddExerciseNote,
   handleValidationErrors,
   workoutLogControllers.updateExerciseNotes
+);
+
+router.patch(
+  "/update-workout-set/:workoutSetId/:workoutExerciseId",
+  workoutLogValidations.validateUpdateWorkoutSet,
+  handleValidationErrors,
+  workoutLogControllers.updateWorkoutSet
 );
 
 export default router;

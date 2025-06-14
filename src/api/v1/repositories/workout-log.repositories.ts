@@ -2,6 +2,29 @@ import pool from "../../../config/db.config";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
+const queryGetWorkoutLogDates = async (
+  userId: string,
+  programId: string,
+  startDate: string,
+  endDate: string
+): Promise<any> => {
+  try {
+    const query =
+      "SELECT workout_date, status FROM workout_logs WHERE user_id = ? AND program_id = ? AND workout_date BETWEEN ? AND ? ORDER BY workout_date ASC";
+
+    const [result] = await pool.execute(query, [
+      userId,
+      programId,
+      startDate,
+      endDate,
+    ]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error getting workout log dates: ${err}`, "errLog.log");
+    throw new AppError("Error getting workout log dates", 500);
+  }
+};
+
 const queryIsWorkoutLogExists = async (
   userId: string,
   programId: string,
@@ -132,9 +155,38 @@ const queryIsWorkoutExerciseExists = async (
   }
 };
 
+const queryUpdateWorkoutSet = async (
+  workoutSetId: string,
+  workoutExerciseId: string,
+  leftReps: number,
+  rightReps: number,
+  weight: number,
+  weightUnit: string
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE workout_sets SET reps_left = ?, reps_right = ?, weight = ?, weight_unit = ? WHERE workout_set_id = ? AND workout_exercise_id = ?";
+
+    const [result] = await pool.execute(query, [
+      leftReps,
+      rightReps,
+      weight,
+      weightUnit,
+      workoutSetId,
+      workoutExerciseId,
+    ]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error updating workout set: ${err}`, "errLog.log");
+    throw new AppError("Database error while updating workout set", 500);
+  }
+};
+
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
   queryWorkoutLogsByDateRange,
   queryUpdateExerciseNotes,
+  queryGetWorkoutLogDates,
+  queryUpdateWorkoutSet,
 };
