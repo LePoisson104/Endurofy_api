@@ -90,6 +90,25 @@ const updateExerciseNotes = async (
   }
 };
 
+const updateWorkoutLogStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const workoutLogId = req.params.workoutLogId;
+  const status = req.body.status;
+
+  try {
+    const result = await workoutLogServices.updateWorkoutLogStatus(
+      workoutLogId,
+      status
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const updateWorkoutSet = async (
   req: Request,
   res: Response,
@@ -139,4 +158,5 @@ export default {
   deleteWorkoutSetWithCascade,
   updateExerciseNotes,
   updateWorkoutSet,
+  updateWorkoutLogStatus,
 };

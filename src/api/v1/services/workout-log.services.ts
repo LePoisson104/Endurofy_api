@@ -259,23 +259,24 @@ const createWorkoutLog = async (
   };
 };
 
-const setWorkoutLogComplete = async (workoutLogId: string, notes: string) => {
-  const connection = await pool.getConnection();
+const updateWorkoutLogStatus = async (
+  workoutLogId: string,
+  status: string
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.queryUpdateWorkoutLogStatus(
+    workoutLogId,
+    status
+  );
 
-  try {
-    await connection.execute(
-      "UPDATE workout_logs SET status = 'completed', notes = ? WHERE workout_log_id = ?",
-      [notes, workoutLogId]
-    );
-
-    await connection.commit();
-  } catch (err) {
-    await connection.rollback();
-    Logger.logEvents(`Error updating workout log status: ${err}`, "errLog.log");
-    throw new AppError("Database error while updating workout log status", 500);
-  } finally {
-    connection.release();
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout log id", 400);
   }
+
+  return {
+    data: {
+      message: "Workout log status updated successfully",
+    },
+  };
 };
 
 const deleteWorkoutLog = async (workoutLogId: string) => {
@@ -425,7 +426,7 @@ const deleteWorkoutSetWithCascade = async (
 
 export default {
   createWorkoutLog,
-  setWorkoutLogComplete,
+  updateWorkoutLogStatus,
   deleteWorkoutLog,
   updateWorkoutSet,
   deleteWorkoutSetWithCascade,

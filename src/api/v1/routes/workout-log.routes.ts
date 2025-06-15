@@ -33,6 +33,13 @@ router.post(
   workoutLogControllers.createWorkoutLog
 );
 
+router.patch(
+  "/update-workout-log-status/:workoutLogId",
+  workoutLogValidations.validateSetWorkoutLogStatus,
+  handleValidationErrors,
+  workoutLogControllers.updateWorkoutLogStatus
+);
+
 router.delete(
   "/delete-workout-set/:workoutSetId/:workoutExerciseId/:workoutLogId",
   workoutLogValidations.validateDeleteWorkoutSet,

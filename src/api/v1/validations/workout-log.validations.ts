@@ -90,10 +90,23 @@ const validateUpdateWorkoutSet = [
     .withMessage("Weight unit must be either kg or lb"),
 ];
 
+const validateSetWorkoutLogStatus = [
+  param("workoutLogId")
+    .isUUID()
+    .withMessage("Invalid workout log id format")
+    .notEmpty()
+    .withMessage("Workout log id is required"),
+  body("status")
+    .notEmpty()
+    .isIn(["incomplete", "completed"])
+    .withMessage("Status must be either incomplete or completed"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
   validateDeleteWorkoutSet,
   validateAddExerciseNote,
   validateUpdateWorkoutSet,
+  validateSetWorkoutLogStatus,
 };

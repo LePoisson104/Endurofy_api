@@ -182,6 +182,21 @@ const queryUpdateWorkoutSet = async (
   }
 };
 
+const queryUpdateWorkoutLogStatus = async (
+  workoutLogId: string,
+  status: string
+): Promise<any> => {
+  try {
+    const query = "UPDATE workout_logs SET status = ? WHERE workout_log_id = ?";
+
+    const [result] = await pool.execute(query, [status, workoutLogId]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error setting workout log status: ${err}`, "errLog.log");
+    throw new AppError("Database error while setting workout log status", 500);
+  }
+};
+
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
@@ -189,4 +204,5 @@ export default {
   queryUpdateExerciseNotes,
   queryGetWorkoutLogDates,
   queryUpdateWorkoutSet,
+  queryUpdateWorkoutLogStatus,
 };
