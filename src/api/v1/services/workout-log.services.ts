@@ -8,6 +8,23 @@ import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import workoutLogRepository from "../repositories/workout-log.repositories";
 
+const getCompletedWorkoutLogs = async (
+  userId: string,
+  programId: string,
+  startDate: string,
+  endDate: string
+): Promise<{ data: number }> => {
+  const completedWorkoutLogs =
+    await workoutLogRepository.queryGetCompletedWorkoutLogs(
+      userId,
+      programId,
+      new Date(startDate),
+      new Date(endDate)
+    );
+
+  return { data: completedWorkoutLogs };
+};
+
 const getWorkoutLogDates = async (
   userId: string,
   programId: string,
@@ -471,4 +488,5 @@ export default {
   getWorkoutLogData,
   updateExerciseNotes,
   getWorkoutLogDates,
+  getCompletedWorkoutLogs,
 };

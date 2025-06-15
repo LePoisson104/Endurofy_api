@@ -25,6 +25,37 @@ const queryGetWorkoutLogDates = async (
   }
 };
 
+const queryGetCompletedWorkoutLogs = async (
+  userId: string,
+  programId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<number> => {
+  try {
+    const query = `
+      SELECT COUNT(*) AS count
+      FROM workout_logs
+      WHERE user_id = ? AND program_id = ? AND workout_date BETWEEN ? AND ? AND status = 'completed'
+    `;
+
+    const [rows] = await pool.execute(query, [
+      userId,
+      programId,
+      startDate,
+      endDate,
+    ]);
+
+    const count = (rows as any[])[0]?.count ?? 0;
+    return count;
+  } catch (err) {
+    Logger.logEvents(
+      `Error getting completed workout logs: ${err}`,
+      "errLog.log"
+    );
+    return 0; // Fallback to avoid undefined
+  }
+};
+
 const queryIsWorkoutLogExists = async (
   userId: string,
   programId: string,
@@ -268,4 +299,5 @@ export default {
   queryUpdateWorkoutSet,
   queryUpdateWorkoutLogStatus,
   queryPreviousWorkoutLogForExercise,
+  queryGetCompletedWorkoutLogs,
 };

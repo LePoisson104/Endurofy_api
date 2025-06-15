@@ -35,10 +35,26 @@ const validateCreateWorkoutLogRequest = [
 ];
 
 const validateGetWorkoutLogByDate = [
-  param("startDate").notEmpty().withMessage("Start date is required"),
-  param("endDate").notEmpty().withMessage("End date is required"),
-  param("startDate").isDate().withMessage("Start date must be a valid date"),
-  param("endDate").isDate().withMessage("End date must be a valid date"),
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid user id format")
+    .notEmpty()
+    .withMessage("User id is required"),
+  param("programId")
+    .isUUID()
+    .withMessage("Invalid program id format")
+    .notEmpty()
+    .withMessage("Program id is required"),
+  param("startDate")
+    .notEmpty()
+    .withMessage("Start date is required")
+    .isISO8601()
+    .withMessage("Start date must be a valid date in YYYY-MM-DD format"),
+  param("endDate")
+    .notEmpty()
+    .withMessage("End date is required")
+    .isISO8601()
+    .withMessage("End date must be a valid date in YYYY-MM-DD format"),
 ];
 
 const validateDeleteWorkoutSet = [
@@ -112,6 +128,29 @@ const validateSetWorkoutLogStatus = [
     .withMessage("Status must be either incomplete or completed"),
 ];
 
+const validateGetCompletedWorkoutLogs = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid user id format")
+    .notEmpty()
+    .withMessage("User id is required"),
+  param("programId")
+    .isUUID()
+    .withMessage("Invalid program id format")
+    .notEmpty()
+    .withMessage("Program id is required"),
+  param("startDate")
+    .notEmpty()
+    .withMessage("Start date is required")
+    .isISO8601()
+    .withMessage("Start date must be a valid date in YYYY-MM-DD format"),
+  param("endDate")
+    .notEmpty()
+    .withMessage("End date is required")
+    .isISO8601()
+    .withMessage("End date must be a valid date in YYYY-MM-DD format"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
@@ -119,4 +158,5 @@ export default {
   validateAddExerciseNote,
   validateUpdateWorkoutSet,
   validateSetWorkoutLogStatus,
+  validateGetCompletedWorkoutLogs,
 };
