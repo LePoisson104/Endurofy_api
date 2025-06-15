@@ -197,6 +197,68 @@ const queryUpdateWorkoutLogStatus = async (
   }
 };
 
+const queryPreviousWorkoutLogForExercise = async (
+  userId: string,
+  programId: string,
+  dayId: string,
+  programExerciseId: string,
+  setNumber: number,
+  currentWorkoutDate: string,
+  connection?: any
+): Promise<any> => {
+  try {
+    const query = `
+      SELECT 
+        ws.reps_left as leftReps,
+        ws.reps_right as rightReps,
+        ws.weight,
+        ws.weight_unit as weightUnit
+      FROM workout_logs wl
+      JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+      JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+      WHERE wl.user_id = ? 
+        AND wl.program_id = ? 
+        AND wl.day_id = ? 
+        AND we.program_exercise_id = ?
+        AND ws.set_number = ?
+        AND wl.workout_date < ?
+      ORDER BY wl.workout_date DESC
+      LIMIT 1
+    `;
+
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        userId,
+        programId,
+        dayId,
+        programExerciseId,
+        setNumber,
+        currentWorkoutDate,
+      ]);
+      return result as any[];
+    } else {
+      const [result] = await pool.execute(query, [
+        userId,
+        programId,
+        dayId,
+        programExerciseId,
+        setNumber,
+        currentWorkoutDate,
+      ]);
+      return result as any[];
+    }
+  } catch (err) {
+    Logger.logEvents(
+      `Error querying previous workout log for exercise: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while querying previous workout log for exercise",
+      500
+    );
+  }
+};
+
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
@@ -205,4 +267,5 @@ export default {
   queryGetWorkoutLogDates,
   queryUpdateWorkoutSet,
   queryUpdateWorkoutLogStatus,
+  queryPreviousWorkoutLogForExercise,
 };

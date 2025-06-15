@@ -98,6 +98,49 @@ const getWorkoutLogData = async (
               [exercise.workout_exercise_id]
             )) as any[];
 
+            // Get previous workout data for each set
+            const workoutSetsWithPrevious = await Promise.all(
+              (workoutSetsResult as any[]).map(async (set) => {
+                // Get previous workout log data for this specific exercise and set number
+                const previousWorkoutLogResult =
+                  await workoutLogRepository.queryPreviousWorkoutLogForExercise(
+                    userId,
+                    programId,
+                    workoutLog.day_id,
+                    exercise.program_exercise_id,
+                    set.set_number,
+                    workoutLog.workout_date,
+                    connection
+                  );
+
+                return {
+                  workoutSetId: set.workout_set_id,
+                  workoutExerciseId: set.workout_exercise_id,
+                  setNumber: set.set_number,
+                  repsLeft: set.reps_left,
+                  repsRight: set.reps_right,
+                  weight: parseFloat(set.weight),
+                  weightUnit: set.weight_unit,
+                  previousLeftReps:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].leftReps
+                      : null,
+                  previousRightReps:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].rightReps
+                      : null,
+                  previousWeight:
+                    previousWorkoutLogResult.length > 0
+                      ? parseFloat(previousWorkoutLogResult[0].weight)
+                      : null,
+                  previousWeightUnit:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].weightUnit
+                      : null,
+                };
+              })
+            );
+
             return {
               workoutExerciseId: exercise.workout_exercise_id,
               workoutLogId: exercise.workout_log_id,
@@ -107,15 +150,7 @@ const getWorkoutLogData = async (
               laterality: exercise.laterality,
               exerciseOrder: exercise.exercise_order,
               notes: exercise.notes,
-              workoutSets: (workoutSetsResult as any[]).map((set) => ({
-                workoutSetId: set.workout_set_id,
-                workoutExerciseId: set.workout_exercise_id,
-                setNumber: set.set_number,
-                repsLeft: set.reps_left,
-                repsRight: set.reps_right,
-                weight: parseFloat(set.weight),
-                weightUnit: set.weight_unit,
-              })),
+              workoutSets: workoutSetsWithPrevious,
             };
           })
         );
@@ -125,6 +160,7 @@ const getWorkoutLogData = async (
           workoutLogId: workoutLog.workout_log_id,
           userId: workoutLog.user_id,
           programId: workoutLog.program_id,
+          dayId: workoutLog.day_id,
           title: workoutLog.title,
           workoutDate: new Date(workoutLog.workout_date),
           status: workoutLog.status,
@@ -145,6 +181,7 @@ const getWorkoutLogData = async (
 const createWorkoutLog = async (
   userId: string,
   programId: string,
+  dayId: string,
   workoutLogPayload: WorkoutRequestPayload
 ): Promise<{ data: { message: string } }> => {
   const {
@@ -182,11 +219,12 @@ const createWorkoutLog = async (
       // Create new workout log
       currentWorkoutLogId = uuidv4();
       await connection.execute(
-        "INSERT INTO workout_logs (workout_log_id, user_id, program_id, title, workout_date, status) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO workout_logs (workout_log_id, user_id, program_id, day_id, title, workout_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           currentWorkoutLogId,
           userId,
           programId,
+          dayId,
           workoutName,
           workoutDate,
           "incomplete",

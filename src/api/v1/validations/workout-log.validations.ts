@@ -1,6 +1,16 @@
 import { body, param } from "express-validator";
 
 const validateCreateWorkoutLogRequest = [
+  param("dayId")
+    .isUUID()
+    .withMessage("Invalid day id format")
+    .notEmpty()
+    .withMessage("Day id is required"),
+  param("programId")
+    .isUUID()
+    .withMessage("Invalid program id format")
+    .notEmpty()
+    .withMessage("Program id is required"),
   body("workoutName").notEmpty().withMessage("Workout name is required"),
   body("workoutDate").notEmpty().withMessage("Workout date is required"),
   body("exerciseNotes").isString(),

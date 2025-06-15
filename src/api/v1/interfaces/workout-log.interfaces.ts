@@ -18,6 +18,7 @@ export interface WorkoutLogData {
   workoutLogId: string;
   userId: string;
   programId: string;
+  dayId: string;
   title: string;
   workoutDate: Date;
   status: string;
@@ -39,8 +40,20 @@ export interface WorkoutExerciseData {
 export interface WorkoutSetData {
   workoutSetId: string;
   workoutExerciseId: string;
+  setNumber: number;
   repsLeft: number;
   repsRight: number;
   weight: number;
   weightUnit: string;
+  previousLeftReps: number | null;
+  previousRightReps: number | null;
+  previousWeight: number | null;
+  previousWeightUnit: string | null;
+}
+
+export interface previousWorkoutLog {
+  previousLeftReps: number;
+  previousRightReps: number;
+  previousWeight: number;
+  previousWeightUnit: string;
 }

@@ -57,12 +57,14 @@ const createWorkoutLog = async (
 ): Promise<void> => {
   const userId = req.params.userId;
   const programId = req.params.programId;
+  const dayId = req.params.dayId;
   const payload = req.body;
 
   try {
     const result = await workoutLogServices.createWorkoutLog(
       userId,
       programId,
+      dayId,
       payload
     );
     sendSuccess(res, result.data);
