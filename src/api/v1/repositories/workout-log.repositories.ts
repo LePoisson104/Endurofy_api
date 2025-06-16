@@ -239,7 +239,8 @@ const queryPreviousWorkoutLogForExercise = async (
 ): Promise<any> => {
   try {
     const query = `
-      SELECT 
+      SELECT
+        ws.set_number as setNumber,
         ws.reps_left as leftReps,
         ws.reps_right as rightReps,
         ws.weight,
@@ -290,6 +291,39 @@ const queryPreviousWorkoutLogForExercise = async (
   }
 };
 
+const queryGetExercisesByDayId = async (
+  dayId: string,
+  connection?: any
+): Promise<any> => {
+  try {
+    const query = `
+      SELECT 
+        pe.program_exercise_id,
+        pe.exercise_name,
+        pe.body_part,
+        pe.laterality,
+        pe.sets,
+        pe.min_reps,
+        pe.max_reps,
+        pe.exercise_order
+      FROM program_exercises pe
+      WHERE pe.program_day_id = ?
+      ORDER BY pe.exercise_order
+    `;
+
+    if (connection) {
+      const [result] = await connection.execute(query, [dayId]);
+      return result as any[];
+    } else {
+      const [result] = await pool.execute(query, [dayId]);
+      return result as any[];
+    }
+  } catch (err) {
+    Logger.logEvents(`Error getting exercises by day id: ${err}`, "errLog.log");
+    throw new AppError("Database error while getting exercises by day id", 500);
+  }
+};
+
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
@@ -300,4 +334,5 @@ export default {
   queryUpdateWorkoutLogStatus,
   queryPreviousWorkoutLogForExercise,
   queryGetCompletedWorkoutLogs,
+  queryGetExercisesByDayId,
 };

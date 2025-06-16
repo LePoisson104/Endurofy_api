@@ -57,3 +57,21 @@ export interface previousWorkoutLog {
   previousWeight: number;
   previousWeightUnit: string;
 }
+
+export interface PreviousWorkoutLogData {
+  programExerciseId: string;
+  exerciseName: string;
+  bodyPart: string;
+  laterality: string;
+  sets: number;
+  minReps: number;
+  maxReps: number;
+  exerciseOrder: number;
+  previousWorkoutSets: {
+    setNumber: number;
+    leftReps: number | null;
+    rightReps: number | null;
+    weight: number | null;
+    weightUnit: string | null;
+  }[];
+}

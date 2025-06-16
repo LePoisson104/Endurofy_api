@@ -3,10 +3,99 @@ import { v4 as uuidv4 } from "uuid";
 import {
   WorkoutLogData,
   WorkoutRequestPayload,
+  PreviousWorkoutLogData,
 } from "../interfaces/workout-log.interfaces";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import workoutLogRepository from "../repositories/workout-log.repositories";
+
+const getPreviousWorkoutLog = async (
+  userId: string,
+  programId: string,
+  dayId: string,
+  currentWorkoutDate: string
+): Promise<{ data: PreviousWorkoutLogData[] }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    // Get all exercises for this dayId
+    const exercises = await workoutLogRepository.queryGetExercisesByDayId(
+      dayId,
+      connection
+    );
+
+    if (exercises.length === 0) {
+      return { data: [] };
+    }
+
+    // Loop through each exercise and find previous workout data
+    const exercisesWithPreviousData: PreviousWorkoutLogData[] =
+      await Promise.all(
+        exercises.map(
+          async (exercise: any): Promise<PreviousWorkoutLogData> => {
+            // Get previous workout data for each set of this exercise
+            const previousWorkoutSets = [];
+
+            for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
+              const previousWorkoutLogResult =
+                await workoutLogRepository.queryPreviousWorkoutLogForExercise(
+                  userId,
+                  programId,
+                  dayId,
+                  exercise.program_exercise_id,
+                  setNumber,
+                  currentWorkoutDate,
+                  connection
+                );
+
+              // Add the previous data for this set
+              if (previousWorkoutLogResult.length > 0) {
+                const previousSet = previousWorkoutLogResult[0];
+                previousWorkoutSets.push({
+                  setNumber: previousSet.setNumber,
+                  leftReps: previousSet.leftReps,
+                  rightReps: previousSet.rightReps,
+                  weight: parseFloat(previousSet.weight),
+                  weightUnit: previousSet.weightUnit,
+                });
+              } else {
+                // No previous data for this set
+                previousWorkoutSets.push({
+                  setNumber: setNumber,
+                  leftReps: null,
+                  rightReps: null,
+                  weight: null,
+                  weightUnit: null,
+                });
+              }
+            }
+
+            return {
+              programExerciseId: exercise.program_exercise_id,
+              exerciseName: exercise.exercise_name,
+              bodyPart: exercise.body_part,
+              laterality: exercise.laterality,
+              sets: exercise.sets,
+              minReps: exercise.min_reps,
+              maxReps: exercise.max_reps,
+              exerciseOrder: exercise.exercise_order,
+              previousWorkoutSets: previousWorkoutSets,
+            };
+          }
+        )
+      );
+
+    return { data: exercisesWithPreviousData };
+  } catch (err) {
+    Logger.logEvents(
+      `Error getting previous workout log: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Error getting previous workout log", 500);
+  } finally {
+    connection.release();
+  }
+};
 
 const getCompletedWorkoutLogs = async (
   userId: string,
@@ -489,4 +578,5 @@ export default {
   updateExerciseNotes,
   getWorkoutLogDates,
   getCompletedWorkoutLogs,
+  getPreviousWorkoutLog,
 };

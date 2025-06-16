@@ -151,6 +151,31 @@ const validateGetCompletedWorkoutLogs = [
     .withMessage("End date must be a valid date in YYYY-MM-DD format"),
 ];
 
+const validateGetPreviousWorkoutLog = [
+  param("userId")
+    .isUUID()
+    .withMessage("Invalid user id format")
+    .notEmpty()
+    .withMessage("User id is required"),
+  param("programId")
+    .isUUID()
+    .withMessage("Invalid program id format")
+    .notEmpty()
+    .withMessage("Program id is required"),
+  param("dayId")
+    .isUUID()
+    .withMessage("Invalid day id format")
+    .notEmpty()
+    .withMessage("Day id is required"),
+  param("currentWorkoutDate")
+    .notEmpty()
+    .withMessage("Current workout date is required")
+    .isISO8601()
+    .withMessage(
+      "Current workout date must be a valid date in YYYY-MM-DD format"
+    ),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
@@ -159,4 +184,5 @@ export default {
   validateUpdateWorkoutSet,
   validateSetWorkoutLogStatus,
   validateGetCompletedWorkoutLogs,
+  validateGetPreviousWorkoutLog,
 };
