@@ -1,16 +1,6 @@
 import { body, param } from "express-validator";
 
 const validateCreateWorkoutLogRequest = [
-  param("dayId")
-    .isUUID()
-    .withMessage("Invalid day id format")
-    .notEmpty()
-    .withMessage("Day id is required"),
-  param("programId")
-    .isUUID()
-    .withMessage("Invalid program id format")
-    .notEmpty()
-    .withMessage("Program id is required"),
   body("workoutName").notEmpty().withMessage("Workout name is required"),
   body("workoutDate").notEmpty().withMessage("Workout date is required"),
   body("exerciseNotes").isString(),
@@ -35,16 +25,6 @@ const validateCreateWorkoutLogRequest = [
 ];
 
 const validateGetWorkoutLogByDate = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid user id format")
-    .notEmpty()
-    .withMessage("User id is required"),
-  param("programId")
-    .isUUID()
-    .withMessage("Invalid program id format")
-    .notEmpty()
-    .withMessage("Program id is required"),
   param("startDate")
     .notEmpty()
     .withMessage("Start date is required")
@@ -76,11 +56,6 @@ const validateDeleteWorkoutSet = [
 ];
 
 const validateAddExerciseNote = [
-  param("workoutExerciseId")
-    .isUUID()
-    .withMessage("Invalid workout exercise id format")
-    .notEmpty()
-    .withMessage("Workout exercise id is required"),
   body("exerciseNotes")
     .optional()
     .isString()
@@ -88,17 +63,6 @@ const validateAddExerciseNote = [
 ];
 
 const validateUpdateWorkoutSet = [
-  param("workoutSetId")
-    .isUUID()
-    .withMessage("Invalid workout set id format")
-    .notEmpty()
-    .withMessage("Workout set id is required"),
-  param("workoutExerciseId")
-    .isUUID()
-    .withMessage("Invalid workout exercise id format")
-    .notEmpty()
-    .withMessage("Workout exercise id is required"),
-
   body("leftReps")
     .isInt({ min: 1 })
     .withMessage("Reps left must be a number greater than 0"),
@@ -129,16 +93,6 @@ const validateSetWorkoutLogStatus = [
 ];
 
 const validateGetCompletedWorkoutLogs = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid user id format")
-    .notEmpty()
-    .withMessage("User id is required"),
-  param("programId")
-    .isUUID()
-    .withMessage("Invalid program id format")
-    .notEmpty()
-    .withMessage("Program id is required"),
   param("startDate")
     .notEmpty()
     .withMessage("Start date is required")
@@ -152,21 +106,6 @@ const validateGetCompletedWorkoutLogs = [
 ];
 
 const validateGetPreviousWorkoutLog = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid user id format")
-    .notEmpty()
-    .withMessage("User id is required"),
-  param("programId")
-    .isUUID()
-    .withMessage("Invalid program id format")
-    .notEmpty()
-    .withMessage("Program id is required"),
-  param("dayId")
-    .isUUID()
-    .withMessage("Invalid day id format")
-    .notEmpty()
-    .withMessage("Day id is required"),
   param("currentWorkoutDate")
     .notEmpty()
     .withMessage("Current workout date is required")
