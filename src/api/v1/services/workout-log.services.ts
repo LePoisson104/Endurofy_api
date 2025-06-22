@@ -5,6 +5,7 @@ import {
   WorkoutRequestPayload,
   PreviousWorkoutLogData,
   WorkoutLogExists,
+  WorkoutLogPagination,
 } from "../interfaces/workout-log.interfaces";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
@@ -15,27 +16,35 @@ const getWorkoutLogPagination = async (
   programId: string,
   limit: number,
   offset: number
-): Promise<{ data: any[] }> => {
+): Promise<{ data: WorkoutLogPagination }> => {
   const connection = await pool.getConnection();
 
   try {
     const workoutLogs: WorkoutLogExists[] =
       await workoutLogRepository.queryGetWorkoutLogPagination(
         programId,
-        limit,
+        limit + 1,
         offset,
         connection
       );
 
-    const workoutLogData =
+    const workoutLogsData =
       await workoutLogRepository.queryGetWorkoutExercisesAndSets(
         userId,
         programId,
-        workoutLogs,
+        [...workoutLogs].slice(0, limit),
         connection
       );
 
-    return { data: workoutLogData };
+    return {
+      data: {
+        offset: offset,
+        limit: limit,
+        nextOffset: offset + limit,
+        hasMore: workoutLogs.length === limit + 1,
+        workoutLogsData: workoutLogsData,
+      },
+    };
   } catch (err) {
     Logger.logEvents(
       `Error getting workout log pagination: ${err}`,

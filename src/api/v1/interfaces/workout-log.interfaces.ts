@@ -85,3 +85,11 @@ export interface WorkoutLogExists {
   workout_date: Date;
   status: "completed" | "incomplete";
 }
+
+export interface WorkoutLogPagination {
+  offset: number;
+  limit: number;
+  nextOffset: number;
+  hasMore: boolean;
+  workoutLogsData: WorkoutLogData[];
+}
