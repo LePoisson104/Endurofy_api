@@ -115,6 +115,29 @@ const validateGetPreviousWorkoutLog = [
     ),
 ];
 
+const validateGetWorkoutLogPagination = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User id is required")
+    .isUUID()
+    .withMessage("Invalid user id format"),
+  param("programId")
+    .notEmpty()
+    .withMessage("Program id is required")
+    .isUUID()
+    .withMessage("Invalid program id format"),
+  param("limit")
+    .notEmpty()
+    .withMessage("Limit is required")
+    .isInt({ min: 1 })
+    .withMessage("Limit must be a number greater than 0"),
+  param("offset")
+    .notEmpty()
+    .withMessage("Offset is required")
+    .isInt({ min: 0 })
+    .withMessage("Offset must be a number greater than 0"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
@@ -124,4 +147,5 @@ export default {
   validateSetWorkoutLogStatus,
   validateGetCompletedWorkoutLogs,
   validateGetPreviousWorkoutLog,
+  validateGetWorkoutLogPagination,
 };

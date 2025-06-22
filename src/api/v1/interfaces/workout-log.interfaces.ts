@@ -75,3 +75,13 @@ export interface PreviousWorkoutLogData {
     weightUnit: string | null;
   }[];
 }
+
+export interface WorkoutLogExists {
+  workout_log_id: string;
+  user_id: string;
+  program_id: string;
+  day_id: string;
+  title: string;
+  workout_date: Date;
+  status: "completed" | "incomplete";
+}

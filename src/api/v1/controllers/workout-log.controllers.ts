@@ -4,6 +4,29 @@ import { CustomError } from "../interfaces/error.interface";
 import { sendSuccess } from "../utils/response.utils";
 import workoutLogServices from "../services/workout-log.services";
 
+const getWorkoutLogPagination = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const programId = req.params.programId;
+  const limit = parseInt(req.params.limit);
+  const offset = parseInt(req.params.offset);
+
+  try {
+    const result = await workoutLogServices.getWorkoutLogPagination(
+      userId,
+      programId,
+      limit,
+      offset
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const getPreviousWorkoutLog = async (
   req: Request,
   res: Response,
@@ -209,4 +232,5 @@ export default {
   updateWorkoutLogStatus,
   getCompletedWorkoutLogs,
   getPreviousWorkoutLog,
+  getWorkoutLogPagination,
 };

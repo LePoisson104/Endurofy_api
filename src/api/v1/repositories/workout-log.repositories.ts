@@ -1,6 +1,48 @@
 import pool from "../../../config/db.config";
+import { WorkoutLogExists } from "../interfaces/workout-log.interfaces";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
+
+const queryGetWorkoutLogPagination = async (
+  programId: string,
+  limit: number,
+  offset: number,
+  connection: any
+): Promise<any> => {
+  try {
+    // Validate and sanitize limit and offset to prevent injection
+    const limitInt = Math.max(
+      1,
+      Math.min(parseInt(limit.toString(), 10) || 10, 100)
+    ); // Cap between 1-100
+    const offsetInt = Math.max(0, parseInt(offset.toString(), 10) || 0); // Minimum 0
+
+    // Validate that they are actually numbers after parsing
+    if (isNaN(limitInt) || isNaN(offsetInt)) {
+      throw new Error("Invalid limit or offset values");
+    }
+
+    const query = `
+    SELECT * FROM workout_logs 
+    WHERE program_id = ?
+    ORDER BY workout_date DESC
+    LIMIT ? OFFSET ?`;
+
+    // Use connection.query instead of connection.execute for better LIMIT/OFFSET support
+    const [result] = await connection.query(query, [
+      programId,
+      limitInt,
+      offsetInt,
+    ]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(
+      `Error getting workout log pagination: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Error getting workout log pagination", 500);
+  }
+};
 
 const queryGetWorkoutLogDates = async (
   userId: string,
@@ -22,6 +64,130 @@ const queryGetWorkoutLogDates = async (
   } catch (err) {
     Logger.logEvents(`Error getting workout log dates: ${err}`, "errLog.log");
     throw new AppError("Error getting workout log dates", 500);
+  }
+};
+
+const queryGetWorkoutExercisesAndSets = async (
+  userId: string,
+  programId: string,
+  workoutLogResults: WorkoutLogExists[],
+  connection?: any
+) => {
+  try {
+    const workoutLogsData = await Promise.all(
+      workoutLogResults.map(async (workoutLog: any) => {
+        // Get workout exercises for this workout log using same connection
+        const [workoutExercisesResult] = (await connection.execute(
+          `SELECT 
+            we.workout_exercise_id,
+            we.workout_log_id,
+            we.program_exercise_id,
+            we.exercise_name,
+            we.body_part,
+            we.laterality,
+            we.exercise_order,
+            we.notes
+          FROM workout_exercises we 
+          WHERE we.workout_log_id = ?
+          ORDER BY we.exercise_order`,
+          [workoutLog.workout_log_id]
+        )) as any[];
+
+        // Get workout sets for all exercises using same connection
+        const workoutExercises = await Promise.all(
+          (workoutExercisesResult as any[]).map(async (exercise) => {
+            const [workoutSetsResult] = (await connection.execute(
+              `SELECT 
+                ws.workout_set_id,
+                ws.workout_exercise_id,
+                ws.set_number,
+                ws.reps_left,
+                ws.reps_right,
+                ws.weight,
+                ws.weight_unit
+              FROM workout_sets ws 
+              WHERE ws.workout_exercise_id = ?
+              ORDER BY ws.set_number`,
+              [exercise.workout_exercise_id]
+            )) as any[];
+
+            // Get previous workout data for each set
+            const workoutSetsWithPrevious = await Promise.all(
+              (workoutSetsResult as any[]).map(async (set) => {
+                // Get previous workout log data for this specific exercise and set number
+                const previousWorkoutLogResult =
+                  await queryPreviousWorkoutLogForExercise(
+                    userId,
+                    programId,
+                    workoutLog.day_id,
+                    exercise.program_exercise_id,
+                    set.set_number,
+                    workoutLog.workout_date,
+                    connection
+                  );
+
+                return {
+                  workoutSetId: set.workout_set_id,
+                  workoutExerciseId: set.workout_exercise_id,
+                  setNumber: set.set_number,
+                  repsLeft: set.reps_left,
+                  repsRight: set.reps_right,
+                  weight: parseFloat(set.weight),
+                  weightUnit: set.weight_unit,
+                  previousLeftReps:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].leftReps
+                      : null,
+                  previousRightReps:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].rightReps
+                      : null,
+                  previousWeight:
+                    previousWorkoutLogResult.length > 0
+                      ? parseFloat(previousWorkoutLogResult[0].weight)
+                      : null,
+                  previousWeightUnit:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].weightUnit
+                      : null,
+                };
+              })
+            );
+
+            return {
+              workoutExerciseId: exercise.workout_exercise_id,
+              workoutLogId: exercise.workout_log_id,
+              programExerciseId: exercise.program_exercise_id,
+              exerciseName: exercise.exercise_name,
+              bodyPart: exercise.body_part,
+              laterality: exercise.laterality,
+              exerciseOrder: exercise.exercise_order,
+              notes: exercise.notes,
+              workoutSets: workoutSetsWithPrevious,
+            };
+          })
+        );
+
+        // Construct WorkoutLogData object for this workout log
+        return {
+          workoutLogId: workoutLog.workout_log_id,
+          userId: workoutLog.user_id,
+          programId: workoutLog.program_id,
+          dayId: workoutLog.day_id,
+          title: workoutLog.title,
+          workoutDate: new Date(workoutLog.workout_date),
+          status: workoutLog.status,
+          workoutExercises: workoutExercises,
+        };
+      })
+    );
+    return workoutLogsData;
+  } catch (err) {
+    Logger.logEvents(
+      `Error getting workout exercises and sets: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Error getting workout exercises and sets", 500);
   }
 };
 
@@ -335,4 +501,6 @@ export default {
   queryPreviousWorkoutLogForExercise,
   queryGetCompletedWorkoutLogs,
   queryGetExercisesByDayId,
+  queryGetWorkoutExercisesAndSets,
+  queryGetWorkoutLogPagination,
 };
