@@ -21,6 +21,11 @@ const verifyJWT = (
     return;
   }
 
+  if (process.env.ACCESS_TOKEN_SECRET === undefined) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
   const token = authHeader.split(" ")[1];
 
   jwt.verify(

@@ -1,8 +1,8 @@
 export interface CustomError extends Error {
   statusCode: number;
   isOperational: boolean;
-  code?: string;
   details?: any;
+  code: string;
 }
 
 export type ValidationError = {

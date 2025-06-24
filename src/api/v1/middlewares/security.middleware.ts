@@ -1,14 +1,45 @@
 import helmet from "helmet";
 import cors from "cors";
 import { Express, Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
   "http://localhost:3000",
 ];
 
 export const configureSecurityMiddleware = (app: Express): void => {
-  // Helmet middleware for security headers
-  app.use(helmet());
+  // Helmet middleware for security headers with custom CSP
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            // Add specific trusted domains if needed
+            // "https://trusted-cdn.example.com",
+          ],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'", // Often needed for CSS-in-JS frameworks
+          ],
+          imgSrc: ["'self'", "data:", "https:"],
+          fontSrc: ["'self'", "https:", "data:"],
+          connectSrc: ["'self'"],
+          mediaSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          childSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          workerSrc: ["'self'"],
+          manifestSrc: ["'self'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+    })
+  );
 
   // CORS configuration
   app.use(
@@ -27,15 +58,22 @@ export const configureSecurityMiddleware = (app: Express): void => {
     })
   );
 
-  // Add security headers
+  // Additional security headers (some may be redundant with helmet but kept for clarity)
   app.use((req: Request, res: Response, next: NextFunction) => {
+    // Generate nonce for inline scripts if needed
+    const nonce = crypto.randomBytes(16).toString("base64");
+    res.locals.nonce = nonce;
+
+    // Additional security headers
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader(
-      "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+      "Permissions-Policy",
+      "geolocation=(), microphone=(), camera=()"
     );
+
     next();
   });
 

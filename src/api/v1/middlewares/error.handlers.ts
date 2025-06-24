@@ -45,14 +45,14 @@ export const handleValidationErrors = async (
 export class AppError extends Error implements CustomError {
   statusCode: number;
   isOperational: boolean;
-  code?: string;
   details?: any;
+  code: string;
 
   constructor(
     message: string,
     statusCode: number,
-    code?: string,
-    details?: any
+    details?: any,
+    code: string = "APP_ERROR"
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -71,12 +71,13 @@ export const controllerErrorResponse = async (
   err: CustomError
 ): Promise<Response> => {
   const statusCode = err.statusCode || 500;
+  // Determine what to expose to the client
+
+  // Base error response (always safe to expose)
   const errorResponse: ErrorResponse = {
     status: "error",
     code: err.code || "INTERNAL_SERVER_ERROR",
-    message: err.message,
-    details: err.details,
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    message: getSafeErrorMessage(err),
   };
 
   // In a real application, you would want to log this error
@@ -96,4 +97,23 @@ export const controllerErrorResponse = async (
   );
 
   return res.status(statusCode).json(errorResponse);
+};
+
+const getSafeErrorMessage = (err: CustomError): string => {
+  // Map internal errors to safe public messages
+  const safeMessages: Record<string, string> = {
+    DATABASE_ERROR: "A database error occurred",
+    INTERNAL_SERVER_ERROR: "An error occurred while processing your request",
+    AUTH_ERROR: "Authentication failed",
+    PERMISSION_ERROR: "Access denied",
+    RATE_LIMIT_ERROR: "Too many requests",
+    EXTERNAL_API_ERROR: "External service unavailable",
+    APP_ERROR: err.message,
+  };
+
+  // Return safe message if available, otherwise generic message
+  return (
+    safeMessages[err.code || ""] ||
+    "An error occurred while processing your request"
+  );
 };

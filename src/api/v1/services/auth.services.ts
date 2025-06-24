@@ -448,7 +448,7 @@ const login = async (
   const userCredentials = await Auth.queryGetUserCredentials(email);
 
   if (userCredentials.length === 0 || userCredentials[0].verified === 0) {
-    throw new AppError("Unauthorized!", 401);
+    throw new AppError("Invalid credentials!", 401);
   }
 
   const match = await bcrypt.compare(
