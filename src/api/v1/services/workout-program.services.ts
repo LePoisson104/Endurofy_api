@@ -104,6 +104,18 @@ const createWorkoutProgram = async (
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
+  const workoutPrograms = await WorkoutPrograms.queryGetWorkoutProgram(
+    userId,
+    connection
+  );
+
+  if (workoutPrograms.length === 3) {
+    throw new AppError(
+      "You have reached the maximum number of workout programs",
+      400
+    );
+  }
+
   try {
     await connection.beginTransaction();
     const workoutProgramId = uuidv4();
