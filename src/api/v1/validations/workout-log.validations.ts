@@ -121,11 +121,6 @@ const validateGetWorkoutLogPagination = [
     .withMessage("User id is required")
     .isUUID()
     .withMessage("Invalid user id format"),
-  param("programId")
-    .notEmpty()
-    .withMessage("Program id is required")
-    .isUUID()
-    .withMessage("Invalid program id format"),
   param("limit")
     .notEmpty()
     .withMessage("Limit is required")
