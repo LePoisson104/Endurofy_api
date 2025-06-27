@@ -8,7 +8,7 @@ const createLimiter = ({ windowMs, max, duration }: LimiterConfig) => {
     windowMs,
     max, // Limit each IP to max requests per window
     message: {
-      message: `Too many requests from this IP, please try again after a ${duration} pause.`,
+      message: `Too many requests, please try again after a ${duration} pause.`,
     },
     handler: async (
       req: Request,

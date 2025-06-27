@@ -7,7 +7,7 @@ import workoutLogValidations from "../validations/workout-log.validations";
 
 const router: Router = express.Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.get(
   "/get-workout-log-pagination/:userId/:programId/:offset/:limit",

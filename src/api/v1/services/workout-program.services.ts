@@ -98,25 +98,177 @@ const getAllWorkoutPrograms = async (
   };
 };
 
+const createManualWorkoutProgram = async (
+  userId: string,
+  exercise: ExerciseRequest,
+  connection: any
+): Promise<{ data: { message: string } }> => {
+  try {
+    const existingProgram = await connection.execute(
+      "SELECT program_id FROM programs WHERE user_id = ? AND program_type = 'manual' FOR UPDATE",
+      [userId]
+    );
+
+    if (existingProgram[0].length > 0) {
+      throw new AppError("Manual workout program already exists", 400);
+    }
+
+    await connection.beginTransaction();
+
+    const programId = uuidv4();
+    await connection.execute(
+      "INSERT INTO programs (program_id, user_id, program_name, description, program_type, is_active, starting_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        programId,
+        userId,
+        "Manual Workout Program",
+        "Manual workout program",
+        "manual",
+        false,
+        new Date(),
+      ]
+    );
+
+    const dayId = uuidv4();
+    await connection.execute(
+      "INSERT INTO program_days (program_day_id, program_id, day_name, day_number) VALUES (?, ?, ?, ?)",
+      [dayId, programId, "Manual Workout Day", 1]
+    );
+
+    const exerciseId = uuidv4();
+    await connection.execute(
+      "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        exerciseId,
+        dayId,
+        exercise.exerciseName,
+        exercise.bodyPart,
+        exercise.laterality,
+        exercise.sets,
+        exercise.minReps,
+        exercise.maxReps,
+        exercise.exerciseOrder,
+      ]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    if (err instanceof AppError) throw err;
+    await Logger.logEvents(
+      `Error creating manual workout program: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Error creating manual workout program", 500);
+  } finally {
+    connection.release();
+  }
+
+  return {
+    data: {
+      message: "Workout program created successfully",
+    },
+  };
+};
+
+const createManualWorkoutExercise = async (
+  userId: string,
+  exercise: ExerciseRequest
+): Promise<{ data: { message: string } }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    const manualProgramExists: any[] = await connection.execute(
+      `SELECT 
+      p.program_id,
+      p.user_id,
+      p.program_name,
+      p.program_type,
+      pd.program_day_id,
+      pd.day_number,
+      pd.day_name
+     FROM programs p
+     LEFT JOIN program_days pd ON p.program_id = pd.program_id
+     WHERE p.user_id = ? AND p.program_type = 'manual'`,
+      [userId]
+    );
+
+    if (manualProgramExists[0].length === 0) {
+      try {
+        await createManualWorkoutProgram(userId, exercise, connection);
+        connection.release();
+        return {
+          data: {
+            message: "Workout exercise created successfully",
+          },
+        };
+      } catch (err) {
+        if (err instanceof AppError) throw err;
+        throw new AppError("Error creating manual workout program", 500);
+      }
+    }
+
+    await connection.beginTransaction();
+
+    const dayId = manualProgramExists[0]?.[0].program_day_id;
+    const exerciseId = uuidv4();
+    await connection.execute(
+      "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        exerciseId,
+        dayId,
+        exercise.exerciseName,
+        exercise.bodyPart,
+        exercise.laterality,
+        exercise.sets,
+        exercise.minReps,
+        exercise.maxReps,
+        exercise.exerciseOrder,
+      ]
+    );
+    await connection.commit();
+
+    return {
+      data: {
+        message: "Workout exercise created successfully",
+      },
+    };
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error creating manual workout exercise: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error creating manual workout exercise", 500);
+  } finally {
+    connection.release();
+  }
+};
+
 const createWorkoutProgram = async (
   userId: string,
   workoutProgram: WorkoutProgramRequest
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
-  const workoutPrograms = await WorkoutPrograms.queryGetWorkoutProgram(
-    userId,
-    connection
-  );
-
-  if (workoutPrograms.length === 3) {
-    throw new AppError(
-      "You have reached the maximum number of workout programs",
-      400
-    );
-  }
-
   try {
+    const workoutPrograms = await WorkoutPrograms.queryGetWorkoutProgram(
+      userId,
+      connection
+    );
+
+    const filteredWorkoutPrograms = workoutPrograms.filter(
+      (program: any) => program.program_type !== "manual"
+    );
+
+    if (filteredWorkoutPrograms.length === 3) {
+      throw new AppError(
+        "You have reached the maximum number of workout programs",
+        400
+      );
+    }
+
     await connection.beginTransaction();
     const workoutProgramId = uuidv4();
     await connection.execute(
@@ -180,17 +332,40 @@ const addExercise = async (
   dayId: string,
   exercise: ExerciseRequest
 ): Promise<{ data: { message: string } }> => {
-  const isProgramAndProgramDayExists =
-    await WorkoutPrograms.queryIfProgramAndProgramDayExists(programId, dayId);
+  const connection = await pool.getConnection();
 
-  if (!isProgramAndProgramDayExists) {
-    throw new AppError("Program or program day not found", 404);
+  try {
+    const isProgramAndProgramDayExists =
+      await WorkoutPrograms.queryIfProgramAndProgramDayExists(programId, dayId);
+
+    if (!isProgramAndProgramDayExists) {
+      throw new AppError("Program or program day not found", 404);
+    }
+
+    await connection.beginTransaction();
+
+    const exerciseId = uuidv4();
+    await WorkoutPrograms.queryAddExercise(
+      dayId,
+      exerciseId,
+      exercise,
+      connection
+    );
+
+    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
+      programId,
+      connection
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(`Error adding exercise: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error adding exercise", 500);
+  } finally {
+    connection.release();
   }
-
-  const exerciseId = uuidv4();
-  await WorkoutPrograms.queryAddExercise(dayId, exerciseId, exercise);
-
-  await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
 
   return {
     data: {
@@ -635,4 +810,5 @@ export default {
   addProgramDay,
   setProgramAsActive,
   setProgramAsInactive,
+  createManualWorkoutExercise,
 };

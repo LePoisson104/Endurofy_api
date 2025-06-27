@@ -99,6 +99,16 @@ const validateUpdateWorkoutProgramExerciseRequest = [
   body("exerciseOrder").notEmpty().withMessage("Exercise order is required"),
 ];
 
+const validateCreateManualWorkoutExerciseRequest = [
+  body("exerciseName").notEmpty().withMessage("Exercise name is required"),
+  body("bodyPart").notEmpty().withMessage("Body part is required"),
+  body("laterality").notEmpty().withMessage("Laterality is required"),
+  body("sets").notEmpty().withMessage("Sets are required"),
+  body("minReps").notEmpty().withMessage("Min reps are required"),
+  body("maxReps").notEmpty().withMessage("Max reps are required"),
+  body("exerciseOrder").notEmpty().withMessage("Exercise order is required"),
+];
+
 export default {
   validateWorkoutProgramRequest,
   validateProgramId,
@@ -107,4 +117,5 @@ export default {
   validateUpdateWorkoutProgramDescriptionRequest,
   validateUpdateWorkoutProgramDayRequest,
   validateUpdateWorkoutProgramExerciseRequest,
+  validateCreateManualWorkoutExerciseRequest,
 };

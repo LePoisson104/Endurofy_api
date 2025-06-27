@@ -7,7 +7,7 @@ import workoutProgramValidations from "../validations/workout-program.validation
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 router.get(
   "/get-workout-program/:userId",
@@ -29,6 +29,13 @@ router.post(
   workoutProgramValidations.validateDayId,
   handleValidationErrors,
   workoutProgramControllers.addExercise
+);
+
+router.post(
+  "/create-manual-workout-exercise/:userId",
+  workoutProgramValidations.validateCreateManualWorkoutExerciseRequest,
+  handleValidationErrors,
+  workoutProgramControllers.createManualWorkoutExercise
 );
 
 router.post(
