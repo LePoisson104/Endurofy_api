@@ -350,6 +350,33 @@ const createWorkoutLog = async (
   };
 };
 
+const createManualWorkoutLog = async (
+  userId: string,
+  programId: string,
+  dayId: string,
+  workoutLogPayload: WorkoutRequestPayload
+): Promise<{ data: { message: string } }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    await connection.commit();
+
+    return {
+      data: {
+        message: "Workout log created successfully",
+      },
+    };
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error creating manual workout log: ${err}`, "errLog.log");
+    throw new AppError("Database error while creating manual workout log", 500);
+  } finally {
+    connection.release();
+  }
+};
+
 const updateWorkoutLogStatus = async (
   workoutLogId: string,
   status: string
@@ -518,6 +545,7 @@ const deleteWorkoutSetWithCascade = async (
 export default {
   getWorkoutLogPagination,
   createWorkoutLog,
+  createManualWorkoutLog,
   updateWorkoutLogStatus,
   deleteWorkoutLog,
   updateWorkoutSet,

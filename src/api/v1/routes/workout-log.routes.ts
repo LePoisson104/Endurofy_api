@@ -52,6 +52,13 @@ router.post(
   workoutLogControllers.createWorkoutLog
 );
 
+router.post(
+  "/create-manual-workout-log/:userId/:programId/:dayId",
+  userValidation.validateUserId,
+  handleValidationErrors,
+  workoutLogControllers.createManualWorkoutLog
+);
+
 router.patch(
   "/update-workout-log-status/:workoutLogId",
   workoutLogValidations.validateSetWorkoutLogStatus,

@@ -11,6 +11,7 @@ import {
   ExerciseRepo,
 } from "../interfaces/workout-program.interface";
 import { AppError } from "../middlewares/error.handlers";
+import workoutProgramRepositories from "../repositories/workout-program.repositories";
 
 const getAllWorkoutPrograms = async (
   userId: string
@@ -100,7 +101,6 @@ const getAllWorkoutPrograms = async (
 
 const createManualWorkoutProgram = async (
   userId: string,
-  exercise: ExerciseRequest,
   connection: any
 ): Promise<{ data: { message: string } }> => {
   try {
@@ -112,8 +112,6 @@ const createManualWorkoutProgram = async (
     if (existingProgram[0].length > 0) {
       throw new AppError("Manual workout program already exists", 400);
     }
-
-    await connection.beginTransaction();
 
     const programId = uuidv4();
     await connection.execute(
@@ -134,34 +132,13 @@ const createManualWorkoutProgram = async (
       "INSERT INTO program_days (program_day_id, program_id, day_name, day_number) VALUES (?, ?, ?, ?)",
       [dayId, programId, "Manual Workout Day", 1]
     );
-
-    const exerciseId = uuidv4();
-    await connection.execute(
-      "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        exerciseId,
-        dayId,
-        exercise.exerciseName,
-        exercise.bodyPart,
-        exercise.laterality,
-        exercise.sets,
-        exercise.minReps,
-        exercise.maxReps,
-        exercise.exerciseOrder,
-      ]
-    );
-
-    await connection.commit();
   } catch (err) {
-    await connection.rollback();
     if (err instanceof AppError) throw err;
     await Logger.logEvents(
       `Error creating manual workout program: ${err}`,
       "errLog.log"
     );
     throw new AppError("Error creating manual workout program", 500);
-  } finally {
-    connection.release();
   }
 
   return {
@@ -172,45 +149,14 @@ const createManualWorkoutProgram = async (
 };
 
 const createManualWorkoutExercise = async (
-  userId: string,
+  dayId: string,
   exercise: ExerciseRequest
 ): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
   try {
-    const manualProgramExists: any[] = await connection.execute(
-      `SELECT 
-      p.program_id,
-      p.user_id,
-      p.program_name,
-      p.program_type,
-      pd.program_day_id,
-      pd.day_number,
-      pd.day_name
-     FROM programs p
-     LEFT JOIN program_days pd ON p.program_id = pd.program_id
-     WHERE p.user_id = ? AND p.program_type = 'manual'`,
-      [userId]
-    );
-
-    if (manualProgramExists[0].length === 0) {
-      try {
-        await createManualWorkoutProgram(userId, exercise, connection);
-        connection.release();
-        return {
-          data: {
-            message: "Workout exercise created successfully",
-          },
-        };
-      } catch (err) {
-        if (err instanceof AppError) throw err;
-        throw new AppError("Error creating manual workout program", 500);
-      }
-    }
-
     await connection.beginTransaction();
 
-    const dayId = manualProgramExists[0]?.[0].program_day_id;
     const exerciseId = uuidv4();
     await connection.execute(
       "INSERT INTO program_exercises (program_exercise_id, program_day_id, exercise_name, body_part, laterality, sets, min_reps, max_reps, exercise_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -242,8 +188,47 @@ const createManualWorkoutExercise = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error creating manual workout exercise", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
+};
+
+const deleteManualWorkoutExercise = async (
+  dayId: string,
+  exerciseId: string
+): Promise<{ data: { message: string } }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    const result =
+      await workoutProgramRepositories.queryDeleteWorkoutProgramExercise(
+        dayId,
+        exerciseId,
+        connection
+      );
+
+    if (result.affectedRows === 0) {
+      throw new AppError("Exercise not found", 404);
+    }
+  } catch (err) {
+    await Logger.logEvents(
+      `Error deleting manual workout exercise: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error deleting manual workout exercise", 500);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+
+  return {
+    data: {
+      message: "Workout exercise deleted successfully",
+    },
+  };
 };
 
 const createWorkoutProgram = async (
@@ -317,7 +302,9 @@ const createWorkoutProgram = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error creating workout program", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 
   return {
@@ -364,7 +351,9 @@ const addExercise = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error adding exercise", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 
   return {
@@ -404,7 +393,9 @@ const addProgramDay = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error adding program day", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
   return {
     data: {
@@ -450,7 +441,9 @@ const updateWorkoutProgramDescription = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error updating workout program description", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 
   return {
@@ -493,7 +486,9 @@ const updateWorkoutProgramDay = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error updating workout program day", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 
   return {
@@ -562,7 +557,9 @@ const updateWorkoutProgramExercise = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error updating workout program exercise", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 
   return {
@@ -605,7 +602,9 @@ const reorderExerciseOrder = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error reordering exercise order", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 
   return {
@@ -652,7 +651,9 @@ const setProgramAsActive = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error setting program as active", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
   return {
     data: {
@@ -733,7 +734,9 @@ const deleteWorkoutProgramDay = async (
     if (err instanceof AppError) throw err;
     throw new AppError("Error deleting workout program day", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
   return {
     data: {
@@ -787,7 +790,9 @@ const deleteWorkoutProgramExercise = async (
     );
     throw err;
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
   return {
     data: {
@@ -798,6 +803,7 @@ const deleteWorkoutProgramExercise = async (
 
 export default {
   createWorkoutProgram,
+  createManualWorkoutProgram,
   getAllWorkoutPrograms,
   deleteWorkoutProgram,
   updateWorkoutProgramDescription,
@@ -806,6 +812,7 @@ export default {
   addExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
+  deleteManualWorkoutExercise,
   reorderExerciseOrder,
   addProgramDay,
   setProgramAsActive,

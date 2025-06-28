@@ -28,12 +28,12 @@ const createManualWorkoutExercise = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const userId = req.params.userId;
+  const dayId = req.params.dayId;
   const exercise = req.body as ExerciseRequest;
 
   try {
     const result = await workoutProgramServices.createManualWorkoutExercise(
-      userId,
+      dayId,
       exercise
     );
     sendSuccess(res, result);
@@ -243,6 +243,25 @@ const deleteWorkoutProgram = async (
   }
 };
 
+const deleteManualWorkoutExercise = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const dayId = req.params.dayId;
+  const exerciseId = req.params.exerciseId;
+  try {
+    const result = await workoutProgramServices.deleteManualWorkoutExercise(
+      dayId,
+      exerciseId
+    );
+
+    sendSuccess(res, result);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteWorkoutProgramDay = async (
   req: Request,
   res: Response,
@@ -293,6 +312,7 @@ export default {
   updateWorkoutProgramExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
+  deleteManualWorkoutExercise,
   addExercise,
   addProgramDay,
   reorderExerciseOrder,

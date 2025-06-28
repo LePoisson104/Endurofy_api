@@ -7,7 +7,7 @@ import workoutProgramValidations from "../validations/workout-program.validation
 
 const router: Router = express.Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.get(
   "/get-workout-program/:userId",
@@ -32,7 +32,7 @@ router.post(
 );
 
 router.post(
-  "/create-manual-workout-exercise/:userId",
+  "/create-manual-workout-exercise/:dayId",
   workoutProgramValidations.validateCreateManualWorkoutExerciseRequest,
   handleValidationErrors,
   workoutProgramControllers.createManualWorkoutExercise
@@ -103,6 +103,14 @@ router.delete(
   workoutProgramValidations.validateProgramId,
   handleValidationErrors,
   workoutProgramControllers.deleteWorkoutProgram
+);
+
+router.delete(
+  "/delete-manual-workout-exercise/:dayId/:exerciseId",
+  workoutProgramValidations.validateDayId,
+  workoutProgramValidations.validateExerciseId,
+  handleValidationErrors,
+  workoutProgramControllers.deleteManualWorkoutExercise
 );
 
 router.delete(

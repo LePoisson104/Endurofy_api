@@ -142,6 +142,29 @@ const createWorkoutLog = async (
   }
 };
 
+const createManualWorkoutLog = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const programId = req.params.programId;
+  const dayId = req.params.dayId;
+  const payload = req.body;
+
+  try {
+    const result = await workoutLogServices.createManualWorkoutLog(
+      userId,
+      programId,
+      dayId,
+      payload
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const updateExerciseNotes = async (
   req: Request,
   res: Response,
@@ -224,6 +247,7 @@ const deleteWorkoutSetWithCascade = async (
 
 export default {
   createWorkoutLog,
+  createManualWorkoutLog,
   getWorkoutLogByDate,
   getWorkoutLogDates,
   deleteWorkoutSetWithCascade,

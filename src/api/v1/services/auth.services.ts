@@ -18,6 +18,7 @@ import {
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import Users from "../repositories/users.repositories";
+import workoutProgramServices from "./workout-program.services";
 
 // Constants
 const AUTH_CONSTANTS = {
@@ -393,6 +394,8 @@ const signup = async (
       [userId, email, hashedOTP, createdAt, expiresAt]
     );
 
+    await workoutProgramServices.createManualWorkoutProgram(userId, connection);
+
     // Commit the transaction
     await connection.commit();
 
@@ -418,15 +421,11 @@ const signup = async (
     };
   } catch (err) {
     await connection.rollback();
-
     if (err instanceof AppError) throw err;
-
-    // Check for specific MySQL errors
     const mysqlError = err as any;
     if (mysqlError.code === "ER_DUP_ENTRY") {
       throw new AppError("Email already registered", 409);
     }
-
     await Logger.logEvents(
       `Error during user registration: ${err}`,
       "errLog.log"
