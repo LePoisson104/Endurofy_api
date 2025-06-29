@@ -60,6 +60,13 @@ router.post(
 );
 
 router.patch(
+  "/update-workout-log-name/:workoutLogId",
+  workoutLogValidations.validateUpdateWorkoutLogName,
+  handleValidationErrors,
+  workoutLogControllers.updateWorkoutLogName
+);
+
+router.patch(
   "/update-workout-log-status/:workoutLogId",
   workoutLogValidations.validateSetWorkoutLogStatus,
   handleValidationErrors,

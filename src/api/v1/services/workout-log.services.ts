@@ -397,6 +397,26 @@ const updateWorkoutLogStatus = async (
   };
 };
 
+const updateWorkoutLogName = async (
+  workoutLogId: string,
+  title: string
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.queryUpdateWorkoutLogName(
+    workoutLogId,
+    title
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout log id", 400);
+  }
+
+  return {
+    data: {
+      message: "Workout log name updated successfully",
+    },
+  };
+};
+
 const deleteWorkoutLog = async (workoutLogId: string) => {
   const connection = await pool.getConnection();
 
@@ -547,6 +567,7 @@ export default {
   createWorkoutLog,
   createManualWorkoutLog,
   updateWorkoutLogStatus,
+  updateWorkoutLogName,
   deleteWorkoutLog,
   updateWorkoutSet,
   deleteWorkoutSetWithCascade,

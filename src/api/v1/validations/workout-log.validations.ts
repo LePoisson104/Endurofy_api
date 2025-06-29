@@ -133,6 +133,19 @@ const validateGetWorkoutLogPagination = [
     .withMessage("Offset must be a number greater than 0"),
 ];
 
+const validateUpdateWorkoutLogName = [
+  param("workoutLogId")
+    .notEmpty()
+    .withMessage("Workout log id is required")
+    .isUUID()
+    .withMessage("Invalid workout log id format"),
+  body("title")
+    .notEmpty()
+    .withMessage("Title is required")
+    .isString()
+    .withMessage("Title must be a string"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateGetWorkoutLogByDate,
@@ -142,5 +155,6 @@ export default {
   validateSetWorkoutLogStatus,
   validateGetCompletedWorkoutLogs,
   validateGetPreviousWorkoutLog,
+  validateUpdateWorkoutLogName,
   validateGetWorkoutLogPagination,
 };
