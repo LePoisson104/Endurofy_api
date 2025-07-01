@@ -11,6 +11,220 @@ import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import workoutLogRepository from "../repositories/workout-log.repositories";
 
+const getManualWorkoutLogWithPrevious = async (
+  userId: string,
+  programId: string,
+  workoutDate: string
+): Promise<{ data: WorkoutLogData[] }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    // Get the workout log for the specified date
+    const workoutLogResult = await workoutLogRepository.queryIsWorkoutLogExists(
+      userId,
+      programId,
+      workoutDate,
+      connection
+    );
+
+    if (workoutLogResult.length === 0) {
+      return { data: [] };
+    }
+
+    const workoutLog = workoutLogResult[0];
+
+    // Get all exercises for this workout log
+    const [workoutExercisesResult] = (await connection.execute(
+      `SELECT 
+        we.workout_exercise_id,
+        we.workout_log_id,
+        we.program_exercise_id,
+        we.exercise_name,
+        we.body_part,
+        we.laterality,
+        we.exercise_order,
+        we.notes
+      FROM workout_exercises we 
+      WHERE we.workout_log_id = ?
+      ORDER BY we.exercise_order`,
+      [workoutLog.workout_log_id]
+    )) as any[];
+
+    // Process each exercise to get current sets and previous values
+    const workoutExercisesData = await Promise.all(
+      (workoutExercisesResult as any[]).map(async (exercise) => {
+        // Get current workout sets for this exercise
+        const [currentSetsResult] = (await connection.execute(
+          `SELECT 
+            ws.workout_set_id,
+            ws.workout_exercise_id,
+            ws.set_number,
+            ws.reps_left,
+            ws.reps_right,
+            ws.weight,
+            ws.weight_unit
+          FROM workout_sets ws 
+          WHERE ws.workout_exercise_id = ?
+          ORDER BY ws.set_number`,
+          [exercise.workout_exercise_id]
+        )) as any[];
+
+        // If there are current sets, get previous values for each set
+        let workoutSetsWithPrevious: any[] = [];
+
+        if (currentSetsResult.length > 0) {
+          // Exercise has current sets - get previous values for each
+          workoutSetsWithPrevious = await Promise.all(
+            (currentSetsResult as any[]).map(async (set) => {
+              const previousWorkoutLogResult =
+                await workoutLogRepository.queryPreviousWorkoutLogForExercise(
+                  userId,
+                  programId,
+                  workoutLog.day_id,
+                  exercise.program_exercise_id,
+                  set.set_number,
+                  workoutDate,
+                  connection
+                );
+
+              return {
+                workoutSetId: set.workout_set_id,
+                workoutExerciseId: set.workout_exercise_id,
+                setNumber: set.set_number,
+                repsLeft: set.reps_left,
+                repsRight: set.reps_right,
+                weight: parseFloat(set.weight),
+                weightUnit: set.weight_unit,
+                previousLeftReps:
+                  previousWorkoutLogResult.length > 0
+                    ? previousWorkoutLogResult[0].leftReps
+                    : null,
+                previousRightReps:
+                  previousWorkoutLogResult.length > 0
+                    ? previousWorkoutLogResult[0].rightReps
+                    : null,
+                previousWeight:
+                  previousWorkoutLogResult.length > 0
+                    ? parseFloat(previousWorkoutLogResult[0].weight)
+                    : null,
+                previousWeightUnit:
+                  previousWorkoutLogResult.length > 0
+                    ? previousWorkoutLogResult[0].weightUnit
+                    : null,
+              };
+            })
+          );
+        } else {
+          // Exercise has no current sets - still get previous values to show what was done before
+          // We'll look for previous sets for this exercise and create placeholder current sets
+          const previousWorkoutResult = await connection.execute(
+            `SELECT DISTINCT ws.set_number
+             FROM workout_logs wl
+             JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+             JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+             WHERE wl.user_id = ? 
+               AND wl.program_id = ? 
+               AND wl.day_id = ? 
+               AND we.program_exercise_id = ?
+               AND wl.workout_date < ?
+             ORDER BY ws.set_number`,
+            [
+              userId,
+              programId,
+              workoutLog.day_id,
+              exercise.program_exercise_id,
+              workoutDate,
+            ]
+          );
+
+          const [previousSets] = previousWorkoutResult as any[];
+
+          if (previousSets.length > 0) {
+            // Create placeholder sets with previous values
+            workoutSetsWithPrevious = await Promise.all(
+              (previousSets as any[]).map(async (prevSet) => {
+                const previousWorkoutLogResult =
+                  await workoutLogRepository.queryPreviousWorkoutLogForExercise(
+                    userId,
+                    programId,
+                    workoutLog.day_id,
+                    exercise.program_exercise_id,
+                    prevSet.set_number,
+                    workoutDate,
+                    connection
+                  );
+
+                return {
+                  workoutSetId: null, // No current set exists
+                  workoutExerciseId: exercise.workout_exercise_id,
+                  setNumber: prevSet.set_number,
+                  repsLeft: null, // No current values
+                  repsRight: null,
+                  weight: null,
+                  weightUnit: null,
+                  previousLeftReps:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].leftReps
+                      : null,
+                  previousRightReps:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].rightReps
+                      : null,
+                  previousWeight:
+                    previousWorkoutLogResult.length > 0
+                      ? parseFloat(previousWorkoutLogResult[0].weight)
+                      : null,
+                  previousWeightUnit:
+                    previousWorkoutLogResult.length > 0
+                      ? previousWorkoutLogResult[0].weightUnit
+                      : null,
+                };
+              })
+            );
+          }
+        }
+
+        return {
+          workoutExerciseId: exercise.workout_exercise_id,
+          workoutLogId: exercise.workout_log_id,
+          programExerciseId: exercise.program_exercise_id,
+          exerciseName: exercise.exercise_name,
+          bodyPart: exercise.body_part,
+          laterality: exercise.laterality,
+          exerciseOrder: exercise.exercise_order,
+          notes: exercise.notes,
+          workoutSets: workoutSetsWithPrevious,
+        };
+      })
+    );
+
+    // Construct the complete workout log data
+    const workoutLogData = {
+      workoutLogId: workoutLog.workout_log_id,
+      userId: workoutLog.user_id,
+      programId: workoutLog.program_id,
+      dayId: workoutLog.day_id,
+      title: workoutLog.title,
+      workoutDate: new Date(workoutLog.workout_date),
+      status: workoutLog.status,
+      workoutExercises: workoutExercisesData,
+    };
+
+    return { data: [workoutLogData] };
+  } catch (err: any) {
+    Logger.logEvents(
+      `Error getting manual workout log with previous: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error getting manual workout log with previous", 500);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+};
+
 const getWorkoutLogPagination = async (
   userId: string,
   programId: string,
@@ -408,6 +622,42 @@ const createManualWorkoutLog = async (
   };
 };
 
+const addWorkoutSet = async (
+  workoutExerciseId: string,
+  workoutSetPayload: {
+    setNumber: number;
+    repsLeft: number;
+    repsRight: number;
+    weight: number;
+    weightUnit: string;
+  }
+): Promise<{ data: { message: string } }> => {
+  const { setNumber, repsLeft, repsRight, weight, weightUnit } =
+    workoutSetPayload;
+
+  const workoutSetId = uuidv4();
+
+  const result = await workoutLogRepository.queryAddWorkoutSet(
+    workoutSetId,
+    workoutExerciseId,
+    setNumber,
+    repsLeft,
+    repsRight,
+    weight,
+    weightUnit
+  );
+
+  if (result.length === 0) {
+    throw new AppError("Failed to add workout set", 500);
+  }
+
+  return {
+    data: {
+      message: "Workout set added successfully",
+    },
+  };
+};
+
 const addManualWorkoutExercise = async (
   workoutLogId: string,
   programExerciseId: string,
@@ -561,6 +811,40 @@ const updateWorkoutSet = async (
   };
 };
 
+const deleteWorkoutSet = async (
+  workoutSetId: string
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.queryDeleteWorkoutSet(workoutSetId);
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout set id", 400);
+  }
+
+  return {
+    data: {
+      message: "Workout set deleted successfully",
+    },
+  };
+};
+
+const deleteWorkoutExercise = async (
+  workoutExerciseId: string
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.queryDeleteWorkoutExercise(
+    workoutExerciseId
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout exercise id", 400);
+  }
+
+  return {
+    data: {
+      message: "Workout exercise deleted successfully",
+    },
+  };
+};
+
 const deleteWorkoutSetWithCascade = async (
   workoutSetId: string,
   workoutExerciseId: string,
@@ -633,6 +917,8 @@ const deleteWorkoutSetWithCascade = async (
 
 export default {
   getWorkoutLogPagination,
+  getManualWorkoutLogWithPrevious,
+  addWorkoutSet,
   createWorkoutLog,
   createManualWorkoutLog,
   addManualWorkoutExercise,
@@ -645,5 +931,7 @@ export default {
   updateExerciseNotes,
   getWorkoutLogDates,
   getCompletedWorkoutLogs,
+  deleteWorkoutSet,
   getPreviousWorkoutLog,
+  deleteWorkoutExercise,
 };

@@ -802,20 +802,20 @@ const deleteWorkoutProgramExercise = async (
 };
 
 export default {
+  addProgramDay,
+  addExercise,
+  createManualWorkoutExercise,
   createWorkoutProgram,
   createManualWorkoutProgram,
-  getAllWorkoutPrograms,
   deleteWorkoutProgram,
-  updateWorkoutProgramDescription,
-  updateWorkoutProgramDay,
-  updateWorkoutProgramExercise,
-  addExercise,
   deleteWorkoutProgramDay,
   deleteWorkoutProgramExercise,
   deleteManualWorkoutExercise,
+  getAllWorkoutPrograms,
   reorderExerciseOrder,
-  addProgramDay,
   setProgramAsActive,
   setProgramAsInactive,
-  createManualWorkoutExercise,
+  updateWorkoutProgramDescription,
+  updateWorkoutProgramDay,
+  updateWorkoutProgramExercise,
 };

@@ -1,8 +1,5 @@
 import pool from "../../../config/db.config";
-import {
-  WorkoutLogExists,
-  WorkoutRequestPayload,
-} from "../interfaces/workout-log.interfaces";
+import { WorkoutLogExists } from "../interfaces/workout-log.interfaces";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
@@ -508,6 +505,35 @@ const queryGetExercisesByDayId = async (
   }
 };
 
+const queryAddWorkoutSet = async (
+  workoutSetId: string,
+  workoutExerciseId: string,
+  setNumber: number,
+  repsLeft: number,
+  repsRight: number,
+  weight: number,
+  weightUnit: string
+): Promise<any> => {
+  try {
+    const query =
+      "INSERT INTO workout_sets (workout_set_id, workout_exercise_id, set_number, reps_left, reps_right, weight, weight_unit) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    const [result] = await pool.execute(query, [
+      workoutSetId,
+      workoutExerciseId,
+      setNumber,
+      repsLeft,
+      repsRight,
+      weight,
+      weightUnit,
+    ]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error adding workout set: ${err}`, "errLog.log");
+    throw new AppError("Database error while adding workout set", 500);
+  }
+};
+
 const queryCreateManualWorkoutLog = async (
   workoutLogId: string,
   userId: string,
@@ -589,6 +615,30 @@ const queryAddManualWorkoutExercise = async (
   }
 };
 
+const queryDeleteWorkoutSet = async (workoutSetId: string): Promise<any> => {
+  try {
+    const query = "DELETE FROM workout_sets WHERE workout_set_id = ?";
+    const [result] = await pool.execute(query, [workoutSetId]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error deleting workout set: ${err}`, "errLog.log");
+    throw new AppError("Database error while deleting workout set", 500);
+  }
+};
+
+const queryDeleteWorkoutExercise = async (
+  workoutExerciseId: string
+): Promise<any> => {
+  try {
+    const query = "DELETE FROM workout_exercises WHERE workout_exercise_id = ?";
+    const [result] = await pool.execute(query, [workoutExerciseId]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(`Error deleting workout exercise: ${err}`, "errLog.log");
+    throw new AppError("Database error while deleting workout exercise", 500);
+  }
+};
+
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
@@ -605,4 +655,7 @@ export default {
   queryGetWorkoutLogPagination,
   queryCreateManualWorkoutLog,
   queryAddManualWorkoutExercise,
+  queryAddWorkoutSet,
+  queryDeleteWorkoutSet,
+  queryDeleteWorkoutExercise,
 };

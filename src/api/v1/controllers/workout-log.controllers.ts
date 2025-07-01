@@ -4,6 +4,27 @@ import { CustomError } from "../interfaces/error.interface";
 import { sendSuccess } from "../utils/response.utils";
 import workoutLogServices from "../services/workout-log.services";
 
+const getManualWorkoutLogWithPrevious = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const userId = req.params.userId;
+  const programId = req.params.programId;
+  const workoutDate = req.params.workoutDate;
+
+  try {
+    const result = await workoutLogServices.getManualWorkoutLogWithPrevious(
+      userId,
+      programId,
+      workoutDate
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const getWorkoutLogPagination = async (
   req: Request,
   res: Response,
@@ -134,6 +155,25 @@ const createWorkoutLog = async (
       userId,
       programId,
       dayId,
+      payload
+    );
+    sendSuccess(res, result.data);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const addWorkoutSet = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const workoutExerciseId = req.params.workoutExerciseId;
+  const payload = req.body;
+
+  try {
+    const result = await workoutLogServices.addWorkoutSet(
+      workoutExerciseId,
       payload
     );
     sendSuccess(res, result.data);
@@ -279,6 +319,38 @@ const deleteWorkoutLog = async (
   }
 };
 
+const deleteWorkoutSet = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const workoutSetId = req.params.workoutSetId;
+
+  try {
+    const result = await workoutLogServices.deleteWorkoutSet(workoutSetId);
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
+const deleteWorkoutExercise = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const workoutExerciseId = req.params.workoutExerciseId;
+
+  try {
+    const result = await workoutLogServices.deleteWorkoutExercise(
+      workoutExerciseId
+    );
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteWorkoutSetWithCascade = async (
   req: Request,
   res: Response,
@@ -302,6 +374,7 @@ const deleteWorkoutSetWithCascade = async (
 
 export default {
   createWorkoutLog,
+  getManualWorkoutLogWithPrevious,
   createManualWorkoutLog,
   addManualWorkoutExercise,
   getWorkoutLogByDate,
@@ -315,4 +388,7 @@ export default {
   getPreviousWorkoutLog,
   getWorkoutLogPagination,
   deleteWorkoutLog,
+  addWorkoutSet,
+  deleteWorkoutSet,
+  deleteWorkoutExercise,
 };

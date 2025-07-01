@@ -10,6 +10,13 @@ const router: Router = express.Router();
 router.use(verifyJWT);
 
 router.get(
+  "/get-manual-workout-log-with-previous/:userId/:programId/:workoutDate",
+  workoutLogValidations.validateGetManualWorkoutLogWithPrevious,
+  handleValidationErrors,
+  workoutLogControllers.getManualWorkoutLogWithPrevious
+);
+
+router.get(
   "/get-workout-log-pagination/:userId/:programId/:offset/:limit",
   workoutLogValidations.validateGetWorkoutLogPagination,
   handleValidationErrors,
@@ -67,6 +74,13 @@ router.post(
   workoutLogControllers.addManualWorkoutExercise
 );
 
+router.post(
+  "/add-workout-set/:workoutExerciseId",
+  workoutLogValidations.validateAddWorkoutSet,
+  handleValidationErrors,
+  workoutLogControllers.addWorkoutSet
+);
+
 router.patch(
   "/update-workout-log-name/:workoutLogId",
   workoutLogValidations.validateUpdateWorkoutLogName,
@@ -96,7 +110,7 @@ router.patch(
 );
 
 router.delete(
-  "/delete-workout-set/:workoutSetId/:workoutExerciseId/:workoutLogId",
+  "/delete-workout-set-with-cascade/:workoutSetId/:workoutExerciseId/:workoutLogId",
   workoutLogValidations.validateDeleteWorkoutSet,
   handleValidationErrors,
   workoutLogControllers.deleteWorkoutSetWithCascade
@@ -105,6 +119,16 @@ router.delete(
 router.delete(
   "/delete-workout-log/:workoutLogId",
   workoutLogControllers.deleteWorkoutLog
+);
+
+router.delete(
+  "/delete-workout-set/:workoutSetId",
+  workoutLogControllers.deleteWorkoutSet
+);
+
+router.delete(
+  "/delete-workout-exercise/:workoutExerciseId",
+  workoutLogControllers.deleteWorkoutExercise
 );
 
 export default router;

@@ -162,6 +162,36 @@ const validateAddManualWorkoutExercise = [
   body("exerciseOrder").notEmpty().withMessage("Exercise order is required"),
 ];
 
+const validateAddWorkoutSet = [
+  body("setNumber").notEmpty().withMessage("Set number is required"),
+  body("repsRight").notEmpty().withMessage("Reps right is required"),
+  body("repsLeft").notEmpty().withMessage("Reps left is required"),
+  body("weight")
+    .isFloat({ min: 0.1 })
+    .withMessage("Weight must be a number greater than 0"),
+  body("weightUnit")
+    .isIn(["kg", "lb"])
+    .withMessage("Weight unit must be either kg or lb"),
+];
+
+const validateGetManualWorkoutLogWithPrevious = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User id is required")
+    .isUUID()
+    .withMessage("Invalid user id format"),
+  param("programId")
+    .notEmpty()
+    .withMessage("Program id is required")
+    .isUUID()
+    .withMessage("Invalid program id format"),
+  param("workoutDate")
+    .notEmpty()
+    .withMessage("Workout date is required")
+    .isISO8601()
+    .withMessage("Workout date must be a valid date in YYYY-MM-DD format"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateCreateManualWorkoutLogRequest,
@@ -175,4 +205,6 @@ export default {
   validateUpdateWorkoutLogName,
   validateGetWorkoutLogPagination,
   validateAddManualWorkoutExercise,
+  validateAddWorkoutSet,
+  validateGetManualWorkoutLogWithPrevious,
 };
