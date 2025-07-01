@@ -354,27 +354,88 @@ const createManualWorkoutLog = async (
   userId: string,
   programId: string,
   dayId: string,
-  workoutLogPayload: WorkoutRequestPayload
+  workoutLogPayload: { title: string; workoutDate: string }
 ): Promise<{ data: { message: string } }> => {
-  const connection = await pool.getConnection();
+  const { title, workoutDate } = workoutLogPayload;
 
+  const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+    const isWorkoutLogExists =
+      await workoutLogRepository.queryIsWorkoutLogExists(
+        userId,
+        programId,
+        workoutDate,
+        connection
+      );
+
+    if (isWorkoutLogExists.length !== 0) {
+      throw new AppError("Workout log already exists", 400);
+    }
+
+    const workoutLogResult =
+      await workoutLogRepository.queryCreateManualWorkoutLog(
+        uuidv4(),
+        userId,
+        programId,
+        dayId,
+        title,
+        workoutDate,
+        "incomplete",
+        connection
+      );
+
+    if (workoutLogResult.length === 0) {
+      throw new AppError("Failed to create workout log", 500);
+    }
 
     await connection.commit();
-
-    return {
-      data: {
-        message: "Workout log created successfully",
-      },
-    };
   } catch (err) {
     await connection.rollback();
     Logger.logEvents(`Error creating manual workout log: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
     throw new AppError("Database error while creating manual workout log", 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
+
+  return {
+    data: {
+      message: "Workout log created successfully",
+    },
+  };
+};
+
+const addManualWorkoutExercise = async (
+  workoutLogId: string,
+  programExerciseId: string,
+  workoutLogPayload: {
+    exerciseName: string;
+    bodyPart: string;
+    laterality: string;
+    exerciseOrder: number;
+  }
+): Promise<{ data: { message: string } }> => {
+  const workoutExerciseId = uuidv4();
+
+  const result = await workoutLogRepository.queryAddManualWorkoutExercise(
+    workoutExerciseId,
+    workoutLogId,
+    programExerciseId,
+    workoutLogPayload
+  );
+
+  if (result.length === 0) {
+    throw new AppError("Failed to add workout exercise", 500);
+  }
+
+  return {
+    data: {
+      message: "Workout exercise added successfully",
+    },
+  };
 };
 
 const updateWorkoutLogStatus = async (
@@ -566,6 +627,7 @@ export default {
   getWorkoutLogPagination,
   createWorkoutLog,
   createManualWorkoutLog,
+  addManualWorkoutExercise,
   updateWorkoutLogStatus,
   updateWorkoutLogName,
   deleteWorkoutLog,

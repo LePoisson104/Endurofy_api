@@ -1,5 +1,8 @@
 import pool from "../../../config/db.config";
-import { WorkoutLogExists } from "../interfaces/workout-log.interfaces";
+import {
+  WorkoutLogExists,
+  WorkoutRequestPayload,
+} from "../interfaces/workout-log.interfaces";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
@@ -505,6 +508,87 @@ const queryGetExercisesByDayId = async (
   }
 };
 
+const queryCreateManualWorkoutLog = async (
+  workoutLogId: string,
+  userId: string,
+  programId: string,
+  dayId: string,
+  title: string,
+  workoutDate: string,
+  status: string,
+  connection?: any
+): Promise<any> => {
+  try {
+    const query =
+      "INSERT INTO workout_logs (workout_log_id,user_id,  program_id, day_id, title, workout_date, status  ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    if (connection) {
+      const [result] = await connection.execute(query, [
+        workoutLogId,
+        userId,
+        programId,
+        dayId,
+        title,
+        workoutDate,
+        status,
+      ]);
+      return result as any[];
+    } else {
+      const [result] = await pool.execute(query, [
+        userId,
+        programId,
+        dayId,
+        title,
+        workoutDate,
+      ]);
+      return result as any[];
+    }
+  } catch (err) {
+    Logger.logEvents(`Error creating manual workout log: ${err}`, "errLog.log");
+    throw new AppError("Database error while creating manual workout log", 500);
+  }
+};
+
+const queryAddManualWorkoutExercise = async (
+  workoutExerciseId: string,
+  workoutLogId: string,
+  programExerciseId: string,
+  workoutLogPayload: {
+    exerciseName: string;
+    bodyPart: string;
+    laterality: string;
+    exerciseOrder: number;
+  }
+): Promise<any> => {
+  try {
+    const query =
+      "INSERT INTO workout_exercises (workout_exercise_id, workout_log_id, program_exercise_id, exercise_name, body_part, laterality, exercise_order, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    const { exerciseName, bodyPart, laterality, exerciseOrder } =
+      workoutLogPayload;
+
+    const [result] = await pool.execute(query, [
+      workoutExerciseId,
+      workoutLogId,
+      programExerciseId,
+      exerciseName,
+      bodyPart,
+      laterality,
+      exerciseOrder,
+      "",
+    ]);
+    return result as any[];
+  } catch (err) {
+    Logger.logEvents(
+      `Error adding manual workout exercise: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Database error while adding manual workout exercise",
+      500
+    );
+  }
+};
+
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
@@ -519,4 +603,6 @@ export default {
   queryGetExercisesByDayId,
   queryGetWorkoutExercisesAndSets,
   queryGetWorkoutLogPagination,
+  queryCreateManualWorkoutLog,
+  queryAddManualWorkoutExercise,
 };

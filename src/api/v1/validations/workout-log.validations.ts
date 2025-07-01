@@ -146,8 +146,25 @@ const validateUpdateWorkoutLogName = [
     .withMessage("Title must be a string"),
 ];
 
+const validateCreateManualWorkoutLogRequest = [
+  body("title").notEmpty().withMessage("Title is required"),
+  body("workoutDate")
+    .notEmpty()
+    .withMessage("Workout date is required")
+    .isISO8601()
+    .withMessage("Workout date must be a valid date in YYYY-MM-DD format"),
+];
+
+const validateAddManualWorkoutExercise = [
+  body("exerciseName").notEmpty().withMessage("Exercise name is required"),
+  body("bodyPart").notEmpty().withMessage("Body part is required"),
+  body("laterality").notEmpty().withMessage("Laterality is required"),
+  body("exerciseOrder").notEmpty().withMessage("Exercise order is required"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
+  validateCreateManualWorkoutLogRequest,
   validateGetWorkoutLogByDate,
   validateDeleteWorkoutSet,
   validateAddExerciseNote,
@@ -157,4 +174,5 @@ export default {
   validateGetPreviousWorkoutLog,
   validateUpdateWorkoutLogName,
   validateGetWorkoutLogPagination,
+  validateAddManualWorkoutExercise,
 };
