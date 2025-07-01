@@ -81,13 +81,6 @@ router.patch(
   workoutLogControllers.updateWorkoutLogStatus
 );
 
-router.delete(
-  "/delete-workout-set/:workoutSetId/:workoutExerciseId/:workoutLogId",
-  workoutLogValidations.validateDeleteWorkoutSet,
-  handleValidationErrors,
-  workoutLogControllers.deleteWorkoutSetWithCascade
-);
-
 router.patch(
   "/update-exercise-notes/:workoutExerciseId",
   workoutLogValidations.validateAddExerciseNote,
@@ -100,6 +93,18 @@ router.patch(
   workoutLogValidations.validateUpdateWorkoutSet,
   handleValidationErrors,
   workoutLogControllers.updateWorkoutSet
+);
+
+router.delete(
+  "/delete-workout-set/:workoutSetId/:workoutExerciseId/:workoutLogId",
+  workoutLogValidations.validateDeleteWorkoutSet,
+  handleValidationErrors,
+  workoutLogControllers.deleteWorkoutSetWithCascade
+);
+
+router.delete(
+  "/delete-workout-log/:workoutLogId",
+  workoutLogControllers.deleteWorkoutLog
 );
 
 export default router;

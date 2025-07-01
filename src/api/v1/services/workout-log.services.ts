@@ -478,7 +478,9 @@ const updateWorkoutLogName = async (
   };
 };
 
-const deleteWorkoutLog = async (workoutLogId: string) => {
+const deleteWorkoutLog = async (
+  workoutLogId: string
+): Promise<{ data: { message: string } }> => {
   const connection = await pool.getConnection();
 
   try {
@@ -495,6 +497,12 @@ const deleteWorkoutLog = async (workoutLogId: string) => {
   } finally {
     connection.release();
   }
+
+  return {
+    data: {
+      message: "Workout log deleted successfully",
+    },
+  };
 };
 
 const updateExerciseNotes = async (

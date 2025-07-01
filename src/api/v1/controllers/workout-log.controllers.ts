@@ -264,6 +264,21 @@ const updateWorkoutSet = async (
   }
 };
 
+const deleteWorkoutLog = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const workoutLogId = req.params.workoutLogId;
+
+  try {
+    const result = await workoutLogServices.deleteWorkoutLog(workoutLogId);
+    sendSuccess(res, result.data.message);
+  } catch (err) {
+    controllerErrorResponse(res, err as CustomError);
+  }
+};
+
 const deleteWorkoutSetWithCascade = async (
   req: Request,
   res: Response,
@@ -299,4 +314,5 @@ export default {
   getCompletedWorkoutLogs,
   getPreviousWorkoutLog,
   getWorkoutLogPagination,
+  deleteWorkoutLog,
 };
