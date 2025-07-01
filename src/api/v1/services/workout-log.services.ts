@@ -69,119 +69,88 @@ const getManualWorkoutLogWithPrevious = async (
           [exercise.workout_exercise_id]
         )) as any[];
 
-        // If there are current sets, get previous values for each set
+        // Get all previous sets for this exercise to determine max sets
+        const previousWorkoutResult = await connection.execute(
+          `SELECT DISTINCT ws.set_number
+           FROM workout_logs wl
+           JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+           JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+           WHERE wl.user_id = ? 
+             AND wl.program_id = ? 
+             AND wl.day_id = ? 
+             AND we.program_exercise_id = ?
+             AND wl.workout_date < ?
+           ORDER BY ws.set_number`,
+          [
+            userId,
+            programId,
+            workoutLog.day_id,
+            exercise.program_exercise_id,
+            workoutDate,
+          ]
+        );
+
+        const [previousSets] = previousWorkoutResult as any[];
+
+        // Determine the maximum number of sets between current and previous
+        const maxCurrentSet =
+          currentSetsResult.length > 0
+            ? Math.max(...currentSetsResult.map((s: any) => s.set_number))
+            : 0;
+        const maxPreviousSet =
+          previousSets.length > 0
+            ? Math.max(...previousSets.map((s: any) => s.set_number))
+            : 0;
+        const maxSets = Math.max(maxCurrentSet, maxPreviousSet);
+
+        // Create a complete set list showing all sets (current + placeholders)
         let workoutSetsWithPrevious: any[] = [];
 
-        if (currentSetsResult.length > 0) {
-          // Exercise has current sets - get previous values for each
-          workoutSetsWithPrevious = await Promise.all(
-            (currentSetsResult as any[]).map(async (set) => {
-              const previousWorkoutLogResult =
-                await workoutLogRepository.queryPreviousWorkoutLogForExercise(
-                  userId,
-                  programId,
-                  workoutLog.day_id,
-                  exercise.program_exercise_id,
-                  set.set_number,
-                  workoutDate,
-                  connection
-                );
-
-              return {
-                workoutSetId: set.workout_set_id,
-                workoutExerciseId: set.workout_exercise_id,
-                setNumber: set.set_number,
-                repsLeft: set.reps_left,
-                repsRight: set.reps_right,
-                weight: parseFloat(set.weight),
-                weightUnit: set.weight_unit,
-                previousLeftReps:
-                  previousWorkoutLogResult.length > 0
-                    ? previousWorkoutLogResult[0].leftReps
-                    : null,
-                previousRightReps:
-                  previousWorkoutLogResult.length > 0
-                    ? previousWorkoutLogResult[0].rightReps
-                    : null,
-                previousWeight:
-                  previousWorkoutLogResult.length > 0
-                    ? parseFloat(previousWorkoutLogResult[0].weight)
-                    : null,
-                previousWeightUnit:
-                  previousWorkoutLogResult.length > 0
-                    ? previousWorkoutLogResult[0].weightUnit
-                    : null,
-              };
-            })
+        for (let setNumber = 1; setNumber <= maxSets; setNumber++) {
+          // Find current set data for this set number
+          const currentSet = currentSetsResult.find(
+            (s: any) => s.set_number === setNumber
           );
-        } else {
-          // Exercise has no current sets - still get previous values to show what was done before
-          // We'll look for previous sets for this exercise and create placeholder current sets
-          const previousWorkoutResult = await connection.execute(
-            `SELECT DISTINCT ws.set_number
-             FROM workout_logs wl
-             JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
-             JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
-             WHERE wl.user_id = ? 
-               AND wl.program_id = ? 
-               AND wl.day_id = ? 
-               AND we.program_exercise_id = ?
-               AND wl.workout_date < ?
-             ORDER BY ws.set_number`,
-            [
+
+          // Get previous data for this set number
+          const previousWorkoutLogResult =
+            await workoutLogRepository.queryPreviousWorkoutLogForExercise(
               userId,
               programId,
               workoutLog.day_id,
               exercise.program_exercise_id,
+              setNumber,
               workoutDate,
-            ]
-          );
-
-          const [previousSets] = previousWorkoutResult as any[];
-
-          if (previousSets.length > 0) {
-            // Create placeholder sets with previous values
-            workoutSetsWithPrevious = await Promise.all(
-              (previousSets as any[]).map(async (prevSet) => {
-                const previousWorkoutLogResult =
-                  await workoutLogRepository.queryPreviousWorkoutLogForExercise(
-                    userId,
-                    programId,
-                    workoutLog.day_id,
-                    exercise.program_exercise_id,
-                    prevSet.set_number,
-                    workoutDate,
-                    connection
-                  );
-
-                return {
-                  workoutSetId: null, // No current set exists
-                  workoutExerciseId: exercise.workout_exercise_id,
-                  setNumber: prevSet.set_number,
-                  repsLeft: null, // No current values
-                  repsRight: null,
-                  weight: null,
-                  weightUnit: null,
-                  previousLeftReps:
-                    previousWorkoutLogResult.length > 0
-                      ? previousWorkoutLogResult[0].leftReps
-                      : null,
-                  previousRightReps:
-                    previousWorkoutLogResult.length > 0
-                      ? previousWorkoutLogResult[0].rightReps
-                      : null,
-                  previousWeight:
-                    previousWorkoutLogResult.length > 0
-                      ? parseFloat(previousWorkoutLogResult[0].weight)
-                      : null,
-                  previousWeightUnit:
-                    previousWorkoutLogResult.length > 0
-                      ? previousWorkoutLogResult[0].weightUnit
-                      : null,
-                };
-              })
+              connection
             );
-          }
+
+          workoutSetsWithPrevious.push({
+            workoutSetId: currentSet ? currentSet.workout_set_id : null,
+            workoutExerciseId: exercise.workout_exercise_id,
+            setNumber: setNumber,
+            // Current values (if set is logged, otherwise null)
+            repsLeft: currentSet ? currentSet.reps_left : null,
+            repsRight: currentSet ? currentSet.reps_right : null,
+            weight: currentSet ? parseFloat(currentSet.weight) : null,
+            weightUnit: currentSet ? currentSet.weight_unit : null,
+            // Previous values (if they exist)
+            previousLeftReps:
+              previousWorkoutLogResult.length > 0
+                ? previousWorkoutLogResult[0].leftReps
+                : null,
+            previousRightReps:
+              previousWorkoutLogResult.length > 0
+                ? previousWorkoutLogResult[0].rightReps
+                : null,
+            previousWeight:
+              previousWorkoutLogResult.length > 0
+                ? parseFloat(previousWorkoutLogResult[0].weight)
+                : null,
+            previousWeightUnit:
+              previousWorkoutLogResult.length > 0
+                ? previousWorkoutLogResult[0].weightUnit
+                : null,
+          });
         }
 
         return {
