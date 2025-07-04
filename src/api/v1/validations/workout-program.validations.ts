@@ -79,6 +79,10 @@ const validateExerciseId = [
 const validateUpdateWorkoutProgramDescriptionRequest = [
   body("programName").notEmpty().withMessage("Program name is required"),
   body("description").optional().isString(),
+  body("startingDate")
+    .notEmpty()
+    .isISO8601()
+    .withMessage("Invalid starting date format"),
 ];
 
 const validateUpdateWorkoutProgramDayRequest = [

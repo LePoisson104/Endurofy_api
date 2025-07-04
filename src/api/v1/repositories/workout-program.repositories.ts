@@ -152,15 +152,17 @@ const queryUpdateWorkoutProgramDescription = async (
   programId: string,
   programName: string,
   description: string,
+  startingDate: Date,
   connection?: any
 ): Promise<any> => {
   try {
     const query =
-      "UPDATE programs SET program_name = ?, description = ? WHERE user_id = ? AND program_id = ?";
+      "UPDATE programs SET program_name = ?, description = ?, starting_date = ? WHERE user_id = ? AND program_id = ?";
     if (connection) {
       const [result] = await connection.execute(query, [
         programName,
         description,
+        startingDate,
         userId,
         programId,
       ]);
@@ -169,6 +171,7 @@ const queryUpdateWorkoutProgramDescription = async (
       const [result] = await pool.execute(query, [
         programName,
         description,
+        startingDate,
         userId,
         programId,
       ]);

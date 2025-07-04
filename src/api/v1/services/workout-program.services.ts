@@ -407,9 +407,9 @@ const addProgramDay = async (
 const updateWorkoutProgramDescription = async (
   userId: string,
   programId: string,
-  payload: { programName: string; description: string }
+  payload: { programName: string; description: string; startingDate: Date }
 ): Promise<{ data: { message: string } }> => {
-  const { programName, description } = payload;
+  const { programName, description, startingDate } = payload;
   const connection = await pool.getConnection();
 
   try {
@@ -419,6 +419,7 @@ const updateWorkoutProgramDescription = async (
       programId,
       programName,
       description,
+      startingDate,
       connection
     );
 
