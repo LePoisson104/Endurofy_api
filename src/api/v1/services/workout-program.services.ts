@@ -666,20 +666,45 @@ const setProgramAsInactive = async (
   userId: string,
   programId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await WorkoutPrograms.querySetProgramAsInactive(
-    userId,
-    programId
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Program not found", 404);
+  try {
+    await connection.beginTransaction();
+    const result1 = await WorkoutPrograms.querySetProgramAsInactive(
+      userId,
+      programId,
+      connection
+    );
+
+    if (result1.affectedRows === 0) {
+      throw new AppError("Program not found", 404);
+    }
+
+    await connection.execute(
+      "UPDATE programs SET is_active = 1 WHERE user_id = ? AND program_type = 'manual' ",
+      [userId]
+    );
+
+    await connection.commit();
+
+    return {
+      data: {
+        message: "Program set as inactive successfully",
+      },
+    };
+  } catch (err: any) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error setting program as inactive: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error setting program as inactive", 500);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
-
-  return {
-    data: {
-      message: "Program set as inactive successfully",
-    },
-  };
 };
 
 const deleteWorkoutProgram = async (
