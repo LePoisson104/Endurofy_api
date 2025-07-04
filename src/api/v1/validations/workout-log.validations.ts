@@ -5,8 +5,14 @@ const validateCreateWorkoutLogRequest = [
   body("workoutDate").notEmpty().withMessage("Workout date is required"),
   body("exerciseNotes").isString(),
   body("setNumber").notEmpty().withMessage("Set number is required"),
-  body("repsLeft").notEmpty().withMessage("Reps left is required"),
-  body("repsRight").notEmpty().withMessage("Reps right is required"),
+  body("repsLeft")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("Reps left is required"),
+  body("repsRight")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("Reps right is required"),
   body("weight").notEmpty().withMessage("Weight is required"),
   body("weightUnit")
     .notEmpty()
@@ -164,8 +170,14 @@ const validateAddManualWorkoutExercise = [
 
 const validateAddWorkoutSet = [
   body("setNumber").notEmpty().withMessage("Set number is required"),
-  body("repsRight").notEmpty().withMessage("Reps right is required"),
-  body("repsLeft").notEmpty().withMessage("Reps left is required"),
+  body("repsRight")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("Reps right is required"),
+  body("repsLeft")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("Reps left is required"),
   body("weight")
     .isFloat({ min: 0.1 })
     .withMessage("Weight must be a number greater than 0"),
