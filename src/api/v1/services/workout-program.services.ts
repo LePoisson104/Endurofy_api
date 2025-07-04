@@ -122,7 +122,7 @@ const createManualWorkoutProgram = async (
         "Manual Workout Program",
         "Manual workout program",
         "manual",
-        false,
+        true,
         new Date(),
       ]
     );
