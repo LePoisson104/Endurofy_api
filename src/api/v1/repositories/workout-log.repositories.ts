@@ -626,19 +626,6 @@ const queryDeleteWorkoutSet = async (workoutSetId: string): Promise<any> => {
   }
 };
 
-const queryDeleteWorkoutExercise = async (
-  workoutExerciseId: string
-): Promise<any> => {
-  try {
-    const query = "DELETE FROM workout_exercises WHERE workout_exercise_id = ?";
-    const [result] = await pool.execute(query, [workoutExerciseId]);
-    return result as any[];
-  } catch (err) {
-    Logger.logEvents(`Error deleting workout exercise: ${err}`, "errLog.log");
-    throw new AppError("Database error while deleting workout exercise", 500);
-  }
-};
-
 export default {
   queryIsWorkoutLogExists,
   queryIsWorkoutExerciseExists,
@@ -657,5 +644,4 @@ export default {
   queryAddManualWorkoutExercise,
   queryAddWorkoutSet,
   queryDeleteWorkoutSet,
-  queryDeleteWorkoutExercise,
 };

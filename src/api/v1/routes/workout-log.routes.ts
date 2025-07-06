@@ -127,7 +127,9 @@ router.delete(
 );
 
 router.delete(
-  "/delete-workout-exercise/:workoutExerciseId",
+  "/delete-workout-exercise/:workoutExerciseId/:workoutLogId/:workoutLogType",
+  workoutLogValidations.validateDeleteWorkoutExercise,
+  handleValidationErrors,
   workoutLogControllers.deleteWorkoutExercise
 );
 

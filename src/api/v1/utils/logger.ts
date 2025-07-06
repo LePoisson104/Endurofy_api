@@ -6,7 +6,7 @@ import path from "path";
 import { Request, Response, NextFunction } from "express";
 
 const logEvents = async (message: string, logFileName: string) => {
-  const dateTime = format(new Date(), "yyyyMMdd\tHH:mm:ss");
+  const dateTime = format(new Date(), "yyyy-MM-dd\tHH:mm:ss");
   const logItem = `${dateTime}\t${uuid()}\t${message}\n`;
 
   try {

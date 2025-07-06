@@ -340,10 +340,14 @@ const deleteWorkoutExercise = async (
   next: NextFunction
 ): Promise<void> => {
   const workoutExerciseId = req.params.workoutExerciseId;
+  const workoutLogId = req.params.workoutLogId;
+  const workoutLogType = req.params.workoutLogType;
 
   try {
     const result = await workoutLogServices.deleteWorkoutExercise(
-      workoutExerciseId
+      workoutExerciseId,
+      workoutLogId,
+      workoutLogType
     );
     sendSuccess(res, result.data.message);
   } catch (err) {

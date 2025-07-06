@@ -797,21 +797,58 @@ const deleteWorkoutSet = async (
 };
 
 const deleteWorkoutExercise = async (
-  workoutExerciseId: string
+  workoutExerciseId: string,
+  workoutLogId: string,
+  workoutLogType: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await workoutLogRepository.queryDeleteWorkoutExercise(
-    workoutExerciseId
-  );
+  const connection = await pool.getConnection();
 
-  if (result.affectedRows === 0) {
-    throw new AppError("Invalid workout exercise id", 400);
+  try {
+    await connection.beginTransaction();
+
+    await connection.execute(
+      "DELETE FROM workout_exercises WHERE workout_exercise_id = ?",
+      [workoutExerciseId]
+    );
+
+    if (workoutLogType === "program") {
+      // Step 3: Check if there are any other exercises for this workout log
+      const [remainingExercisesResult] = (await connection.execute(
+        "SELECT COUNT(*) as count FROM workout_exercises WHERE workout_log_id = ?",
+        [workoutLogId]
+      )) as any[];
+
+      const remainingExercisesCount = remainingExercisesResult[0].count;
+
+      // If no more exercises exist for this workout log, delete the workout log
+      if (remainingExercisesCount === 0) {
+        await connection.execute(
+          "DELETE FROM workout_logs WHERE workout_log_id = ?",
+          [workoutLogId]
+        );
+      }
+    }
+
+    await connection.commit();
+
+    return {
+      data: {
+        message: "Workout exercise deleted successfully",
+      },
+    };
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(
+      `Error deleting workout exercise with cascade: ${err}`,
+      "errLog.log"
+    );
+    if (err instanceof AppError) throw err;
+    throw new AppError("Database error while deleting workout exercise", 500);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
-
-  return {
-    data: {
-      message: "Workout exercise deleted successfully",
-    },
-  };
 };
 
 const deleteWorkoutSetWithCascade = async (
