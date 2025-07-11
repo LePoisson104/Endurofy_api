@@ -61,7 +61,6 @@ export enum USDAFoodNutrientID {
 
   // Fat-Soluble Vitamins
   VITAMIN_A = 1104, // "Vitamin A, IU"
-  VITAMIN_A_RAE = 1106, // "Vitamin A, RAE"
   RETINOL = 1105,
   BETA_CAROTENE = 1107, // "Carotene, beta"
   ALPHA_CAROTENE = 1108, // "Carotene, alpha"
@@ -83,7 +82,7 @@ export enum USDAFoodNutrientID {
   VITAMIN_B12_ADDED = 1246, // "Vitamin B-12, added"
 
   // Folate Family (B9)
-  FOLATE_TOTAL = 1177, // "Folate, total"
+  FOLATE = 1177, // "Folate, total"
   FOLIC_ACID = 1186,
   FOLATE_FOOD = 1187, // "Folate, food"
   FOLATE_DFE = 1190, // "Folate, DFE" (Dietary Folate Equivalents)
@@ -104,13 +103,6 @@ export enum USDAFoodNutrientID {
 
 // Helper object for common nutrient groupings
 export const NutrientGroups = {
-  MACRONUTRIENTS: [
-    USDAFoodNutrientID.PROTEIN,
-    USDAFoodNutrientID.FAT,
-    USDAFoodNutrientID.CARBOHYDRATE,
-    USDAFoodNutrientID.CALORIES,
-  ],
-
   BASIC_NUTRITION: [
     USDAFoodNutrientID.CALORIES,
     USDAFoodNutrientID.PROTEIN,
@@ -119,41 +111,6 @@ export const NutrientGroups = {
     USDAFoodNutrientID.FIBER,
     USDAFoodNutrientID.TOTAL_SUGARS,
     USDAFoodNutrientID.SODIUM,
-  ],
-
-  VITAMINS: [
-    USDAFoodNutrientID.VITAMIN_A_RAE,
-    USDAFoodNutrientID.VITAMIN_C,
-    USDAFoodNutrientID.VITAMIN_D,
-    USDAFoodNutrientID.VITAMIN_E,
-    USDAFoodNutrientID.VITAMIN_K,
-    USDAFoodNutrientID.THIAMIN,
-    USDAFoodNutrientID.RIBOFLAVIN,
-    USDAFoodNutrientID.NIACIN,
-    USDAFoodNutrientID.VITAMIN_B6,
-    USDAFoodNutrientID.VITAMIN_B12,
-    USDAFoodNutrientID.FOLATE_TOTAL,
-  ],
-
-  MINERALS: [
-    USDAFoodNutrientID.CALCIUM,
-    USDAFoodNutrientID.IRON,
-    USDAFoodNutrientID.MAGNESIUM,
-    USDAFoodNutrientID.PHOSPHORUS,
-    USDAFoodNutrientID.POTASSIUM,
-    USDAFoodNutrientID.SODIUM,
-    USDAFoodNutrientID.ZINC,
-    USDAFoodNutrientID.COPPER,
-    USDAFoodNutrientID.SELENIUM,
-  ],
-
-  B_VITAMINS: [
-    USDAFoodNutrientID.THIAMIN, // B1
-    USDAFoodNutrientID.RIBOFLAVIN, // B2
-    USDAFoodNutrientID.NIACIN, // B3
-    USDAFoodNutrientID.VITAMIN_B6,
-    USDAFoodNutrientID.VITAMIN_B12,
-    USDAFoodNutrientID.FOLATE_TOTAL, // B9
-    USDAFoodNutrientID.CHOLINE,
+    USDAFoodNutrientID.CHOLESTEROL,
   ],
 } as const;

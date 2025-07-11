@@ -36,11 +36,7 @@ const organizeNutrientsByGroups = (foodNutrients: any[]) => {
   };
 
   return {
-    macroNutrients: transformNutrients(NutrientGroups.MACRONUTRIENTS),
     basicNutrition: transformNutrients(NutrientGroups.BASIC_NUTRITION),
-    vitamins: transformNutrients(NutrientGroups.VITAMINS),
-    minerals: transformNutrients(NutrientGroups.MINERALS),
-    bVitamins: transformNutrients(NutrientGroups.B_VITAMINS),
   };
 };
 
@@ -134,11 +130,7 @@ const searchFood: RequestHandler = async (
           servingSize: food.servingSize,
           servingSizeUnit: food.servingSizeUnit,
           nutrition: {
-            macroNutrients: nutrients.macroNutrients,
             basicNutrition: nutrients.basicNutrition,
-            vitamins: nutrients.vitamins,
-            minerals: nutrients.minerals,
-            bVitamins: nutrients.bVitamins,
           },
         };
       }),
@@ -147,7 +139,7 @@ const searchFood: RequestHandler = async (
       totalPages: responseData.totalPages || 1,
     };
 
-    sendSuccess(res, responseData);
+    sendSuccess(res, transformedData);
   } catch (err) {
     Logger.logEvents(`Error fetching food data: ${err}`, "errLog.log");
     controllerErrorResponse(res, err as CustomError);
