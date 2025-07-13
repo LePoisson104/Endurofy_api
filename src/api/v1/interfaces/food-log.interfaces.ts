@@ -66,3 +66,70 @@ export const NutrientGroups = {
     USDAFoodNutrientID.CHOLESTEROL,
   ],
 } as const;
+
+// Types for service parameters
+export type MealType =
+  | "breakfast"
+  | "lunch"
+  | "dinner"
+  | "snack"
+  | "uncategorized";
+export type FoodSource = "usda" | "custom";
+export type ServingUnit = "g" | "ml" | "oz";
+
+export interface AddFoodPayload {
+  fdcId?: number;
+  foodName: string;
+  foodBrand: string;
+  foodSource: FoodSource;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+  cholesterol?: number;
+  servingSize: number;
+  servingUnit: ServingUnit;
+  mealType: MealType;
+  loggedAt: string;
+}
+
+export interface AddFavoriteFoodPayload {
+  foodId: string;
+  foodName: string;
+  foodBrand: string;
+  foodSource: FoodSource;
+}
+
+export interface AddCustomFoodPayload {
+  foodName: string;
+  foodBrand: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol: number;
+  servingSize: number;
+  servingUnit: ServingUnit;
+}
+
+export interface UpdateFoodPayload {
+  serving_size: number;
+  serving_unit: ServingUnit;
+}
+
+export interface UpdateCustomFoodPayload {
+  food_name: string;
+  food_brand: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  serving_size: number;
+  serving_unit: ServingUnit;
+}

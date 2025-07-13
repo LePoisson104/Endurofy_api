@@ -66,7 +66,7 @@ const queryGetIsFavoriteFood = async (
   }
 };
 
-const queryGetLogDates = async (
+const queryGetLoggedDates = async (
   userId: string,
   startDate: string,
   endDate: string
@@ -311,7 +311,7 @@ const queryDeleteCustomFood = async (customFoodId: string): Promise<any> => {
 export default {
   queryGetFoodLogByDate,
   queryGetFavoriteFood,
-  queryGetLogDates,
+  queryGetLoggedDates,
   queryGetIsFavoriteFood,
   queryGetCustomFood,
   queryGetCustomFoodById,
