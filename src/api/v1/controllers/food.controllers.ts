@@ -41,7 +41,7 @@ const organizeNutrientsByGroups = (
   };
 
   return {
-    basicNutrition: transformNutrients(NutrientGroups.BASIC_NUTRITION),
+    ...transformNutrients(NutrientGroups.BASIC_NUTRITION),
   };
 };
 
@@ -141,8 +141,8 @@ const searchFood: RequestHandler = async (
           ingredients: food.ingredients || undefined,
           servingSize: food.servingSize,
           servingSizeUnit: food.servingSizeUnit,
-          nutrition: {
-            basicNutrition: nutrients.basicNutrition,
+          nutritions: {
+            ...nutrients,
           },
         };
       }),
@@ -153,7 +153,7 @@ const searchFood: RequestHandler = async (
 
     sendSuccess(res, {
       message: "Food search completed successfully",
-      data: transformedData,
+      ...transformedData,
     });
   } catch (err: any) {
     Logger.logEvents(`Error fetching food data: ${err}`, "errLog.log");
