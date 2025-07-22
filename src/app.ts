@@ -8,6 +8,7 @@ import weightLogRoutes from "./api/v1/routes/weight-log.routes";
 import workoutProgramRoutes from "./api/v1/routes/workoutProgramRoutes";
 import workoutLogRoutes from "./api/v1/routes/workout-log.routes";
 import foodLogRoutes from "./api/v1/routes/food-log.routes";
+import foodRoutes from "./api/v1/routes/food.routes";
 
 const app: Express = express();
 
@@ -20,6 +21,7 @@ app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/weight-log", weightLogRoutes);
 app.use("/api/v1/workout-program", workoutProgramRoutes);
 app.use("/api/v1/workout-log", workoutLogRoutes);
+app.use("/api/v1/food", foodRoutes);
 app.use("/api/v1/food-log", foodLogRoutes);
 
 // Initialize cleanup scheduler

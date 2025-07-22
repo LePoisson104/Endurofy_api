@@ -23,3 +23,22 @@ export interface UserInfoServiceResponse {
     userInfo: UsersInfo;
   };
 }
+
+// Food Service Interfaces
+export interface FoodSearchServiceResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+export interface FavoriteFoodServiceResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+export interface CustomFoodServiceResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
