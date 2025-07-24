@@ -40,9 +40,7 @@ const organizeNutrientsByGroups = (
       }));
   };
 
-  return {
-    ...transformNutrients(NutrientGroups.BASIC_NUTRITION),
-  };
+  return transformNutrients(NutrientGroups.BASIC_NUTRITION);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,9 +139,7 @@ const searchFood: RequestHandler = async (
           ingredients: food.ingredients || undefined,
           servingSize: food.servingSize,
           servingSizeUnit: food.servingSizeUnit,
-          nutritions: {
-            ...nutrients,
-          },
+          nutritions: nutrients,
         };
       }),
       totalHits: responseData.totalHits || 0,
