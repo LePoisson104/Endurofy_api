@@ -33,7 +33,7 @@ const organizeNutrientsByGroups = (
         nutrientName: nutrient.nutrientName,
         nutrientNumber: nutrient.nutrientNumber,
         unitName: nutrient.unitName,
-        value: Number((nutrient.value * (servingSize / 100)).toFixed(2)), // scale to the actual serving size originally per 100g/ml
+        value: nutrient.value, // per 100g/ml
         rank: nutrient.rank,
         indentLevel: nutrient.indentLevel,
         foodNutrientId: nutrient.foodNutrientId,
