@@ -130,9 +130,9 @@ const deleteFood: RequestHandler = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { foodId } = req.params;
+    const { foodLogId } = req.params;
 
-    const deletedFood = await foodLogServices.deleteFood(foodId);
+    const deletedFood = await foodLogServices.deleteFood(foodLogId);
 
     sendSuccess(res, {
       message: "Food deleted successfully",

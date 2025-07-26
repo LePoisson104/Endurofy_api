@@ -53,7 +53,7 @@ router.patch(
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.delete(
-  "/food/:foodId",
+  "/food/:foodLogId",
   foodLogValidations.validateDeleteFood,
   handleValidationErrors,
   foodLogControllers.deleteFood

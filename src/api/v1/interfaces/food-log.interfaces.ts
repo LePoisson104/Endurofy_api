@@ -9,7 +9,7 @@ export type MealType =
   | "uncategorized";
 
 export interface AddFoodPayload {
-  fdcId?: number;
+  foodId: string;
   foodName: string;
   foodBrand: string;
   foodSource: FoodSource;
@@ -17,10 +17,10 @@ export interface AddFoodPayload {
   protein: number;
   carbs: number;
   fat: number;
-  fiber?: number;
-  sugar?: number;
-  sodium?: number;
-  cholesterol?: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol: number;
   servingSize: number;
   servingUnit: ServingUnit;
   mealType: MealType;

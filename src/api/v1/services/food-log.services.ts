@@ -11,10 +11,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const getFoodLogByDate = async (
-  userId: string,
-  date: string
-): Promise<any[]> => {
+const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
   if (!userId || !date) {
     throw new AppError("UserId and date are required!", 400);
   }
@@ -24,7 +21,25 @@ const getFoodLogByDate = async (
       userId,
       date
     );
-    return getAllFoods;
+
+    const groupedFoods: Record<string, any[]> = {
+      breakfast: [],
+      lunch: [],
+      dinner: [],
+      snacks: [],
+      uncategorized: [],
+    };
+
+    getAllFoods.forEach((food: any) => {
+      const mealType = food.meal_type;
+      if (groupedFoods[mealType]) {
+        groupedFoods[mealType].push(food);
+      } else {
+        groupedFoods.uncategorized.push(food);
+      }
+    });
+
+    return groupedFoods;
   } catch (error: any) {
     await Logger.logEvents(
       `Error in getAllFood service: ${error.message}`,
@@ -71,19 +86,18 @@ const getLoggedDates = async (
 const addFood = async (
   userId: string,
   foodPayload: AddFoodPayload
-): Promise<any> => {
-  console.log("foodPayload", foodPayload);
+): Promise<{
+  data: {
+    message: string;
+  };
+}> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
   }
 
-  const connection = await pool.getConnection();
-
   try {
-    await connection.beginTransaction();
-
     const {
-      fdcId,
+      foodId,
       foodName,
       foodBrand,
       foodSource,
@@ -102,9 +116,8 @@ const addFood = async (
     } = foodPayload;
 
     const foodLogId = uuidv4();
-    const foodId = fdcId ? fdcId.toString() : uuidv4();
 
-    const addedFood = await foodLogRepository.queryAddFood(
+    await foodLogRepository.queryAddFood(
       foodLogId,
       userId,
       foodId,
@@ -118,24 +131,24 @@ const addFood = async (
       protein,
       carbs,
       fat,
-      loggedAt,
       fiber,
       sugar,
       sodium,
-      cholesterol
+      cholesterol,
+      loggedAt.split("T")[0]
     );
 
-    await connection.commit();
-    return addedFood;
+    return {
+      data: {
+        message: "Food added successfully",
+      },
+    };
   } catch (error: any) {
-    await connection.rollback();
     await Logger.logEvents(
       `Error in addFood service: ${error.message}`,
       "errLog.log"
     );
     throw new AppError("Something went wrong while trying to add food!", 500);
-  } finally {
-    connection.release();
   }
 };
 
@@ -189,9 +202,9 @@ const updateFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE SERVICES
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const deleteFood = async (foodId: string): Promise<any> => {
-  if (!foodId) {
-    throw new AppError("FoodId is required!", 400);
+const deleteFood = async (foodLogId: string): Promise<any> => {
+  if (!foodLogId) {
+    throw new AppError("foodLogId is required!", 400);
   }
 
   const connection = await pool.getConnection();
@@ -199,7 +212,7 @@ const deleteFood = async (foodId: string): Promise<any> => {
   try {
     await connection.beginTransaction();
 
-    const deletedFood = await foodLogRepository.queryDeleteFood(foodId);
+    const deletedFood = await foodLogRepository.queryDeleteFood(foodLogId);
 
     await connection.commit();
     return deletedFood;

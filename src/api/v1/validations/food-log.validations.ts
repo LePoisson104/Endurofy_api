@@ -95,10 +95,11 @@ const validateAddFood = [
     .withMessage("Logged at date is required")
     .isISO8601()
     .withMessage("Logged at must be a valid date in YYYY-MM-DD format"),
-  body("fdcId")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("FDC ID must be a positive integer"),
+  body("foodId")
+    .notEmpty()
+    .withMessage("Food ID is required")
+    .isString()
+    .withMessage("Food ID must be a string"),
 ];
 
 const validateUpdateFood = [
@@ -168,9 +169,9 @@ const validateUpdateCustomFood = [
 ];
 
 const validateDeleteFood = [
-  param("foodId")
+  param("foodLogId")
     .notEmpty()
-    .withMessage("Food ID is required")
+    .withMessage("Food log ID is required")
     .isUUID()
     .withMessage("Invalid food ID format"),
 ];

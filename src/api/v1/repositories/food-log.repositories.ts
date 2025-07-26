@@ -62,18 +62,18 @@ const queryAddFood = async (
   servingSize: number,
   servingSizeUnit: "g" | "ml" | "oz",
   calories: number,
-  proteinG: number,
-  carbsG: number,
-  fatG: number,
-  logDate: string,
-  fiberG?: number,
-  sugarG?: number,
-  sodiumMg?: number,
-  cholestrolMg?: number
+  protein: number,
+  carbs: number,
+  fat: number,
+  fiber: number,
+  sugar: number,
+  sodium: number,
+  cholestrol: number,
+  loggedAt: string
 ): Promise<any> => {
   try {
     const query =
-      "INSERT INTO food_logs (food_log_id, user_id, food_id, food_name, brand_name, food_source, meal_type, serving_size, serving_size_unit, calories, protein_g, carbs_g, fat_g, log_date, fiber_g, sugar_g, sodium_mg, cholestrol_mg) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO food_logs (food_log_id, user_id, food_id, food_name, brand_name, food_source, meal_type, serving_size, serving_size_unit, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholestrol_mg, log_date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     const [result] = await pool.execute(query, [
       foodLogId,
       userId,
@@ -85,14 +85,14 @@ const queryAddFood = async (
       servingSize,
       servingSizeUnit,
       calories,
-      proteinG,
-      carbsG,
-      fatG,
-      logDate,
-      fiberG,
-      sugarG,
-      sodiumMg,
-      cholestrolMg,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium,
+      cholestrol,
+      loggedAt,
     ]);
     return result;
   } catch (err: any) {
