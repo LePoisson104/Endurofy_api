@@ -135,6 +135,7 @@ const searchFood: RequestHandler = async (
           description: food.description,
           brandOwner: food.brandOwner || undefined,
           brandName: food.brandName || undefined,
+          foodSource: "USDA",
           foodCategory: food.foodCategory,
           ingredients: food.ingredients || undefined,
           servingSize: food.servingSize,

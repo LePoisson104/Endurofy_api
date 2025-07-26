@@ -43,8 +43,8 @@ const validateAddFavoriteFood = [
   body("foodSource")
     .notEmpty()
     .withMessage("Food source is required")
-    .isIn(["usda", "custom"])
-    .withMessage("Food source must be either 'usda' or 'custom'"),
+    .isIn(["USDA", "custom"])
+    .withMessage("Food source must be either 'USDA' or 'custom'"),
 ];
 
 const validateDeleteFavoriteFood = [

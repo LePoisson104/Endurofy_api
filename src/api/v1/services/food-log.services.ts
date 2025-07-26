@@ -72,6 +72,7 @@ const addFood = async (
   userId: string,
   foodPayload: AddFoodPayload
 ): Promise<any> => {
+  console.log("foodPayload", foodPayload);
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
   }

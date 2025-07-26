@@ -35,8 +35,8 @@ const validateAddFood = [
   body("foodSource")
     .notEmpty()
     .withMessage("Food source is required")
-    .isIn(["usda", "custom"])
-    .withMessage("Food source must be either 'usda' or 'custom'"),
+    .isIn(["USDA", "custom"])
+    .withMessage("Food source must be either 'USDA' or 'custom'"),
   body("calories")
     .notEmpty()
     .withMessage("Calories is required")
@@ -86,9 +86,9 @@ const validateAddFood = [
   body("mealType")
     .notEmpty()
     .withMessage("Meal type is required")
-    .isIn(["breakfast", "lunch", "dinner", "snack", "uncategorized"])
+    .isIn(["breakfast", "lunch", "dinner", "snacks", "uncategorized"])
     .withMessage(
-      "Meal type must be one of: breakfast, lunch, dinner, snack, uncategorized"
+      "Meal type must be one of: breakfast, lunch, dinner, snacks, uncategorized"
     ),
   body("loggedAt")
     .notEmpty()

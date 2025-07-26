@@ -84,7 +84,7 @@ const queryAddFavoriteFood = async (
   userId: string,
   foodName: string,
   brandName: string,
-  foodSource: "usda" | "custom"
+  foodSource: "USDA" | "custom"
 ): Promise<any> => {
   try {
     const query =

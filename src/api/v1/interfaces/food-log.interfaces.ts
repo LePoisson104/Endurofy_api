@@ -5,7 +5,7 @@ export type MealType =
   | "breakfast"
   | "lunch"
   | "dinner"
-  | "snack"
+  | "snacks"
   | "uncategorized";
 
 export interface AddFoodPayload {
