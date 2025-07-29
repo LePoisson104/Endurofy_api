@@ -1,41 +1,30 @@
 import { Request, Response, NextFunction } from "express";
-import { controllerErrorResponse } from "../middlewares/error.handlers";
-import { CustomError } from "../interfaces/error.interface";
 import { sendSuccess } from "../utils/response.utils";
 import workoutLogServices from "../services/workout-log.services";
+import { asyncHandler } from "../utils/async-handler";
 
-const getManualWorkoutLogWithPrevious = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const workoutDate = req.params.workoutDate;
+const getManualWorkoutLogWithPrevious = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const workoutDate = req.params.workoutDate;
 
-  try {
     const result = await workoutLogServices.getManualWorkoutLogWithPrevious(
       userId,
       programId,
       workoutDate
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const getWorkoutLogPagination = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const limit = parseInt(req.params.limit);
-  const offset = parseInt(req.params.offset);
+const getWorkoutLogPagination = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const limit = parseInt(req.params.limit);
+    const offset = parseInt(req.params.offset);
 
-  try {
     const result = await workoutLogServices.getWorkoutLogPagination(
       userId,
       programId,
@@ -43,22 +32,16 @@ const getWorkoutLogPagination = async (
       offset
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const getPreviousWorkoutLog = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const dayId = req.params.dayId;
-  const currentWorkoutDate = req.params.currentWorkoutDate;
+const getPreviousWorkoutLog = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const dayId = req.params.dayId;
+    const currentWorkoutDate = req.params.currentWorkoutDate;
 
-  try {
     const result = await workoutLogServices.getPreviousWorkoutLog(
       userId,
       programId,
@@ -66,22 +49,16 @@ const getPreviousWorkoutLog = async (
       currentWorkoutDate
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const getWorkoutLogByDate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const startDate = req.params.startDate;
-  const endDate = req.params.endDate;
+const getWorkoutLogByDate = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const startDate = req.params.startDate;
+    const endDate = req.params.endDate;
 
-  try {
     const result = await workoutLogServices.getWorkoutLogData(
       userId,
       programId,
@@ -89,22 +66,16 @@ const getWorkoutLogByDate = async (
       endDate
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const getCompletedWorkoutLogs = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const startDate = req.params.startDate;
-  const endDate = req.params.endDate;
+const getCompletedWorkoutLogs = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const startDate = req.params.startDate;
+    const endDate = req.params.endDate;
 
-  try {
     const result = await workoutLogServices.getCompletedWorkoutLogs(
       userId,
       programId,
@@ -112,22 +83,16 @@ const getCompletedWorkoutLogs = async (
       endDate
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const getWorkoutLogDates = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const startDate = req.params.startDate;
-  const endDate = req.params.endDate;
+const getWorkoutLogDates = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const startDate = req.params.startDate;
+    const endDate = req.params.endDate;
 
-  try {
     const result = await workoutLogServices.getWorkoutLogDates(
       userId,
       programId,
@@ -135,22 +100,16 @@ const getWorkoutLogDates = async (
       endDate
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const createWorkoutLog = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const dayId = req.params.dayId;
-  const payload = req.body;
+const createWorkoutLog = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const dayId = req.params.dayId;
+    const payload = req.body;
 
-  try {
     const result = await workoutLogServices.createWorkoutLog(
       userId,
       programId,
@@ -158,41 +117,29 @@ const createWorkoutLog = async (
       payload
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const addWorkoutSet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutExerciseId = req.params.workoutExerciseId;
-  const payload = req.body;
+const addWorkoutSet = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutExerciseId = req.params.workoutExerciseId;
+    const payload = req.body;
 
-  try {
     const result = await workoutLogServices.addWorkoutSet(
       workoutExerciseId,
       payload
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const createManualWorkoutLog = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const userId = req.params.userId;
-  const programId = req.params.programId;
-  const dayId = req.params.dayId;
-  const payload = req.body;
+const createManualWorkoutLog = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const dayId = req.params.dayId;
+    const payload = req.body;
 
-  try {
     const result = await workoutLogServices.createManualWorkoutLog(
       userId,
       programId,
@@ -200,181 +147,125 @@ const createManualWorkoutLog = async (
       payload
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const addManualWorkoutExercise = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutLogId = req.params.workoutLogId;
-  const programExerciseId = req.params.programExerciseId;
-  const payload = req.body;
+const addManualWorkoutExercise = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutLogId = req.params.workoutLogId;
+    const programExerciseId = req.params.programExerciseId;
+    const payload = req.body;
 
-  try {
     const result = await workoutLogServices.addManualWorkoutExercise(
       workoutLogId,
       programExerciseId,
       payload
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const updateExerciseNotes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutExerciseId = req.params.workoutExerciseId;
-  const exerciseNotes = req.body.exerciseNotes;
+const updateExerciseNotes = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutExerciseId = req.params.workoutExerciseId;
+    const exerciseNotes = req.body.exerciseNotes;
 
-  try {
     const result = await workoutLogServices.updateExerciseNotes(
       workoutExerciseId,
       exerciseNotes
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const updateWorkoutLogName = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutLogId = req.params.workoutLogId;
-  const title = req.body.title;
+const updateWorkoutLogName = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutLogId = req.params.workoutLogId;
+    const title = req.body.title;
 
-  try {
     const result = await workoutLogServices.updateWorkoutLogName(
       workoutLogId,
       title
     );
     sendSuccess(res, result.data.message);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const updateWorkoutLogStatus = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutLogId = req.params.workoutLogId;
-  const status = req.body.status;
+const updateWorkoutLogStatus = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutLogId = req.params.workoutLogId;
+    const status = req.body.status;
 
-  try {
     const result = await workoutLogServices.updateWorkoutLogStatus(
       workoutLogId,
       status
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const updateWorkoutSet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutSetId = req.params.workoutSetId;
-  const workoutExerciseId = req.params.workoutExerciseId;
-  const workoutSetPayload = req.body;
+const updateWorkoutSet = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutSetId = req.params.workoutSetId;
+    const workoutExerciseId = req.params.workoutExerciseId;
+    const workoutSetPayload = req.body;
 
-  try {
     const result = await workoutLogServices.updateWorkoutSet(
       workoutSetId,
       workoutExerciseId,
       workoutSetPayload
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const deleteWorkoutLog = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutLogId = req.params.workoutLogId;
+const deleteWorkoutLog = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutLogId = req.params.workoutLogId;
 
-  try {
     const result = await workoutLogServices.deleteWorkoutLog(workoutLogId);
     sendSuccess(res, result.data.message);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const deleteWorkoutSet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutSetId = req.params.workoutSetId;
+const deleteWorkoutSet = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutSetId = req.params.workoutSetId;
 
-  try {
     const result = await workoutLogServices.deleteWorkoutSet(workoutSetId);
     sendSuccess(res, result.data.message);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const deleteWorkoutExercise = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutExerciseId = req.params.workoutExerciseId;
-  const workoutLogId = req.params.workoutLogId;
-  const workoutLogType = req.params.workoutLogType;
+const deleteWorkoutExercise = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutExerciseId = req.params.workoutExerciseId;
+    const workoutLogId = req.params.workoutLogId;
+    const workoutLogType = req.params.workoutLogType;
 
-  try {
     const result = await workoutLogServices.deleteWorkoutExercise(
       workoutExerciseId,
       workoutLogId,
       workoutLogType
     );
     sendSuccess(res, result.data.message);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const deleteWorkoutSetWithCascade = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const workoutSetId = req.params.workoutSetId;
-  const workoutExerciseId = req.params.workoutExerciseId;
-  const workoutLogId = req.params.workoutLogId;
+const deleteWorkoutSetWithCascade = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutSetId = req.params.workoutSetId;
+    const workoutExerciseId = req.params.workoutExerciseId;
+    const workoutLogId = req.params.workoutLogId;
 
-  try {
     const result = await workoutLogServices.deleteWorkoutSetWithCascade(
       workoutSetId,
       workoutExerciseId,
       workoutLogId
     );
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 export default {
   createWorkoutLog,

@@ -117,3 +117,29 @@ const getSafeErrorMessage = (err: CustomError): string => {
     "An error occurred while processing your request"
   );
 };
+
+// Global error handling middleware for Express
+export const globalErrorHandler = async (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  // If response already sent, delegate to default Express error handler
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  // Convert non-AppError instances to AppError
+  const appError: CustomError =
+    err instanceof AppError
+      ? err
+      : new AppError(
+          "An unexpected error occurred",
+          500,
+          err.details,
+          "INTERNAL_SERVER_ERROR"
+        );
+
+  await controllerErrorResponse(res, appError);
+};

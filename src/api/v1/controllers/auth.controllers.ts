@@ -7,15 +7,11 @@ import {
   LoginRequest,
   OTPRequest,
 } from "../interfaces/auth.interfaces";
-import { RequestHandler } from "express";
 import { sendSuccess, sendCreated } from "../utils/response.utils";
+import { asyncHandler } from "../utils/async-handler";
 
-const signup: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const signup = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { firstName, lastName, email, password } = req.body as SignupRequest;
     const result = await authServices.signup(
       firstName,
@@ -28,110 +24,70 @@ const signup: RequestHandler = async (
       result.data,
       "Verification code has been sent to your email"
     );
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const verifyOTP: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const userId = req.params.userId;
-    const { email, otp } = req.body as OTPRequest;
-    const result = await authServices.verifyOTP(userId, email, otp);
-    sendCreated(res, null, result.message);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
+const verifyOTP = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.params.userId;
+      const { email, otp } = req.body as OTPRequest;
+      const result = await authServices.verifyOTP(userId, email, otp);
+      sendCreated(res, null, result.message);
+    } catch (err) {
+      controllerErrorResponse(res, err as CustomError);
+    }
   }
-};
+);
 
-const resendOTP: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const resendOTP = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
     const { email } = req.body;
     const result = await authServices.resendOTP(userId, email);
     sendSuccess(res, null, result.message);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const forgotPassword: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const forgotPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
     const result = await authServices.forgotPassword(email);
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const resetPassword: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const resetPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const email = req.params.email;
     const otp = req.params.otp;
     const { password } = req.body;
     const result = await authServices.resetPassword(email, otp, password);
     sendSuccess(res, result.data);
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const login: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const login = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body as LoginRequest;
     const result = await authServices.login(email, password, res);
     sendSuccess(res, result.data, "Login successful");
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const refresh: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const refresh = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const result = await authServices.refresh(req.cookies);
     sendSuccess(res, result.data, "Refresh successful");
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const logout: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const logout = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     authServices.logout(req.cookies, res);
     sendSuccess(res, null, "Logged out successfully");
-  } catch (err) {
-    controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 export default {
   signup,

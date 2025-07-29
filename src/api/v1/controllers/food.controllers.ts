@@ -1,11 +1,8 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import {
-  AppError,
-  controllerErrorResponse,
-} from "../middlewares/error.handlers";
-import { CustomError } from "../interfaces/error.interface";
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../middlewares/error.handlers";
 import { sendSuccess } from "../utils/response.utils";
 import Logger from "../utils/logger";
+import { asyncHandler } from "../utils/async-handler";
 import {
   USDAFoodNutrient,
   NutrientGroups,
@@ -13,10 +10,7 @@ import {
 import foodServices from "../services/food.services";
 
 // Helper function to organize nutrients by groups
-const organizeNutrientsByGroups = (
-  foodNutrients: any[],
-  servingSize: number
-) => {
+const organizeNutrientsByGroups = (foodNutrients: any[]) => {
   const nutrientMap = new Map<number, any>();
   foodNutrients.forEach((nutrient) => {
     nutrientMap.set(nutrient.nutrientId, nutrient);
@@ -47,12 +41,8 @@ const organizeNutrientsByGroups = (
 // @GET CONTROLLERS - SEARCH FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const searchFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const searchFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const searchItem = req.params.searchItem;
 
     // Check if API key exists
@@ -125,10 +115,7 @@ const searchFood: RequestHandler = async (
 
     const transformedData = {
       foods: responseData.foods.map((food: any) => {
-        const nutrients = organizeNutrientsByGroups(
-          food.foodNutrients || [],
-          food.servingSize
-        );
+        const nutrients = organizeNutrientsByGroups(food.foodNutrients || []);
 
         return {
           fdcId: food.fdcId,
@@ -152,22 +139,15 @@ const searchFood: RequestHandler = async (
       message: "Food search completed successfully",
       ...transformedData,
     });
-  } catch (err: any) {
-    Logger.logEvents(`Error fetching food data: ${err}`, "errLog.log");
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET CONTROLLERS - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getFavoriteFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const getFavoriteFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
 
     const favoriteFood = await foodServices.getFavoriteFood(userId);
@@ -176,21 +156,11 @@ const getFavoriteFood: RequestHandler = async (
       message: "Favorite food retrieved successfully",
       data: favoriteFood,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in getFavoriteFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
-const getIsFavoriteFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const getIsFavoriteFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
     const { foodId } = req.params;
 
@@ -200,75 +170,39 @@ const getIsFavoriteFood: RequestHandler = async (
       message: "Favorite food status retrieved successfully",
       data: isFavorite,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in getIsFavoriteFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET CONTROLLERS - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const getCustomFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const userId = req.params.userId;
+const getCustomFood = asyncHandler(async (req, res) => {
+  const userId = req.params.userId;
+  const customFood = await foodServices.getCustomFood(userId);
 
-    const customFood = await foodServices.getCustomFood(userId);
+  sendSuccess(res, {
+    message: "Custom food retrieved successfully",
+    data: customFood,
+  });
+});
 
-    sendSuccess(res, {
-      message: "Custom food retrieved successfully",
-      data: customFood,
-    });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in getCustomFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
-  }
-};
+const getCustomFoodById = asyncHandler(async (req, res) => {
+  const { foodId } = req.params;
+  const customFood = await foodServices.getCustomFoodById(foodId);
 
-const getCustomFoodById: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { foodId } = req.params;
-
-    const customFood = await foodServices.getCustomFoodById(foodId);
-
-    sendSuccess(res, {
-      message: "Custom food retrieved successfully",
-      data: customFood,
-    });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in getCustomFoodById controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
-  }
-};
+  sendSuccess(res, {
+    message: "Custom food retrieved successfully",
+    data: customFood,
+  });
+});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @POST CONTROLLERS - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const addFavoriteFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const addFavoriteFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
     const foodPayload = req.body;
 
@@ -281,25 +215,15 @@ const addFavoriteFood: RequestHandler = async (
       message: "Favorite food added successfully",
       data: addedFavoriteFood,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in addFavoriteFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @POST CONTROLLERS - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const addCustomFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const addCustomFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
     const foodPayload = req.body;
 
@@ -312,25 +236,15 @@ const addCustomFood: RequestHandler = async (
       message: "Custom food added successfully",
       data: addedCustomFood,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in addCustomFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @PATCH CONTROLLERS - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const updateCustomFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const updateCustomFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { customFoodId } = req.params;
     const updatePayload = req.body;
 
@@ -343,25 +257,15 @@ const updateCustomFood: RequestHandler = async (
       message: "Custom food updated successfully",
       data: updatedCustomFood,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in updateCustomFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE CONTROLLERS - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const deleteFavoriteFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const deleteFavoriteFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { favFoodId } = req.params;
 
     const deletedFavoriteFood = await foodServices.deleteFavoriteFood(
@@ -372,25 +276,15 @@ const deleteFavoriteFood: RequestHandler = async (
       message: "Favorite food deleted successfully",
       data: deletedFavoriteFood,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in deleteFavoriteFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE CONTROLLERS - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-const deleteCustomFood: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
+const deleteCustomFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { customFoodId } = req.params;
 
     const deletedCustomFood = await foodServices.deleteCustomFood(customFoodId);
@@ -399,14 +293,8 @@ const deleteCustomFood: RequestHandler = async (
       message: "Custom food deleted successfully",
       data: deletedCustomFood,
     });
-  } catch (err: any) {
-    await Logger.logEvents(
-      `Error in deleteCustomFood controller: ${err.message}`,
-      "errLog.log"
-    );
-    await controllerErrorResponse(res, err as CustomError);
   }
-};
+);
 
 export default {
   // Search Food

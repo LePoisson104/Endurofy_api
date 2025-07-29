@@ -71,19 +71,8 @@ const getCustomFood = async (userId: string): Promise<any[]> => {
     throw new AppError("UserId is required!", 400);
   }
 
-  try {
-    const customFood = await foodRepository.queryGetCustomFood(userId);
-    return customFood;
-  } catch (error: any) {
-    await Logger.logEvents(
-      `Error in getCustomFood service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to get custom food!",
-      500
-    );
-  }
+  const customFood = await foodRepository.queryGetCustomFood(userId);
+  return customFood;
 };
 
 const getCustomFoodById = async (foodId: string): Promise<any[]> => {
@@ -162,60 +151,41 @@ const addCustomFood = async (
     throw new AppError("UserId and foodPayload are required!", 400);
   }
 
-  const connection = await pool.getConnection();
+  const {
+    foodName,
+    foodBrand,
+    calories,
+    protein,
+    carbs,
+    fat,
+    fiber,
+    sugar,
+    sodium,
+    cholesterol,
+    servingSize,
+    servingUnit,
+  } = foodPayload;
 
-  try {
-    await connection.beginTransaction();
+  const customFoodId = uuidv4();
 
-    const {
-      foodName,
-      foodBrand,
-      calories,
-      protein,
-      carbs,
-      fat,
-      fiber,
-      sugar,
-      sodium,
-      cholesterol,
-      servingSize,
-      servingUnit,
-    } = foodPayload;
+  const addedCustomFood = await foodRepository.queryAddCustomFood(
+    customFoodId,
+    userId,
+    foodName,
+    foodBrand,
+    calories,
+    protein,
+    carbs,
+    fat,
+    fiber,
+    sugar,
+    sodium,
+    cholesterol,
+    servingSize,
+    servingUnit
+  );
 
-    const customFoodId = uuidv4();
-
-    const addedCustomFood = await foodRepository.queryAddCustomFood(
-      customFoodId,
-      userId,
-      foodName,
-      foodBrand,
-      calories,
-      protein,
-      carbs,
-      fat,
-      fiber,
-      sugar,
-      sodium,
-      cholesterol,
-      servingSize,
-      servingUnit
-    );
-
-    await connection.commit();
-    return addedCustomFood;
-  } catch (error: any) {
-    await connection.rollback();
-    await Logger.logEvents(
-      `Error in addCustomFood service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to add custom food!",
-      500
-    );
-  } finally {
-    connection.release();
-  }
+  return addedCustomFood;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

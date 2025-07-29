@@ -9,6 +9,7 @@ import workoutProgramRoutes from "./api/v1/routes/workoutProgramRoutes";
 import workoutLogRoutes from "./api/v1/routes/workout-log.routes";
 import foodLogRoutes from "./api/v1/routes/food-log.routes";
 import foodRoutes from "./api/v1/routes/food.routes";
+import { globalErrorHandler } from "./api/v1/middlewares/error.handlers";
 
 const app: Express = express();
 
@@ -16,6 +17,7 @@ configureSecurityMiddleware(app);
 app.use(cookieParser());
 app.use(express.json());
 
+// Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/weight-log", weightLogRoutes);
@@ -23,6 +25,9 @@ app.use("/api/v1/workout-program", workoutProgramRoutes);
 app.use("/api/v1/workout-log", workoutLogRoutes);
 app.use("/api/v1/food", foodRoutes);
 app.use("/api/v1/food-log", foodLogRoutes);
+
+// Global error handling middleware (must be last)
+app.use(globalErrorHandler);
 
 // Initialize cleanup scheduler
 scheduleCleanup();
