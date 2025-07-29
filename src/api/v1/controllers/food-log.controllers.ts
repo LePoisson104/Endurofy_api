@@ -102,10 +102,13 @@ const updateFood: RequestHandler = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { foodId } = req.params;
+    const { foodLogId } = req.params;
     const updatePayload = req.body;
 
-    const updatedFood = await foodLogServices.updateFood(foodId, updatePayload);
+    const updatedFood = await foodLogServices.updateFood(
+      foodLogId,
+      updatePayload
+    );
 
     sendSuccess(res, {
       message: "Food updated successfully",

@@ -156,47 +156,33 @@ const addFood = async (
 // @PATCH SERVICES
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const updateFood = async (
-  foodId: string,
+  foodLogId: string,
   updatePayload: UpdateFoodPayload
 ): Promise<any> => {
-  if (!foodId || !updatePayload || Object.keys(updatePayload).length === 0) {
-    throw new AppError("foodId and updatePayload are required!", 400);
+  if (!foodLogId || !updatePayload || Object.keys(updatePayload).length === 0) {
+    throw new AppError("food log id and update payload are required!", 400);
   }
 
-  const { serving_size, serving_unit } = updatePayload;
+  const { serving_size, serving_size_unit } = updatePayload;
 
-  if (!serving_size || !serving_unit) {
+  if (!serving_size || !serving_size_unit) {
     throw new AppError(
-      "Make sure variable names are spelled correctly (serving_size, serving_unit)",
+      "Make sure variable names are spelled correctly (serving_size, serving_size_unit)",
       400
     );
   }
 
-  const connection = await pool.getConnection();
+  const updatedFood = await foodLogRepository.queryUpdateFood(
+    foodLogId,
+    serving_size,
+    serving_size_unit
+  );
 
-  try {
-    await connection.beginTransaction();
-
-    const updatedFood = await foodLogRepository.queryUpdateFood(
-      foodId,
-      updatePayload
-    );
-
-    await connection.commit();
-    return updatedFood;
-  } catch (error: any) {
-    await connection.rollback();
-    await Logger.logEvents(
-      `Error in updateFood service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to update food!",
-      500
-    );
-  } finally {
-    connection.release();
+  if (updatedFood.affectedRows === 0) {
+    throw new AppError("Food log not found!", 404);
   }
+
+  return updatedFood;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

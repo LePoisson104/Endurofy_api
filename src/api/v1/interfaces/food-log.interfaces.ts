@@ -29,5 +29,5 @@ export interface AddFoodPayload {
 
 export interface UpdateFoodPayload {
   serving_size: number;
-  serving_unit: ServingUnit;
+  serving_size_unit: ServingUnit;
 }

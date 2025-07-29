@@ -103,17 +103,17 @@ const validateAddFood = [
 ];
 
 const validateUpdateFood = [
-  param("foodId")
+  param("foodLogId")
     .notEmpty()
-    .withMessage("Food ID is required")
+    .withMessage("Food log ID is required")
     .isUUID()
-    .withMessage("Invalid food ID format"),
+    .withMessage("Invalid food log ID format"),
   body("serving_size")
     .notEmpty()
     .withMessage("Serving size is required")
     .isFloat({ min: 0.1 })
     .withMessage("Serving size must be a number greater than 0"),
-  body("serving_unit")
+  body("serving_size_unit")
     .notEmpty()
     .withMessage("Serving unit is required")
     .isIn(["g", "ml", "oz"])

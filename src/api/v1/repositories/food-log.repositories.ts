@@ -1,4 +1,5 @@
 import pool from "../../../config/db.config";
+import { UpdateFoodPayload } from "../interfaces/food-log.interfaces";
 import { AppError } from "../middlewares/error.handlers";
 import Logger from "../utils/logger";
 
@@ -106,11 +107,17 @@ const queryAddFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const queryUpdateFood = async (
   foodLogId: string,
-  updatePayload: any
+  servingSize: number,
+  servingSizeUnit: "g" | "ml" | "oz"
 ): Promise<any> => {
   try {
-    const query = "UPDATE food_logs SET ? WHERE food_log_id = ?";
-    const [result] = await pool.execute(query, [updatePayload, foodLogId]);
+    const query =
+      "UPDATE food_logs SET serving_size = ?, serving_size_unit = ? WHERE food_log_id = ?";
+    const [result] = await pool.execute(query, [
+      servingSize,
+      servingSizeUnit,
+      foodLogId,
+    ]);
     return result;
   } catch (err: any) {
     await Logger.logEvents(`Error updating food: ${err}`, "errLog.log");
