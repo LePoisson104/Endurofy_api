@@ -15,7 +15,6 @@ const getUsersInfo = asyncHandler(
   }
 );
 
-// update name, email, password
 const updateUsersName = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;

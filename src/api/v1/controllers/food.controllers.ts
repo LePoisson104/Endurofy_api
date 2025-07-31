@@ -37,10 +37,6 @@ const organizeNutrientsByGroups = (foodNutrients: any[]) => {
   return transformNutrients(NutrientGroups.BASIC_NUTRITION);
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @GET CONTROLLERS - SEARCH FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const searchFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const searchItem = req.params.searchItem;
@@ -142,10 +138,6 @@ const searchFood = asyncHandler(
   }
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @GET CONTROLLERS - FAVORITE FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const getFavoriteFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
@@ -173,10 +165,6 @@ const getIsFavoriteFood = asyncHandler(
   }
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @GET CONTROLLERS - CUSTOM FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const getCustomFood = asyncHandler(async (req, res) => {
   const userId = req.params.userId;
   const customFood = await foodServices.getCustomFood(userId);
@@ -197,10 +185,6 @@ const getCustomFoodById = asyncHandler(async (req, res) => {
   });
 });
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @POST CONTROLLERS - FAVORITE FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const addFavoriteFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
@@ -217,10 +201,6 @@ const addFavoriteFood = asyncHandler(
     });
   }
 );
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @POST CONTROLLERS - CUSTOM FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 const addCustomFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -239,10 +219,6 @@ const addCustomFood = asyncHandler(
   }
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @PATCH CONTROLLERS - CUSTOM FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const updateCustomFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { customFoodId } = req.params;
@@ -260,10 +236,6 @@ const updateCustomFood = asyncHandler(
   }
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @DELETE CONTROLLERS - FAVORITE FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const deleteFavoriteFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { favFoodId } = req.params;
@@ -279,10 +251,6 @@ const deleteFavoriteFood = asyncHandler(
   }
 );
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// @DELETE CONTROLLERS - CUSTOM FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-
 const deleteCustomFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { customFoodId } = req.params;
@@ -297,14 +265,11 @@ const deleteCustomFood = asyncHandler(
 );
 
 export default {
-  // Search Food
   searchFood,
-  // Favorite Food
   getFavoriteFood,
   getIsFavoriteFood,
   addFavoriteFood,
   deleteFavoriteFood,
-  // Custom Food
   getCustomFood,
   getCustomFoodById,
   addCustomFood,
