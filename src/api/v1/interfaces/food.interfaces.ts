@@ -133,7 +133,7 @@ export interface CustomFoodRepository {
   fiber_g: number;
   sugar_g: number;
   sodium_mg: number;
-  cholestrol_mg: number;
+  cholesterol_mg: number;
   serving_size: number;
   serving_size_unit: ServingUnit;
 }

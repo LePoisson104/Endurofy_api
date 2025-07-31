@@ -52,7 +52,7 @@ const queryGetIsFavoriteFood = async (
 const queryGetCustomFood = async (userId: string): Promise<any> => {
   try {
     const query =
-      "SELECT custom_food_id, food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholestrol_mg, serving_size, serving_size_unit FROM custom_foods WHERE user_id = ?";
+      "SELECT custom_food_id, food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit FROM custom_foods WHERE user_id = ?";
     const [result] = await pool.execute(query, [userId]);
     return result;
   } catch (err: any) {
@@ -119,13 +119,13 @@ const queryAddCustomFood = async (
   fiberG: number,
   sugarG: number,
   sodiumMg: number,
-  cholestrolMg: number,
+  cholesterolMg: number,
   servingSize: number,
   servingSizeUnit: "g" | "ml" | "oz"
 ): Promise<any> => {
   try {
     const query =
-      "INSERT INTO custom_foods (custom_food_id, user_id, food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholestrol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO custom_foods (custom_food_id, user_id, food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     const [result] = await pool.execute(query, [
       customFoodId,
       userId,
@@ -138,7 +138,7 @@ const queryAddCustomFood = async (
       fiberG,
       sugarG,
       sodiumMg,
-      cholestrolMg,
+      cholesterolMg,
       servingSize,
       servingSizeUnit,
     ]);

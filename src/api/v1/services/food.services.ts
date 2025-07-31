@@ -88,7 +88,7 @@ const getCustomFood = async (
       fiber: food.fiber_g,
       sugar: food.sugar_g,
       sodium: food.sodium_mg,
-      cholesterol: food.cholestrol_mg,
+      cholesterol: food.cholesterol_mg,
       servingSize: food.serving_size,
       servingSizeUnit: food.serving_size_unit,
     })
