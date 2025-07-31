@@ -105,3 +105,35 @@ export interface UpdateCustomFoodPayload {
   serving_size: number;
   serving_unit: ServingUnit;
 }
+
+export interface GetCustomFoodPayload {
+  customFoodId: string;
+  description: string;
+  brandOwner: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol: number;
+  servingSize: number;
+  servingSizeUnit: ServingUnit;
+}
+
+export interface CustomFoodRepository {
+  custom_food_id: string;
+  food_name: string;
+  brand_name: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  sugar_g: number;
+  sodium_mg: number;
+  cholestrol_mg: number;
+  serving_size: number;
+  serving_size_unit: ServingUnit;
+}

@@ -7,6 +7,8 @@ import {
   AddFavoriteFoodPayload,
   AddCustomFoodPayload,
   UpdateCustomFoodPayload,
+  GetCustomFoodPayload,
+  CustomFoodRepository,
 } from "../interfaces/food.interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,13 +68,33 @@ const getIsFavoriteFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const getCustomFood = async (userId: string): Promise<any[]> => {
+const getCustomFood = async (
+  userId: string
+): Promise<GetCustomFoodPayload[]> => {
   if (!userId) {
     throw new AppError("UserId is required!", 400);
   }
 
   const customFood = await foodRepository.queryGetCustomFood(userId);
-  return customFood;
+  const transformedCustomFood = customFood.map(
+    (food: CustomFoodRepository) => ({
+      customFoodId: food.custom_food_id,
+      description: food.food_name,
+      brandOwner: food.brand_name,
+      calories: food.calories,
+      protein: food.protein_g,
+      carbs: food.carbs_g,
+      fat: food.fat_g,
+      fiber: food.fiber_g,
+      sugar: food.sugar_g,
+      sodium: food.sodium_mg,
+      cholesterol: food.cholestrol_mg,
+      servingSize: food.serving_size,
+      servingSizeUnit: food.serving_size_unit,
+    })
+  );
+
+  return transformedCustomFood;
 };
 
 const getCustomFoodById = async (foodId: string): Promise<any[]> => {
@@ -146,7 +168,7 @@ const addFavoriteFood = async (
 const addCustomFood = async (
   userId: string,
   foodPayload: AddCustomFoodPayload
-): Promise<any> => {
+): Promise<{ data: { message: string } }> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
   }
@@ -168,7 +190,7 @@ const addCustomFood = async (
 
   const customFoodId = uuidv4();
 
-  const addedCustomFood = await foodRepository.queryAddCustomFood(
+  await foodRepository.queryAddCustomFood(
     customFoodId,
     userId,
     foodName,
@@ -185,7 +207,9 @@ const addCustomFood = async (
     servingUnit
   );
 
-  return addedCustomFood;
+  return {
+    data: { message: "Custom food added successfully" },
+  };
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
