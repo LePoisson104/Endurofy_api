@@ -10,6 +10,7 @@ import workoutLogRoutes from "./api/v1/routes/workout-log.routes";
 import foodLogRoutes from "./api/v1/routes/food-log.routes";
 import foodRoutes from "./api/v1/routes/food.routes";
 import { globalErrorHandler } from "./api/v1/middlewares/error.handlers";
+import settingsRoutes from "./api/v1/routes/settings.routes";
 
 const app: Express = express();
 
@@ -25,6 +26,7 @@ app.use("/api/v1/workout-program", workoutProgramRoutes);
 app.use("/api/v1/workout-log", workoutLogRoutes);
 app.use("/api/v1/food", foodRoutes);
 app.use("/api/v1/food-log", foodLogRoutes);
+app.use("/api/v1/settings", settingsRoutes);
 
 // Global error handling middleware (must be last)
 app.use(globalErrorHandler);
