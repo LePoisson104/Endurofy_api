@@ -9,7 +9,7 @@ export type MealType =
   | "uncategorized";
 
 export interface AddFoodPayload {
-  foodId: string;
+  foodSourceId: string;
   foodName: string;
   foodBrand: string;
   foodSource: FoodSource;

@@ -51,13 +51,10 @@ const addFood = asyncHandler(
 
 const updateFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { foodLogId } = req.params;
+    const { foodId } = req.params;
     const updatePayload = req.body;
 
-    const updatedFood = await foodLogServices.updateFood(
-      foodLogId,
-      updatePayload
-    );
+    const updatedFood = await foodLogServices.updateFood(foodId, updatePayload);
 
     sendSuccess(res, {
       message: "Food updated successfully",
@@ -68,9 +65,9 @@ const updateFood = asyncHandler(
 
 const deleteFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { foodLogId } = req.params;
+    const { foodId, foodLogId } = req.params;
 
-    const deletedFood = await foodLogServices.deleteFood(foodLogId);
+    const deletedFood = await foodLogServices.deleteFood(foodId, foodLogId);
 
     sendSuccess(res, {
       message: "Food deleted successfully",

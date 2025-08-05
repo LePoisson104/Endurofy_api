@@ -42,7 +42,7 @@ router.post(
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.patch(
-  "/food/:foodLogId",
+  "/food/:foodId",
   foodLogValidations.validateUpdateFood,
   handleValidationErrors,
   foodLogControllers.updateFood
@@ -53,7 +53,7 @@ router.patch(
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.delete(
-  "/food/:foodLogId",
+  "/food/:foodId/:foodLogId",
   foodLogValidations.validateDeleteFood,
   handleValidationErrors,
   foodLogControllers.deleteFood
