@@ -13,6 +13,23 @@ const queryGetSettings = async (userId: string): Promise<any> => {
   }
 };
 
+const queryToggleTheme = async (
+  userId: string,
+  theme: string,
+  updatedAt: Date
+): Promise<any> => {
+  try {
+    const query =
+      "UPDATE settings SET theme = ?, updated_at = ? WHERE user_id = ?";
+    const [result] = await pool.execute(query, [theme, updatedAt, userId]);
+    return result;
+  } catch (err: any) {
+    await Logger.logEvents(`Error toggling theme: ${err}`, "errLog.log");
+    throw new AppError("Database error while toggling theme", 500);
+  }
+};
+
 export default {
   queryGetSettings,
+  queryToggleTheme,
 };

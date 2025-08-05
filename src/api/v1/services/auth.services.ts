@@ -388,6 +388,11 @@ const signup = async (
       [userId, "incomplete"]
     );
 
+    await connection.execute(
+      "INSERT INTO settings (setting_id, user_id, theme) VALUES (?,?, ?)",
+      [uuidv4(), userId, "system"]
+    );
+
     // Then add OTP
     await connection.execute(
       "INSERT INTO otp (user_id, email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?,?)",

@@ -16,6 +16,20 @@ const getSettings = asyncHandler(
   }
 );
 
+const toggleTheme = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const { theme } = req.body;
+
+    const settings = await settingsServices.toggleTheme(userId, theme);
+
+    sendSuccess(res, {
+      message: settings.message,
+    });
+  }
+);
+
 export default {
   getSettings,
+  toggleTheme,
 };
