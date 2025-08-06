@@ -46,6 +46,30 @@ const queryGetIsFavoriteFood = async (
   }
 };
 
+const queryGetFavoriteStatusBatch = async (
+  userId: string,
+  foodIds: string[]
+): Promise<any> => {
+  try {
+    if (foodIds.length === 0) return [];
+
+    const placeholders = foodIds.map(() => "?").join(",");
+    const query = `
+      SELECT food_id, 1 as is_favorite 
+      FROM favorite_foods 
+      WHERE user_id = ? AND food_id IN (${placeholders})
+    `;
+    const [result] = await pool.execute(query, [userId, ...foodIds]);
+    return result;
+  } catch (err: any) {
+    await Logger.logEvents(
+      `Error checking batch favorites: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Database error while checking batch favorites", 500);
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +253,7 @@ export default {
   // Favorite Food
   queryGetFavoriteFood,
   queryGetIsFavoriteFood,
+  queryGetFavoriteStatusBatch,
   queryAddFavoriteFood,
   queryDeleteFavoriteFood,
   // Custom Food

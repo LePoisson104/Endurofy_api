@@ -55,6 +55,17 @@ const validateDeleteFavoriteFood = [
     .withMessage("Invalid favorite food ID format"),
 ];
 
+const validateGetFavoriteStatusBatch = [
+  body("foodIds")
+    .isArray({ min: 1 })
+    .withMessage("Food IDs must be a non-empty array")
+    .custom((value) => {
+      if (!Array.isArray(value)) return false;
+      return value.every((id) => typeof id === "string" && id.length > 0);
+    })
+    .withMessage("All food IDs must be non-empty strings"),
+];
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @CUSTOM FOOD VALIDATIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +155,7 @@ export default {
   validateGetIsFavoriteFood,
   validateAddFavoriteFood,
   validateDeleteFavoriteFood,
+  validateGetFavoriteStatusBatch,
   // Custom Food
   validateGetCustomFoodById,
   validateCustomFood,

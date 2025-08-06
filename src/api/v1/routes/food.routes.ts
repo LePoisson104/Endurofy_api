@@ -36,6 +36,13 @@ router.get(
   foodControllers.getIsFavoriteFood
 );
 
+router.post(
+  "/:userId/favorites/batch",
+  foodValidations.validateGetFavoriteStatusBatch,
+  handleValidationErrors,
+  foodControllers.getFavoriteStatusBatch
+);
+
 router.get(
   "/:userId/custom",
   handleValidationErrors,

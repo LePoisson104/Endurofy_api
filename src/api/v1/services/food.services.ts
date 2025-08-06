@@ -64,6 +64,46 @@ const getIsFavoriteFood = async (
   }
 };
 
+const getFavoriteStatusBatch = async (
+  userId: string,
+  foodIds: string[]
+): Promise<{ [foodId: string]: boolean }> => {
+  if (!userId || !foodIds || foodIds.length === 0) {
+    return {};
+  }
+
+  try {
+    const favoriteResults = await foodRepository.queryGetFavoriteStatusBatch(
+      userId,
+      foodIds
+    );
+
+    // Create a map of foodId -> isFavorite
+    const favoriteMap: { [foodId: string]: boolean } = {};
+
+    // Initialize all as false
+    foodIds.forEach((id) => {
+      favoriteMap[id] = false;
+    });
+
+    // Set favorites to true
+    favoriteResults.forEach((fav: any) => {
+      favoriteMap[fav.food_id] = true;
+    });
+
+    return favoriteMap;
+  } catch (error: any) {
+    await Logger.logEvents(
+      `Error in getFavoriteStatusBatch service: ${error.message}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Something went wrong while checking favorite status!",
+      500
+    );
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,6 +412,7 @@ export default {
   // Favorite Food
   getFavoriteFood,
   getIsFavoriteFood,
+  getFavoriteStatusBatch,
   addFavoriteFood,
   deleteFavoriteFood,
   // Custom Food
