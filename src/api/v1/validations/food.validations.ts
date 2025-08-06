@@ -66,7 +66,7 @@ const validateGetCustomFoodById = [
     .withMessage("Invalid food ID format"),
 ];
 
-const validateAddCustomFood = [
+const validateCustomFood = [
   body("foodName")
     .notEmpty()
     .withMessage("Food name is required")
@@ -129,54 +129,6 @@ const validateAddCustomFood = [
     .withMessage("Serving unit must be either 'g', 'ml', or 'oz'"),
 ];
 
-const validateUpdateCustomFood = [
-  param("customFoodId")
-    .notEmpty()
-    .withMessage("Custom food ID is required")
-    .isUUID()
-    .withMessage("Invalid custom food ID format"),
-  body("food_name")
-    .notEmpty()
-    .withMessage("Food name is required")
-    .isString()
-    .withMessage("Food name must be a string"),
-  body("food_brand")
-    .notEmpty()
-    .withMessage("Food brand is required")
-    .isString()
-    .withMessage("Food brand must be a string"),
-  body("calories")
-    .notEmpty()
-    .withMessage("Calories is required")
-    .isFloat({ min: 0 })
-    .withMessage("Calories must be a number greater than or equal to 0"),
-  body("protein")
-    .notEmpty()
-    .withMessage("Protein is required")
-    .isFloat({ min: 0 })
-    .withMessage("Protein must be a number greater than or equal to 0"),
-  body("carbs")
-    .notEmpty()
-    .withMessage("Carbs is required")
-    .isFloat({ min: 0 })
-    .withMessage("Carbs must be a number greater than or equal to 0"),
-  body("fat")
-    .notEmpty()
-    .withMessage("Fat is required")
-    .isFloat({ min: 0 })
-    .withMessage("Fat must be a number greater than or equal to 0"),
-  body("serving_size")
-    .notEmpty()
-    .withMessage("Serving size is required")
-    .isFloat({ min: 0.1 })
-    .withMessage("Serving size must be a number greater than 0"),
-  body("serving_unit")
-    .notEmpty()
-    .withMessage("Serving unit is required")
-    .isIn(["g", "ml", "oz"])
-    .withMessage("Serving unit must be either 'g', 'ml', or 'oz'"),
-];
-
 const validateDeleteCustomFood = [
   param("customFoodId")
     .notEmpty()
@@ -194,7 +146,6 @@ export default {
   validateDeleteFavoriteFood,
   // Custom Food
   validateGetCustomFoodById,
-  validateAddCustomFood,
-  validateUpdateCustomFood,
+  validateCustomFood,
   validateDeleteCustomFood,
 };

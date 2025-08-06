@@ -80,7 +80,7 @@ export interface AddFavoriteFoodPayload {
 }
 
 // Custom Food Interfaces
-export interface AddCustomFoodPayload {
+export interface CustomFoodPayload {
   foodName: string;
   foodBrand: string;
   calories: number;
@@ -93,17 +93,6 @@ export interface AddCustomFoodPayload {
   cholesterol: number;
   servingSize: number;
   servingUnit: ServingUnit;
-}
-
-export interface UpdateCustomFoodPayload {
-  food_name: string;
-  food_brand: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  serving_size: number;
-  serving_unit: ServingUnit;
 }
 
 export interface GetCustomFoodPayload {

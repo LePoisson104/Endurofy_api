@@ -62,7 +62,7 @@ router.post(
 
 router.post(
   "/:userId/custom",
-  foodValidations.validateAddCustomFood,
+  foodValidations.validateCustomFood,
   handleValidationErrors,
   foodControllers.addCustomFood
 );
@@ -71,9 +71,9 @@ router.post(
 // @PATCH ROUTES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.patch(
+router.put(
   "/custom/:customFoodId",
-  foodValidations.validateUpdateCustomFood,
+  foodValidations.validateCustomFood,
   handleValidationErrors,
   foodControllers.updateCustomFood
 );

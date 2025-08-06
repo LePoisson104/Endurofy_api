@@ -5,10 +5,9 @@ import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import {
   AddFavoriteFoodPayload,
-  AddCustomFoodPayload,
-  UpdateCustomFoodPayload,
   GetCustomFoodPayload,
   CustomFoodRepository,
+  CustomFoodPayload,
 } from "../interfaces/food.interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +166,7 @@ const addFavoriteFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const addCustomFood = async (
   userId: string,
-  foodPayload: AddCustomFoodPayload
+  foodPayload: CustomFoodPayload
 ): Promise<{ data: { message: string } }> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
@@ -217,7 +216,7 @@ const addCustomFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const updateCustomFood = async (
   customFoodId: string,
-  updatePayload: UpdateCustomFoodPayload
+  updatePayload: CustomFoodPayload
 ): Promise<any> => {
   if (
     !customFoodId ||
@@ -228,26 +227,34 @@ const updateCustomFood = async (
   }
 
   const {
-    food_name,
-    food_brand,
+    foodName,
+    foodBrand,
     calories,
     protein,
     carbs,
     fat,
-    serving_size,
-    serving_unit,
+    fiber,
+    sugar,
+    sodium,
+    cholesterol,
+    servingSize,
+    servingUnit,
   } = updatePayload;
 
   // reason for not using ! is because protein, carbs, fat can contain 0, so we only need to check if the variables are undefined not when it's equal to 0
   if (
-    food_name === undefined ||
-    food_brand === undefined ||
+    foodName === undefined ||
+    foodBrand === undefined ||
     calories === undefined ||
     protein === undefined ||
     carbs === undefined ||
     fat === undefined ||
-    serving_size === undefined ||
-    serving_unit === undefined
+    fiber === undefined ||
+    sugar === undefined ||
+    sodium === undefined ||
+    cholesterol === undefined ||
+    servingSize === undefined ||
+    servingUnit === undefined
   ) {
     throw new AppError(
       "Make sure your variable names are spelled correctly (food_name, food_brand, calories, protein, carbs, fat, serving_size, serving_unit)",
@@ -262,7 +269,18 @@ const updateCustomFood = async (
 
     const updatedCustomFood = await foodRepository.queryUpdateCustomFood(
       customFoodId,
-      updatePayload
+      foodName,
+      foodBrand,
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium,
+      cholesterol,
+      servingSize,
+      servingUnit
     );
 
     await connection.commit();

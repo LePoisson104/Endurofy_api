@@ -154,11 +154,37 @@ const queryAddCustomFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const queryUpdateCustomFood = async (
   customFoodId: string,
-  updatePayload: any
+  foodName: string,
+  foodBrand: string,
+  calories: number,
+  protein: number,
+  carbs: number,
+  fat: number,
+  fiber: number,
+  sugar: number,
+  sodium: number,
+  cholesterol: number,
+  servingSize: number,
+  servingSizeUnit: "g" | "ml" | "oz"
 ): Promise<any> => {
   try {
-    const query = "UPDATE custom_foods SET ? WHERE custom_food_id = ?";
-    const [result] = await pool.execute(query, [updatePayload, customFoodId]);
+    const query =
+      "UPDATE custom_foods SET food_name = ?, brand_name = ?, calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?, fiber_g = ?, sugar_g = ?, sodium_mg = ?, cholesterol_mg = ?, serving_size = ?, serving_size_unit = ? WHERE custom_food_id = ?";
+    const [result] = await pool.execute(query, [
+      foodName,
+      foodBrand,
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium,
+      cholesterol,
+      servingSize,
+      servingSizeUnit,
+      customFoodId,
+    ]);
     return result;
   } catch (err: any) {
     await Logger.logEvents(`Error updating custom food: ${err}`, "errLog.log");
