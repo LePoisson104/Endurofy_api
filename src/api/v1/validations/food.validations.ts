@@ -36,8 +36,7 @@ const validateAddFavoriteFood = [
     .isString()
     .withMessage("Food name must be a string"),
   body("foodBrand")
-    .notEmpty()
-    .withMessage("Food brand is required")
+    .optional()
     .isString()
     .withMessage("Food brand must be a string"),
   body("foodSource")
@@ -45,6 +44,50 @@ const validateAddFavoriteFood = [
     .withMessage("Food source is required")
     .isIn(["USDA", "custom"])
     .withMessage("Food source must be either 'USDA' or 'custom'"),
+  // Nutritional information validations (all optional)
+  body("calories")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Calories must be a number greater than or equal to 0"),
+  body("protein")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Protein must be a number greater than or equal to 0"),
+  body("carbs")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Carbs must be a number greater than or equal to 0"),
+  body("fat")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Fat must be a number greater than or equal to 0"),
+  body("fiber")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Fiber must be a number greater than or equal to 0"),
+  body("sugar")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Sugar must be a number greater than or equal to 0"),
+  body("sodium")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Sodium must be a number greater than or equal to 0"),
+  body("cholesterol")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Cholesterol must be a number greater than or equal to 0"),
+  // Serving information validations (required)
+  body("servingSize")
+    .notEmpty()
+    .withMessage("Serving size is required")
+    .isFloat({ min: 0.1 })
+    .withMessage("Serving size must be a number greater than 0"),
+  body("servingUnit")
+    .notEmpty()
+    .withMessage("Serving unit is required")
+    .isIn(["g", "ml", "oz"])
+    .withMessage("Serving unit must be either 'g', 'ml', or 'oz'"),
 ];
 
 const validateDeleteFavoriteFood = [

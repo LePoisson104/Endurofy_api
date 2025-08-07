@@ -75,8 +75,39 @@ export type ServingUnit = "g" | "ml" | "oz";
 export interface AddFavoriteFoodPayload {
   foodId: string;
   foodName: string;
-  foodBrand: string;
+  foodBrand?: string; // Making optional to match table schema
   foodSource: FoodSource;
+  // Nutritional information per 100g
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol: number;
+  // Serving information
+  servingSize: number;
+  servingUnit: ServingUnit;
+}
+
+export interface FavoriteFoodResponse {
+  favoriteFoodId: string;
+  foodId: string;
+  foodSource: FoodSource;
+  isFavorite: boolean;
+  description: string;
+  brandOwner: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol: number;
+  servingSize: number;
+  servingSizeUnit: ServingUnit;
 }
 
 // Custom Food Interfaces

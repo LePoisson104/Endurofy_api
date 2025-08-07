@@ -8,19 +8,41 @@ import {
   GetCustomFoodPayload,
   CustomFoodRepository,
   CustomFoodPayload,
+  FavoriteFoodResponse,
 } from "../interfaces/food.interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const getFavoriteFood = async (userId: string): Promise<any[]> => {
+const getFavoriteFood = async (
+  userId: string
+): Promise<FavoriteFoodResponse[]> => {
   if (!userId) {
     throw new AppError("UserId is required!", 400);
   }
 
   try {
     const getFavorites = await foodRepository.queryGetFavoriteFood(userId);
-    return getFavorites;
+
+    const transformedFavorites = getFavorites.map((favorite: any) => ({
+      favoriteFoodId: favorite.favorite_food_id,
+      foodId: favorite.food_id,
+      foodSource: favorite.food_source,
+      isFavorite: true,
+      description: favorite.food_name,
+      brandOwner: favorite.brand_name,
+      calories: favorite.calories,
+      protein: favorite.protein_g,
+      carbs: favorite.carbs_g,
+      fat: favorite.fat_g,
+      fiber: favorite.fiber_g,
+      sugar: favorite.sugar_g,
+      sodium: favorite.sodium_mg,
+      cholesterol: favorite.cholesterol_mg,
+      servingSize: favorite.serving_size,
+      servingSizeUnit: favorite.serving_size_unit,
+    }));
+    return transformedFavorites;
   } catch (error: any) {
     await Logger.logEvents(
       `Error in getFavoriteFood service: ${error.message}`,
@@ -182,7 +204,25 @@ const addFavoriteFood = async (
   try {
     await connection.beginTransaction();
 
-    const { foodId, foodName, foodBrand, foodSource } = foodPayload;
+    const {
+      foodId,
+      foodName,
+      foodBrand,
+      foodSource,
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium,
+      cholesterol,
+      servingSize,
+      servingUnit,
+    } = foodPayload;
+
+    console.log("foodPayload", foodPayload);
+
     const favFoodId = uuidv4();
 
     const addedFavoriteFood = await foodRepository.queryAddFavoriteFood(
@@ -190,8 +230,18 @@ const addFavoriteFood = async (
       foodId,
       userId,
       foodName,
-      foodBrand,
-      foodSource
+      foodBrand || null,
+      foodSource,
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium,
+      cholesterol,
+      servingSize,
+      servingUnit
     );
 
     await connection.commit();

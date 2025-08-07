@@ -10,8 +10,26 @@ const queryGetFavoriteFood = async (
   connection?: any
 ): Promise<any> => {
   try {
-    const query =
-      "SELECT favorite_food_id, food_id, brand_name, food_name, food_source FROM favorite_foods WHERE user_id = ?";
+    const query = `
+      SELECT 
+        favorite_food_id, 
+        food_id, 
+        brand_name, 
+        food_name, 
+        food_source,
+        calories,
+        protein_g,
+        carbs_g,
+        fat_g,
+        fiber_g,
+        sugar_g,
+        sodium_mg,
+        cholesterol_mg,
+        serving_size,
+        serving_size_unit
+      FROM favorite_foods 
+      WHERE user_id = ?
+    `;
     if (connection) {
       const [result] = await connection.execute(query, [userId]);
       return result as any[];
@@ -107,19 +125,57 @@ const queryAddFavoriteFood = async (
   foodId: string,
   userId: string,
   foodName: string,
-  brandName: string,
-  foodSource: "USDA" | "custom"
+  brandName: string | null,
+  foodSource: "USDA" | "custom",
+  calories: number,
+  protein: number,
+  carbs: number,
+  fat: number,
+  fiber: number,
+  sugar: number,
+  sodium: number,
+  cholesterol: number,
+  servingSize: number,
+  servingUnit: string
 ): Promise<any> => {
   try {
-    const query =
-      "INSERT INTO favorite_foods (favorite_food_id, food_id, user_id, food_name, brand_name, food_source) VALUES (?,?,?,?,?,?)";
+    const query = `
+      INSERT INTO favorite_foods (
+        favorite_food_id, 
+        user_id, 
+        food_id, 
+        food_source, 
+        food_name, 
+        brand_name, 
+        calories, 
+        protein_g, 
+        carbs_g, 
+        fat_g, 
+        fiber_g, 
+        sugar_g, 
+        sodium_mg, 
+        cholesterol_mg, 
+        serving_size, 
+        serving_size_unit
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `;
     const [result] = await pool.execute(query, [
       favoriteFoodId,
-      foodId,
       userId,
+      foodId,
+      foodSource,
       foodName,
       brandName,
-      foodSource,
+      calories,
+      protein,
+      carbs,
+      fat,
+      fiber,
+      sugar,
+      sodium,
+      cholesterol,
+      servingSize,
+      servingUnit,
     ]);
     return result;
   } catch (err: any) {
