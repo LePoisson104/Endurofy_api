@@ -6,14 +6,14 @@ import foodValidations from "../validations/food.validations";
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET ROUTES - SEARCH FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.get(
-  "/search/:searchItem",
+  "/:userId/search/:searchItem",
   foodValidations.validateSearchFood,
   handleValidationErrors,
   foodControllers.searchFood

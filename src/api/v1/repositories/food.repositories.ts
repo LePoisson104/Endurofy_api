@@ -55,7 +55,7 @@ const queryGetFavoriteStatusBatch = async (
 
     const placeholders = foodIds.map(() => "?").join(",");
     const query = `
-      SELECT food_id, 1 as is_favorite 
+      SELECT favorite_food_id, food_id, 1 as is_favorite 
       FROM favorite_foods 
       WHERE user_id = ? AND food_id IN (${placeholders})
     `;

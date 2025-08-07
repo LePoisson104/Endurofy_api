@@ -39,8 +39,8 @@ const organizeNutrientsByGroups = (foodNutrients: any[]) => {
 
 const searchFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
     const searchItem = req.params.searchItem;
-    const userId = (req as any).user?.userId; // Get userId from JWT token
 
     // Check if API key exists
     if (!process.env.FDC_API_KEY) {
@@ -125,7 +125,6 @@ const searchFood = asyncHandler(
           servingSize: food.servingSize,
           servingSizeUnit: food.servingSizeUnit,
           nutritions: nutrients,
-          isFavorite: false, // Will be updated below if user is authenticated
         };
       }),
       totalHits: responseData.totalHits || 0,
@@ -134,7 +133,7 @@ const searchFood = asyncHandler(
     };
 
     // Batch check favorites if user is authenticated and there are foods
-    if (userId && transformedData.foods.length > 0) {
+    if (transformedData.foods.length > 0) {
       try {
         const foodIds = transformedData.foods.map((food: any) =>
           food.fdcId.toString()
@@ -147,7 +146,9 @@ const searchFood = asyncHandler(
         // Update the foods with favorite status
         transformedData.foods = transformedData.foods.map((food: any) => ({
           ...food,
-          isFavorite: favoriteStatuses[food.fdcId.toString()] || false,
+          favoriteFoodId:
+            favoriteStatuses[food.fdcId.toString()].favoriteFoodId,
+          isFavorite: favoriteStatuses[food.fdcId.toString()].isFavorite,
         }));
       } catch (error) {
         // Log error but don't fail the search - just return without favorite status
@@ -232,11 +233,11 @@ const getCustomFoodById = asyncHandler(async (req, res) => {
 const addFavoriteFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
-    const foodPayload = req.body;
+    const payload = req.body;
 
     const addedFavoriteFood = await foodServices.addFavoriteFood(
       userId,
-      foodPayload
+      payload
     );
 
     sendSuccess(res, {

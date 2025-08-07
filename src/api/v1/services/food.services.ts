@@ -67,7 +67,9 @@ const getIsFavoriteFood = async (
 const getFavoriteStatusBatch = async (
   userId: string,
   foodIds: string[]
-): Promise<{ [foodId: string]: boolean }> => {
+): Promise<{
+  [foodId: string]: { favoriteFoodId: string | null; isFavorite: boolean };
+}> => {
   if (!userId || !foodIds || foodIds.length === 0) {
     return {};
   }
@@ -79,16 +81,24 @@ const getFavoriteStatusBatch = async (
     );
 
     // Create a map of foodId -> isFavorite
-    const favoriteMap: { [foodId: string]: boolean } = {};
+    const favoriteMap: {
+      [foodId: string]: {
+        favoriteFoodId: string | null;
+        isFavorite: boolean;
+      };
+    } = {};
 
     // Initialize all as false
     foodIds.forEach((id) => {
-      favoriteMap[id] = false;
+      favoriteMap[id] = { favoriteFoodId: null, isFavorite: false };
     });
 
     // Set favorites to true
     favoriteResults.forEach((fav: any) => {
-      favoriteMap[fav.food_id] = true;
+      favoriteMap[fav.food_id] = {
+        favoriteFoodId: fav.favorite_food_id,
+        isFavorite: true,
+      };
     });
 
     return favoriteMap;
