@@ -40,6 +40,7 @@ const organizeNutrientsByGroups = (foodNutrients: any[]) => {
 const searchFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const searchItem = req.params.searchItem;
+    const userId = (req as any).user?.userId; // Get userId from JWT token
 
     // Check if API key exists
     if (!process.env.FDC_API_KEY) {
@@ -124,12 +125,38 @@ const searchFood = asyncHandler(
           servingSize: food.servingSize,
           servingSizeUnit: food.servingSizeUnit,
           nutritions: nutrients,
+          isFavorite: false, // Will be updated below if user is authenticated
         };
       }),
       totalHits: responseData.totalHits || 0,
       currentPage: responseData.currentPage || 1,
       totalPages: responseData.totalPages || 1,
     };
+
+    // Batch check favorites if user is authenticated and there are foods
+    if (userId && transformedData.foods.length > 0) {
+      try {
+        const foodIds = transformedData.foods.map((food: any) =>
+          food.fdcId.toString()
+        );
+        const favoriteStatuses = await foodServices.getFavoriteStatusBatch(
+          userId,
+          foodIds
+        );
+
+        // Update the foods with favorite status
+        transformedData.foods = transformedData.foods.map((food: any) => ({
+          ...food,
+          isFavorite: favoriteStatuses[food.fdcId.toString()] || false,
+        }));
+      } catch (error) {
+        // Log error but don't fail the search - just return without favorite status
+        Logger.logEvents(
+          `Error checking favorites in search: ${error}`,
+          "errLog.log"
+        );
+      }
+    }
 
     sendSuccess(res, {
       message: "Food search completed successfully",
