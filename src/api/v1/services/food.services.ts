@@ -8,15 +8,13 @@ import {
   GetCustomFoodPayload,
   CustomFoodRepository,
   CustomFoodPayload,
-  FavoriteFoodResponse,
+  BaseFood,
 } from "../interfaces/food.interfaces";
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - FAVORITE FOOD
-////////////////////////////////////////////////////////////////////////////////////////////////
-const getFavoriteFood = async (
-  userId: string
-): Promise<FavoriteFoodResponse[]> => {
+//////////////////////////////////////////////////////////////////////////////////////////////
+const getFavoriteFood = async (userId: string): Promise<BaseFood[]> => {
   if (!userId) {
     throw new AppError("UserId is required!", 400);
   }
@@ -24,24 +22,27 @@ const getFavoriteFood = async (
   try {
     const getFavorites = await foodRepository.queryGetFavoriteFood(userId);
 
-    const transformedFavorites = getFavorites.map((favorite: any) => ({
-      favoriteFoodId: favorite.favorite_food_id,
-      foodId: favorite.food_id,
-      foodSource: favorite.food_source,
-      isFavorite: true,
-      description: favorite.food_name,
-      brandOwner: favorite.brand_name,
-      calories: favorite.calories,
-      protein: favorite.protein_g,
-      carbs: favorite.carbs_g,
-      fat: favorite.fat_g,
-      fiber: favorite.fiber_g,
-      sugar: favorite.sugar_g,
-      sodium: favorite.sodium_mg,
-      cholesterol: favorite.cholesterol_mg,
-      servingSize: favorite.serving_size,
-      servingSizeUnit: favorite.serving_size_unit,
-    }));
+    const transformedFavorites: BaseFood[] = getFavorites.map(
+      (favorite: any) => ({
+        foodId: favorite.food_id,
+        foodName: favorite.food_name,
+        foodBrand: favorite.brand_name || "",
+        ingredients: undefined,
+        foodSource: favorite.food_source,
+        calories: favorite.calories,
+        protein: favorite.protein_g,
+        carbs: favorite.carbs_g,
+        fat: favorite.fat_g,
+        fiber: favorite.fiber_g,
+        sugar: favorite.sugar_g,
+        sodium: favorite.sodium_mg,
+        cholesterol: favorite.cholesterol_mg,
+        servingSize: favorite.serving_size,
+        servingSizeUnit: favorite.serving_size_unit,
+        favoriteFoodId: favorite.favorite_food_id,
+        isFavorite: true,
+      })
+    );
     return transformedFavorites;
   } catch (error: any) {
     await Logger.logEvents(

@@ -91,6 +91,26 @@ export interface AddFavoriteFoodPayload {
   servingUnit: ServingUnit;
 }
 
+export interface BaseFood {
+  foodId: string;
+  foodName: string;
+  foodBrand: string;
+  ingredients?: string;
+  foodSource: FoodSource;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol: number;
+  servingSize: number;
+  servingSizeUnit: ServingUnit;
+  favoriteFoodId: string | null;
+  isFavorite: boolean;
+}
+
 export interface FavoriteFoodResponse {
   favoriteFoodId: string;
   foodId: string;

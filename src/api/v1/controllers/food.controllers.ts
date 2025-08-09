@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/async-handler";
 import {
   USDAFoodNutrient,
   NutrientGroups,
+  USDAFoodNutrientID,
 } from "../interfaces/food.interfaces";
 import foodServices from "../services/food.services";
 
@@ -63,7 +64,6 @@ const searchFood = asyncHandler(
         "User-Agent": "FoodLogApp/1.0",
       },
     });
-
     // Handle HTTP errors
     if (!response.ok) {
       if (response.status === 403) {
@@ -113,18 +113,29 @@ const searchFood = asyncHandler(
     const transformedData = {
       foods: responseData.foods.map((food: any) => {
         const nutrients = organizeNutrientsByGroups(food.foodNutrients || []);
+        const getNutrientValue = (id: number): number => {
+          const nutrient = nutrients.find((n) => n.nutrientId === id);
+          return typeof nutrient?.value === "number" ? nutrient.value : 0;
+        };
 
         return {
-          fdcId: food.fdcId,
-          description: food.description,
-          brandOwner: food.brandOwner || undefined,
-          brandName: food.brandName || undefined,
-          foodSource: "USDA",
-          foodCategory: food.foodCategory,
+          foodId: String(food.fdcId),
+          foodName: food.description,
+          foodBrand: food.brandOwner || "",
           ingredients: food.ingredients || undefined,
+          foodSource: "USDA",
+          calories: getNutrientValue(USDAFoodNutrientID.CALORIES),
+          protein: getNutrientValue(USDAFoodNutrientID.PROTEIN),
+          carbs: getNutrientValue(USDAFoodNutrientID.CARBOHYDRATE),
+          fat: getNutrientValue(USDAFoodNutrientID.FAT),
+          fiber: getNutrientValue(USDAFoodNutrientID.FIBER),
+          sugar: getNutrientValue(USDAFoodNutrientID.TOTAL_SUGARS),
+          sodium: getNutrientValue(USDAFoodNutrientID.SODIUM),
+          cholesterol: getNutrientValue(USDAFoodNutrientID.CHOLESTEROL),
           servingSize: food.servingSize,
           servingSizeUnit: food.servingSizeUnit,
-          nutritions: nutrients,
+          favoriteFoodId: null,
+          isFavorite: false,
         };
       }),
       totalHits: responseData.totalHits || 0,
@@ -135,9 +146,7 @@ const searchFood = asyncHandler(
     // Batch check favorites if user is authenticated and there are foods
     if (transformedData.foods.length > 0) {
       try {
-        const foodIds = transformedData.foods.map((food: any) =>
-          food.fdcId.toString()
-        );
+        const foodIds = transformedData.foods.map((food: any) => food.foodId);
         const favoriteStatuses = await foodServices.getFavoriteStatusBatch(
           userId,
           foodIds
@@ -146,9 +155,8 @@ const searchFood = asyncHandler(
         // Update the foods with favorite status
         transformedData.foods = transformedData.foods.map((food: any) => ({
           ...food,
-          favoriteFoodId:
-            favoriteStatuses[food.fdcId.toString()].favoriteFoodId,
-          isFavorite: favoriteStatuses[food.fdcId.toString()].isFavorite,
+          favoriteFoodId: favoriteStatuses[food.foodId]?.favoriteFoodId ?? null,
+          isFavorite: favoriteStatuses[food.foodId]?.isFavorite ?? false,
         }));
       } catch (error) {
         // Log error but don't fail the search - just return without favorite status
@@ -161,7 +169,8 @@ const searchFood = asyncHandler(
 
     sendSuccess(res, {
       message: "Food search completed successfully",
-      ...transformedData,
+      // ...transformedData,
+      data: responseData,
     });
   }
 );
