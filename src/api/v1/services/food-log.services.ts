@@ -270,7 +270,7 @@ const deleteFood = async (foodId: string, foodLogId: string): Promise<any> => {
     await connection.beginTransaction();
 
     const [deletedFood]: any = await connection.execute(
-      "DELETE FROM foods WHERE food_id = ?",
+      "DELETE FROM logged_foods WHERE food_id = ?",
       [foodId]
     );
 
@@ -279,7 +279,7 @@ const deleteFood = async (foodId: string, foodLogId: string): Promise<any> => {
     }
 
     const [foodLog]: any = await connection.execute(
-      "SELECT COUNT(*) as count FROM foods WHERE food_log_id = ?",
+      "SELECT COUNT(*) as count FROM logged_foods WHERE food_log_id = ?",
       [foodLogId]
     );
 
