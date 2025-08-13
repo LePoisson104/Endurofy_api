@@ -249,8 +249,6 @@ const updateFood = async (
     values
   );
 
-  console.log(updatedFood);
-
   if (updatedFood.affectedRows === 0) {
     throw new AppError("Food log not found!", 404);
   }

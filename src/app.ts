@@ -21,11 +21,11 @@ app.use(express.json());
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", usersRoutes);
-app.use("/api/v1/weight-log", weightLogRoutes);
-app.use("/api/v1/workout-program", workoutProgramRoutes);
-app.use("/api/v1/workout-log", workoutLogRoutes);
-app.use("/api/v1/food", foodRoutes);
-app.use("/api/v1/food-log", foodLogRoutes);
+app.use("/api/v1/weight-logs", weightLogRoutes);
+app.use("/api/v1/workout-programs", workoutProgramRoutes);
+app.use("/api/v1/workout-logs", workoutLogRoutes);
+app.use("/api/v1/foods", foodRoutes);
+app.use("/api/v1/food-logs", foodLogRoutes);
 app.use("/api/v1/settings", settingsRoutes);
 
 // Global error handling middleware (must be last)
