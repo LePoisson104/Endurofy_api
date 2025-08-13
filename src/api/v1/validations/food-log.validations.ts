@@ -37,6 +37,14 @@ const validateAddFood = [
     .withMessage("Food source is required")
     .isIn(["USDA", "custom"])
     .withMessage("Food source must be either 'USDA' or 'custom'"),
+  body("ingredients")
+    .optional()
+    .isString()
+    .withMessage("Ingredients must be a string"),
+  body("ingredients")
+    .optional()
+    .isString()
+    .withMessage("Ingredients must be a string"),
   body("calories")
     .notEmpty()
     .withMessage("Calories is required")

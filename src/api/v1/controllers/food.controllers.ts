@@ -169,8 +169,7 @@ const searchFood = asyncHandler(
 
     sendSuccess(res, {
       message: "Food search completed successfully",
-      // ...transformedData,
-      data: responseData,
+      ...transformedData,
     });
   }
 );

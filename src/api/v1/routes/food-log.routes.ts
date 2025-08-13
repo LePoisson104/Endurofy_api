@@ -6,7 +6,7 @@ import foodLogValidations from "../validations/food-log.validations";
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET ROUTES

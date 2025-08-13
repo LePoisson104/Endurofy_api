@@ -13,6 +13,7 @@ export interface AddFoodPayload {
   foodName: string;
   foodBrand: string;
   foodSource: FoodSource;
+  ingredients: string;
   calories: number;
   protein: number;
   carbs: number;

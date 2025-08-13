@@ -8,9 +8,9 @@ import {
   UpdateFoodPayload,
 } from "../interfaces/food-log.interfaces";
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
   if (!userId || !date) {
     throw new AppError("UserId and date are required!", 400);
@@ -76,9 +76,9 @@ const getLoggedDates = async (
   return logDates;
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 // @POST SERVICES
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 const addFood = async (
   userId: string,
   foodPayload: AddFoodPayload
@@ -98,6 +98,7 @@ const addFood = async (
     foodName,
     foodBrand,
     foodSource,
+    ingredients,
     calories,
     protein,
     carbs,
@@ -115,6 +116,7 @@ const addFood = async (
   try {
     await connection.beginTransaction();
 
+    // Ensure a food_log exists for the date
     const [foodLog]: any = await connection.execute(
       "SELECT food_log_id, status, log_date FROM food_logs WHERE user_id = ? AND log_date = ?",
       [userId, loggedAt.split("T")[0]]
@@ -129,30 +131,74 @@ const addFood = async (
       );
     }
 
-    const foodId = uuidv4();
-
     if (foodLog.length !== 0) foodLogId = foodLog[0].food_log_id;
 
+    // Find or create food_item (lazy cache)
+    const normalizedSource = (foodSource || "custom").toLowerCase(); // 'USDA' | 'custom' => 'usda' | 'custom'
+
+    let existingFoodItemId: string | null = null;
+
+    if (normalizedSource === "usda" && foodSourceId) {
+      const [rows]: any = await connection.execute(
+        "SELECT food_item_id FROM food_items WHERE source = ? AND external_id = ?",
+        ["usda", foodSourceId]
+      );
+      if (rows.length > 0) {
+        existingFoodItemId = rows[0].food_item_id;
+      }
+    } else {
+      // custom food: try to dedupe by user + name + brand
+      const [rows]: any = await connection.execute(
+        "SELECT food_item_id FROM food_items WHERE source = 'custom' AND user_id = ? AND food_name = ? AND (brand_name <=> ?)",
+        [userId, foodName, foodBrand]
+      );
+      if (rows.length > 0) {
+        existingFoodItemId = rows[0].food_item_id;
+      }
+    }
+
+    let foodItemId = existingFoodItemId;
+
+    if (!foodItemId) {
+      foodItemId = uuidv4();
+      await connection.execute(
+        "INSERT INTO food_items (food_item_id, source, external_id, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          foodItemId,
+          normalizedSource,
+          foodSourceId,
+          userId,
+          foodName,
+          foodBrand,
+          ingredients,
+          calories,
+          protein,
+          carbs,
+          fat,
+          fiber,
+          sugar,
+          sodium,
+          cholesterol,
+          100, // default per 100g/ml
+          "g", // default unit
+        ]
+      );
+    }
+
+    // Normalize meal type to match DB enum (snacks -> snack)
+    const normalizedMealType = mealType === "snacks" ? "snack" : mealType;
+
+    // Insert into logged_foods with the actual user serving
+    const foodId = uuidv4();
     await connection.execute(
-      "INSERT INTO foods (food_id, food_log_id, food_source_id, food_name, brand_name, food_source, meal_type, serving_size, serving_size_unit, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO logged_foods (food_id, food_log_id, food_item_id, meal_type, serving_size, serving_size_unit) VALUES (?, ?, ?, ?, ?, ?)",
       [
         foodId,
         foodLogId,
-        foodSourceId,
-        foodName,
-        foodBrand,
-        foodSource,
-        mealType,
+        foodItemId,
+        normalizedMealType,
         servingSize,
         servingUnit,
-        calories,
-        protein,
-        carbs,
-        fat,
-        fiber,
-        sugar,
-        sodium,
-        cholesterol,
       ]
     );
 
@@ -177,9 +223,9 @@ const addFood = async (
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 // @PATCH SERVICES
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 const updateFood = async (
   foodId: string,
   updatePayload: UpdateFoodPayload
@@ -210,9 +256,9 @@ const updateFood = async (
   return updatedFood;
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE SERVICES
-////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 const deleteFood = async (foodId: string, foodLogId: string): Promise<any> => {
   if (!foodId) {
     throw new AppError("foodId is required!", 400);
