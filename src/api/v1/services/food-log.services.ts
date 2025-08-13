@@ -17,10 +17,7 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
   }
 
   try {
-    const foodLogData = await foodLogRepository.queryGetFoodLogByDate(
-      userId,
-      date
-    );
+    const foodLogData = await foodLogRepository.GetFoodLogByDate(userId, date);
 
     const groupedFoods: Record<string, any[]> = {
       breakfast: [],
@@ -67,7 +64,7 @@ const getLoggedDates = async (
     throw new AppError("userId, startDate, and endDate are required!", 400);
   }
 
-  const logDates = await foodLogRepository.queryGetLoggedDates(
+  const logDates = await foodLogRepository.GetLoggedDates(
     userId,
     startDate,
     endDate
@@ -230,24 +227,29 @@ const updateFood = async (
   foodId: string,
   updatePayload: UpdateFoodPayload
 ): Promise<any> => {
-  if (!foodId || !updatePayload || Object.keys(updatePayload).length === 0) {
-    throw new AppError("food log id and update payload are required!", 400);
+  if (!updatePayload || Object.keys(updatePayload).length === 0) {
+    throw new AppError("Update payload is required!", 400);
   }
 
-  const { serving_size, serving_size_unit } = updatePayload;
-
-  if (!serving_size || !serving_size_unit) {
-    throw new AppError(
-      "Make sure variable names are spelled correctly (serving_size, serving_size_unit)",
-      400
-    );
-  }
-
-  const updatedFood = await foodLogRepository.queryUpdateFood(
-    foodId,
-    serving_size,
-    serving_size_unit
+  const validFields = ["serving_size", "serving_size_unit"];
+  const fields = Object.keys(updatePayload).filter((f) =>
+    validFields.includes(f)
   );
+
+  if (fields.length === 0) {
+    throw new AppError("No valid fields to update!", 400);
+  }
+
+  const setClause = fields.map((f) => `${f} = ?`).join(", ");
+  const values = fields.map((f) => updatePayload[f as keyof UpdateFoodPayload]);
+
+  const updatedFood = await foodLogRepository.UpdateFood(
+    foodId,
+    setClause,
+    values
+  );
+
+  console.log(updatedFood);
 
   if (updatedFood.affectedRows === 0) {
     throw new AppError("Food log not found!", 404);

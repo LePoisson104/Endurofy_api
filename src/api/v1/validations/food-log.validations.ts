@@ -116,14 +116,16 @@ const validateUpdateFood = [
     .withMessage("Food ID is required")
     .isUUID()
     .withMessage("Invalid food ID format"),
+
+  // Serving size: optional, but must be valid if provided
   body("serving_size")
-    .notEmpty()
-    .withMessage("Serving size is required")
+    .optional()
     .isFloat({ min: 0.1 })
     .withMessage("Serving size must be a number greater than 0"),
+
+  // Serving unit: optional, but must be valid if provided
   body("serving_size_unit")
-    .notEmpty()
-    .withMessage("Serving unit is required")
+    .optional()
     .isIn(["g", "ml", "oz"])
     .withMessage("Serving unit must be either 'g', 'ml', or 'oz'"),
 ];

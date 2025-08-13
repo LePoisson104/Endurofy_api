@@ -5,7 +5,7 @@ import Logger from "../utils/logger";
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET QUERIES
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const queryGetFoodLogByDate = async (
+const GetFoodLogByDate = async (
   userId: string,
   date: string,
   connection?: any
@@ -74,7 +74,7 @@ const queryGetFoodLogByDate = async (
   }
 };
 
-const queryGetLoggedDates = async (
+const GetLoggedDates = async (
   userId: string,
   startDate: string,
   endDate: string
@@ -93,19 +93,14 @@ const queryGetLoggedDates = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @PATCH QUERIES
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const queryUpdateFood = async (
+const UpdateFood = async (
   foodId: string,
-  servingSize: number,
-  servingSizeUnit: "g" | "ml" | "oz"
+  setClause: string,
+  values: any[]
 ): Promise<any> => {
   try {
-    const query =
-      "UPDATE logged_foods SET serving_size = ?, serving_size_unit = ? WHERE food_id = ?";
-    const [result] = await pool.execute(query, [
-      servingSize,
-      servingSizeUnit,
-      foodId,
-    ]);
+    const query = `UPDATE logged_foods SET ${setClause} WHERE food_id = ?`;
+    const [result] = await pool.execute(query, [...values, foodId]);
     return result;
   } catch (err: any) {
     await Logger.logEvents(`Error updating food: ${err}`, "errLog.log");
@@ -116,7 +111,7 @@ const queryUpdateFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE QUERIES
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const queryDeleteFood = async (foodId: string): Promise<any> => {
+const DeleteFood = async (foodId: string): Promise<any> => {
   try {
     const query = "DELETE FROM logged_foods WHERE food_id = ?";
     const [result] = await pool.execute(query, [foodId]);
@@ -128,8 +123,8 @@ const queryDeleteFood = async (foodId: string): Promise<any> => {
 };
 
 export default {
-  queryGetFoodLogByDate,
-  queryGetLoggedDates,
-  queryUpdateFood,
-  queryDeleteFood,
+  GetFoodLogByDate,
+  GetLoggedDates,
+  UpdateFood,
+  DeleteFood,
 };
