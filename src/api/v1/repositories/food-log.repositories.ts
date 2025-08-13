@@ -12,7 +12,32 @@ const queryGetFoodLogByDate = async (
 ): Promise<any> => {
   try {
     const query1 = `SELECT food_log_id, log_date, status FROM food_logs WHERE user_id = ? AND log_date = ? LIMIT 1`;
-    const query2 = `SELECT * FROM foods WHERE food_log_id = ?`;
+    const query2 = `
+      SELECT
+        lf.food_id AS foodId,
+        lf.food_log_id AS foodLogId,
+        lf.food_item_id AS foodItemId,
+        lf.meal_type AS mealType,
+        lf.serving_size AS loggedServingSize,
+        lf.serving_size_unit AS loggedServingSizeUnit,
+        fi.food_name AS foodName,
+        fi.brand_name AS brandName,
+        fi.ingredients,
+        fi.source,
+        fi.external_id AS foodSourceId,
+        fi.calories,
+        fi.protein_g AS protein,
+        fi.carbs_g AS carbs,
+        fi.fat_g AS fat,
+        fi.fiber_g AS fiber,
+        fi.sugar_g AS sugar,
+        fi.sodium_mg AS sodium,
+        fi.cholesterol_mg AS cholesterol,
+        fi.serving_size AS baseServingSize,
+        fi.serving_size_unit AS baseServingSizeUnit
+      FROM logged_foods lf
+      JOIN food_items fi ON lf.food_item_id = fi.food_item_id
+      WHERE lf.food_log_id = ?`;
 
     const dbConnection = connection || pool;
 
@@ -75,7 +100,7 @@ const queryUpdateFood = async (
 ): Promise<any> => {
   try {
     const query =
-      "UPDATE foods SET serving_size = ?, serving_size_unit = ? WHERE food_id = ?";
+      "UPDATE logged_foods SET serving_size = ?, serving_size_unit = ? WHERE food_id = ?";
     const [result] = await pool.execute(query, [
       servingSize,
       servingSizeUnit,
@@ -93,7 +118,7 @@ const queryUpdateFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const queryDeleteFood = async (foodId: string): Promise<any> => {
   try {
-    const query = "DELETE FROM foods WHERE food_id = ?";
+    const query = "DELETE FROM logged_foods WHERE food_id = ?";
     const [result] = await pool.execute(query, [foodId]);
     return result;
   } catch (err: any) {

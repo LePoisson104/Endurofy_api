@@ -32,7 +32,7 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
 
     // Group foods by meal_type
     foodLogData.foods.forEach((food: any) => {
-      const mealType = food.meal_type;
+      const mealType = food.meal_type === "snack" ? "snacks" : food.meal_type;
       if (groupedFoods[mealType]) {
         groupedFoods[mealType].push(food);
       } else {
