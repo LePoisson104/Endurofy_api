@@ -119,8 +119,8 @@ const resendOTP = async (
   try {
     await connection.beginTransaction();
 
-    const getOTP = await Auth.queryGetOTP(userId, connection);
-    const user = await Auth.queryGetUserById(userId, connection);
+    const getOTP = await Auth.GetOTP(userId, connection);
+    const user = await Auth.GetUserById(userId, connection);
 
     if (user.length === 0) {
       throw new AppError("User not found", 404);
@@ -143,15 +143,9 @@ const resendOTP = async (
       .toString();
 
     if (getOTP.length > 0) {
-      await Auth.queryUpdateOTP(
-        userId,
-        hashedOTP,
-        createdAt,
-        expiresAt,
-        connection
-      );
+      await Auth.UpdateOTP(userId, hashedOTP, createdAt, expiresAt, connection);
     } else if (user[0].pending_email === email) {
-      await Auth.queryCreateOtp(
+      await Auth.CreateOtp(
         userId,
         email,
         hashedOTP,
@@ -198,7 +192,7 @@ const forgotPassword = async (
 
   try {
     await connection.beginTransaction();
-    const user = await Auth.queryGetUserCredentials(email, connection);
+    const user = await Auth.GetUserCredentials(email, connection);
 
     if (user.length === 0) {
       throw new AppError("User not found", 404);
@@ -216,13 +210,13 @@ const forgotPassword = async (
       AUTH_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000
     ).toString();
 
-    const getOTP = await Auth.queryGetOTP(user[0].user_id, connection);
+    const getOTP = await Auth.GetOTP(user[0].user_id, connection);
 
     if (getOTP.length > 0) {
-      await Auth.queryDeleteOTP(user[0].user_id, connection);
+      await Auth.DeleteOTP(user[0].user_id, connection);
     }
 
-    await Auth.queryCreateOtp(
+    await Auth.CreateOtp(
       user[0].user_id,
       email,
       hashedOTP,
@@ -280,13 +274,13 @@ const resetPassword = async (
 
   try {
     await connection.beginTransaction();
-    const user = await Auth.queryGetUserCredentials(email, connection);
+    const user = await Auth.GetUserCredentials(email, connection);
 
     if (user.length === 0) {
       throw new AppError("User not found", 404);
     }
 
-    const getOTP = await Auth.queryGetOTP(user[0].user_id, connection);
+    const getOTP = await Auth.GetOTP(user[0].user_id, connection);
 
     if (getOTP.length === 0) {
       throw new AppError("No otp found", 404);
@@ -310,14 +304,14 @@ const resetPassword = async (
       AUTH_CONSTANTS.SALT_ROUNDS
     );
 
-    await Users.queryUpdateUsersPassword(
+    await Users.UpdateUsersPassword(
       user[0].user_id,
       hashedPassword,
       new Date(),
       connection
     );
 
-    await Auth.queryDeleteOTP(user[0].user_id, connection);
+    await Auth.DeleteOTP(user[0].user_id, connection);
 
     await connection.commit();
   } catch (err) {
@@ -449,7 +443,7 @@ const login = async (
   password: string,
   res: Response
 ): Promise<AuthServiceResponse> => {
-  const userCredentials = await Auth.queryGetUserCredentials(email);
+  const userCredentials = await Auth.GetUserCredentials(email);
 
   if (userCredentials.length === 0 || userCredentials[0].verified === 0) {
     throw new AppError("Invalid credentials!", 401);
@@ -519,9 +513,7 @@ const refresh = async (cookies: {
 
         const decodedToken = decoded as DecodedToken;
         try {
-          const foundUser = await Auth.queryGetUserCredentials(
-            decodedToken.email
-          );
+          const foundUser = await Auth.GetUserCredentials(decodedToken.email);
 
           if (
             !foundUser?.length ||

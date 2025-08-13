@@ -14,7 +14,7 @@ const getWeightLogDatesByRange = async (
   startDate: Date,
   endDate: Date
 ): Promise<{ data: { weightLogDates: Date[] } }> => {
-  const weightLogDates = await WeightLogs.queryGetWeightLogDatesByRange(
+  const weightLogDates = await WeightLogs.GetWeightLogDatesByRange(
     userId,
     startDate,
     endDate
@@ -42,12 +42,12 @@ const getWeeklyWeightDifference = async (
     .toISOString()
     .split("T")[0];
 
-  const currentWeekWeightLogs = await WeightLogs.queryGetWeightByDate(
+  const currentWeekWeightLogs = await WeightLogs.GetWeightByDate(
     userId,
     startOfCurrentWeek,
     endOfCurrentWeek
   );
-  const lastWeekWeightLogs = await WeightLogs.queryGetWeightByDate(
+  const lastWeekWeightLogs = await WeightLogs.GetWeightByDate(
     userId,
     startOfLastWeek,
     endOfLastWeek
@@ -85,13 +85,13 @@ const getWeightLogByRange = async (
 
   if (options === "all") {
     // For "all" option, we don't need to fetch additional week
-    weightLogs = await WeightLogs.queryGetAllWeightLog(userId);
+    weightLogs = await WeightLogs.GetAllWeightLog(userId);
     if (withRates !== "true") {
       return { data: { weightLogs: weightLogs } };
     }
   } else if (options === "date" && startDate && endDate) {
     if (withRates !== "true") {
-      weightLogs = await WeightLogs.queryGetWeightLogByDate(
+      weightLogs = await WeightLogs.GetWeightLogByDate(
         userId,
         startDate,
         endDate
@@ -116,7 +116,7 @@ const getWeightLogByRange = async (
     // one more week before that to calculate rates for the partial week
 
     // Query with extended date range
-    const extendedWeightLogs = await WeightLogs.queryGetWeightLogByDate(
+    const extendedWeightLogs = await WeightLogs.GetWeightLogByDate(
       userId,
       extendedStartDate,
       endDate
@@ -387,7 +387,7 @@ const createWeightLog = async (
   try {
     await connection.beginTransaction();
 
-    const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
+    const isWeightLogExists = await WeightLogs.IsWeightLogExists(
       userId,
       weightLogPayload.logDate,
       connection
@@ -397,7 +397,7 @@ const createWeightLog = async (
       throw new AppError("Weight log already exists for this date", 400);
     }
 
-    const latestWeightLog = await WeightLogs.queryGetLatestWeightLog(
+    const latestWeightLog = await WeightLogs.GetLatestWeightLog(
       userId,
       connection
     );
@@ -459,7 +459,7 @@ const updateWeightLog = async (
   try {
     await connection.beginTransaction();
 
-    const weightLog = await WeightLogs.queryGetWeightLog(
+    const weightLog = await WeightLogs.GetWeightLog(
       userId,
       weightLogId,
       connection
@@ -475,7 +475,7 @@ const updateWeightLog = async (
       weightLogPayload.logDate.toString() !==
         weightLog[0].log_date.toISOString().split("T")[0]
     ) {
-      const isWeightLogExists = await WeightLogs.queryIsWeightLogExists(
+      const isWeightLogExists = await WeightLogs.IsWeightLogExists(
         userId,
         weightLogPayload.logDate,
         connection
@@ -530,7 +530,7 @@ const deleteWeightLog = async (
   weightLogId: string,
   userId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await WeightLogs.queryDeleteWeightLog(weightLogId, userId);
+  const result = await WeightLogs.DeleteWeightLog(weightLogId, userId);
   if (result.affectedRows === 0) {
     throw new AppError("Weight log not found", 404);
   }

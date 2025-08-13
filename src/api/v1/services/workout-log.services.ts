@@ -20,7 +20,7 @@ const getManualWorkoutLogWithPrevious = async (
 
   try {
     // Get the workout log for the specified date
-    const workoutLogResult = await workoutLogRepository.queryIsWorkoutLogExists(
+    const workoutLogResult = await workoutLogRepository.IsWorkoutLogExists(
       userId,
       programId,
       workoutDate,
@@ -114,7 +114,7 @@ const getManualWorkoutLogWithPrevious = async (
 
           // Get previous data for this set number
           const previousWorkoutLogResult =
-            await workoutLogRepository.queryPreviousWorkoutLogForExercise(
+            await workoutLogRepository.GetPreviousWorkoutLogForExercise(
               userId,
               programId,
               workoutLog.day_id,
@@ -204,7 +204,7 @@ const getWorkoutLogPagination = async (
 
   try {
     const workoutLogs: WorkoutLogExists[] =
-      await workoutLogRepository.queryGetWorkoutLogPagination(
+      await workoutLogRepository.GetWorkoutLogPagination(
         programId,
         limit + 1,
         offset,
@@ -212,7 +212,7 @@ const getWorkoutLogPagination = async (
       );
 
     const workoutLogsData =
-      await workoutLogRepository.queryGetWorkoutExercisesAndSets(
+      await workoutLogRepository.GetWorkoutExercisesAndSets(
         userId,
         programId,
         [...workoutLogs].slice(0, limit),
@@ -253,7 +253,7 @@ const getWorkoutLogData = async (
     // Check if startDate and endDate are the same (single date query)
     if (startDate === endDate) {
       // Use the existing single date query method
-      workoutLogResults = await workoutLogRepository.queryIsWorkoutLogExists(
+      workoutLogResults = await workoutLogRepository.IsWorkoutLogExists(
         userId,
         programId,
         startDate,
@@ -261,14 +261,13 @@ const getWorkoutLogData = async (
       );
     } else {
       // Use the date range query method
-      workoutLogResults =
-        await workoutLogRepository.queryWorkoutLogsByDateRange(
-          userId,
-          programId,
-          startDate,
-          endDate,
-          connection
-        );
+      workoutLogResults = await workoutLogRepository.GetWorkoutLogsByDateRange(
+        userId,
+        programId,
+        startDate,
+        endDate,
+        connection
+      );
     }
 
     if (workoutLogResults.length === 0) {
@@ -277,7 +276,7 @@ const getWorkoutLogData = async (
 
     // Process each workout log
     const workoutLogsData =
-      await workoutLogRepository.queryGetWorkoutExercisesAndSets(
+      await workoutLogRepository.GetWorkoutExercisesAndSets(
         userId,
         programId,
         workoutLogResults,
@@ -303,7 +302,7 @@ const getPreviousWorkoutLog = async (
 
   try {
     // Get all exercises for this dayId
-    const exercises = await workoutLogRepository.queryGetExercisesByDayId(
+    const exercises = await workoutLogRepository.GetExercisesByDayId(
       dayId,
       connection
     );
@@ -322,7 +321,7 @@ const getPreviousWorkoutLog = async (
 
             for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
               const previousWorkoutLogResult =
-                await workoutLogRepository.queryPreviousWorkoutLogForExercise(
+                await workoutLogRepository.GetPreviousWorkoutLogForExercise(
                   userId,
                   programId,
                   dayId,
@@ -388,7 +387,7 @@ const getCompletedWorkoutLogs = async (
   endDate: string
 ): Promise<{ data: number }> => {
   const completedWorkoutLogs =
-    await workoutLogRepository.queryGetCompletedWorkoutLogs(
+    await workoutLogRepository.GetCompletedWorkoutLogs(
       userId,
       programId,
       new Date(startDate),
@@ -404,7 +403,7 @@ const getWorkoutLogDates = async (
   startDate: string,
   endDate: string
 ): Promise<{ data: WorkoutLogData[] }> => {
-  const workoutLogDates = await workoutLogRepository.queryGetWorkoutLogDates(
+  const workoutLogDates = await workoutLogRepository.GetWorkoutLogDates(
     userId,
     programId,
     startDate,
@@ -444,7 +443,7 @@ const createWorkoutLog = async (
     let currentWorkoutLogId: string;
 
     // Check if workout log exists using same connection
-    const workoutLogResult = await workoutLogRepository.queryIsWorkoutLogExists(
+    const workoutLogResult = await workoutLogRepository.IsWorkoutLogExists(
       userId,
       programId,
       workoutDate,
@@ -475,7 +474,7 @@ const createWorkoutLog = async (
 
     // Check if workout exercise exists using same connection
     const workoutExerciseResult =
-      await workoutLogRepository.queryIsWorkoutExerciseExists(
+      await workoutLogRepository.IsWorkoutExerciseExists(
         currentWorkoutLogId,
         programExerciseId,
         connection
@@ -544,29 +543,27 @@ const createManualWorkoutLog = async (
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const isWorkoutLogExists =
-      await workoutLogRepository.queryIsWorkoutLogExists(
-        userId,
-        programId,
-        workoutDate,
-        connection
-      );
+    const isWorkoutLogExists = await workoutLogRepository.IsWorkoutLogExists(
+      userId,
+      programId,
+      workoutDate,
+      connection
+    );
 
     if (isWorkoutLogExists.length !== 0) {
       throw new AppError("Workout log already exists", 400);
     }
 
-    const workoutLogResult =
-      await workoutLogRepository.queryCreateManualWorkoutLog(
-        uuidv4(),
-        userId,
-        programId,
-        dayId,
-        title,
-        workoutDate,
-        "incomplete",
-        connection
-      );
+    const workoutLogResult = await workoutLogRepository.CreateManualWorkoutLog(
+      uuidv4(),
+      userId,
+      programId,
+      dayId,
+      title,
+      workoutDate,
+      "incomplete",
+      connection
+    );
 
     if (workoutLogResult.length === 0) {
       throw new AppError("Failed to create workout log", 500);
@@ -606,7 +603,7 @@ const addWorkoutSet = async (
 
   const workoutSetId = uuidv4();
 
-  const result = await workoutLogRepository.queryAddWorkoutSet(
+  const result = await workoutLogRepository.AddWorkoutSet(
     workoutSetId,
     workoutExerciseId,
     setNumber,
@@ -639,7 +636,7 @@ const addManualWorkoutExercise = async (
 ): Promise<{ data: { message: string } }> => {
   const workoutExerciseId = uuidv4();
 
-  const result = await workoutLogRepository.queryAddManualWorkoutExercise(
+  const result = await workoutLogRepository.AddManualWorkoutExercise(
     workoutExerciseId,
     workoutLogId,
     programExerciseId,
@@ -661,7 +658,7 @@ const updateWorkoutLogStatus = async (
   workoutLogId: string,
   status: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await workoutLogRepository.queryUpdateWorkoutLogStatus(
+  const result = await workoutLogRepository.UpdateWorkoutLogStatus(
     workoutLogId,
     status
   );
@@ -681,7 +678,7 @@ const updateWorkoutLogName = async (
   workoutLogId: string,
   title: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await workoutLogRepository.queryUpdateWorkoutLogName(
+  const result = await workoutLogRepository.UpdateWorkoutLogName(
     workoutLogId,
     title
   );
@@ -732,7 +729,7 @@ const updateExerciseNotes = async (
     throw new AppError("Exercise notes must be less than 200 characters", 400);
   }
 
-  const result = await workoutLogRepository.queryUpdateExerciseNotes(
+  const result = await workoutLogRepository.UpdateExerciseNotes(
     workoutExerciseId,
     exerciseNotes
   );
@@ -760,7 +757,7 @@ const updateWorkoutSet = async (
 ): Promise<{ data: { message: string } }> => {
   const { leftReps, rightReps, weight, weightUnit } = workoutSetPayload;
 
-  const result = await workoutLogRepository.queryUpdateWorkoutSet(
+  const result = await workoutLogRepository.UpdateWorkoutSet(
     workoutSetId,
     workoutExerciseId,
     leftReps,
@@ -783,7 +780,7 @@ const updateWorkoutSet = async (
 const deleteWorkoutSet = async (
   workoutSetId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await workoutLogRepository.queryDeleteWorkoutSet(workoutSetId);
+  const result = await workoutLogRepository.DeleteWorkoutSet(workoutSetId);
 
   if (result.affectedRows === 0) {
     throw new AppError("Invalid workout set id", 400);

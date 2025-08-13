@@ -20,7 +20,7 @@ const getFavoriteFood = async (userId: string): Promise<BaseFood[]> => {
   }
 
   try {
-    const getFavorites = await foodRepository.queryGetFavoriteFood(userId);
+    const getFavorites = await foodRepository.GetFavoriteFood(userId);
 
     const transformedFavorites: BaseFood[] = getFavorites.map(
       (favorite: any) => ({
@@ -65,7 +65,7 @@ const getIsFavoriteFood = async (
   }
 
   try {
-    const isFavoriteFood = await foodRepository.queryGetIsFavoriteFood(
+    const isFavoriteFood = await foodRepository.GetIsFavoriteFood(
       userId,
       foodId
     );
@@ -98,7 +98,7 @@ const getFavoriteStatusBatch = async (
   }
 
   try {
-    const favoriteResults = await foodRepository.queryGetFavoriteStatusBatch(
+    const favoriteResults = await foodRepository.GetFavoriteStatusBatch(
       userId,
       foodIds
     );
@@ -147,7 +147,7 @@ const getCustomFood = async (
     throw new AppError("UserId is required!", 400);
   }
 
-  const customFood = await foodRepository.queryGetCustomFood(userId);
+  const customFood = await foodRepository.GetCustomFood(userId);
   const transformedCustomFood = customFood.map(
     (food: CustomFoodRepository) => ({
       customFoodId: food.custom_food_id,
@@ -175,7 +175,7 @@ const getCustomFoodById = async (foodId: string): Promise<any[]> => {
   }
 
   try {
-    const customFoodById = await foodRepository.queryGetCustomFoodById(foodId);
+    const customFoodById = await foodRepository.GetCustomFoodById(foodId);
     return customFoodById;
   } catch (error: any) {
     await Logger.logEvents(
@@ -222,11 +222,9 @@ const addFavoriteFood = async (
       servingUnit,
     } = foodPayload;
 
-    console.log("foodPayload", foodPayload);
-
     const favFoodId = uuidv4();
 
-    const addedFavoriteFood = await foodRepository.queryAddFavoriteFood(
+    const addedFavoriteFood = await foodRepository.AddFavoriteFood(
       favFoodId,
       foodId,
       userId,
@@ -290,7 +288,7 @@ const addCustomFood = async (
 
   const customFoodId = uuidv4();
 
-  await foodRepository.queryAddCustomFood(
+  await foodRepository.AddCustomFood(
     customFoodId,
     userId,
     foodName,
@@ -368,7 +366,7 @@ const updateCustomFood = async (
   try {
     await connection.beginTransaction();
 
-    const updatedCustomFood = await foodRepository.queryUpdateCustomFood(
+    const updatedCustomFood = await foodRepository.UpdateCustomFood(
       customFoodId,
       foodName,
       foodBrand,
@@ -414,7 +412,7 @@ const deleteFavoriteFood = async (favFoodId: string): Promise<any> => {
   try {
     await connection.beginTransaction();
 
-    const deletedFavoriteFood = await foodRepository.queryDeleteFavoriteFood(
+    const deletedFavoriteFood = await foodRepository.DeleteFavoriteFood(
       favFoodId
     );
 
@@ -448,7 +446,7 @@ const deleteCustomFood = async (customFoodId: string): Promise<any> => {
   try {
     await connection.beginTransaction();
 
-    const deletedCustomFood = await foodRepository.queryDeleteCustomFood(
+    const deletedCustomFood = await foodRepository.DeleteCustomFood(
       customFoodId
     );
 

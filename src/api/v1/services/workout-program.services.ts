@@ -16,7 +16,7 @@ import workoutProgramRepositories from "../repositories/workout-program.reposito
 const getAllWorkoutPrograms = async (
   userId: string
 ): Promise<{ data: { programs: WorkoutProgramRequest[] } }> => {
-  const workoutPrograms = await WorkoutPrograms.queryGetWorkoutProgram(userId);
+  const workoutPrograms = await WorkoutPrograms.GetWorkoutProgram(userId);
 
   if (!workoutPrograms || workoutPrograms.length === 0) {
     return {
@@ -38,13 +38,13 @@ const getAllWorkoutPrograms = async (
         updated_at: string;
         starting_date: string;
       }) => {
-        const workoutDays = await WorkoutPrograms.queryGetWorkoutProgramDays(
+        const workoutDays = await WorkoutPrograms.GetWorkoutProgramDays(
           program.program_id
         );
 
         const workoutExercisesMap: { [key: string]: ExerciseRepo[] } = {};
         for (const day of workoutDays) {
-          const exercises = await WorkoutPrograms.queryGetProgramDaysExercises(
+          const exercises = await WorkoutPrograms.GetProgramDaysExercises(
             day.program_day_id
           );
           workoutExercisesMap[day.program_day_id] = exercises;
@@ -202,7 +202,7 @@ const deleteManualWorkoutExercise = async (
 
   try {
     const result =
-      await workoutProgramRepositories.queryDeleteWorkoutProgramExercise(
+      await workoutProgramRepositories.DeleteWorkoutProgramExercise(
         dayId,
         exerciseId,
         connection
@@ -238,7 +238,7 @@ const createWorkoutProgram = async (
   const connection = await pool.getConnection();
 
   try {
-    const workoutPrograms = await WorkoutPrograms.queryGetWorkoutProgram(
+    const workoutPrograms = await WorkoutPrograms.GetWorkoutProgram(
       userId,
       connection
     );
@@ -323,7 +323,7 @@ const addExercise = async (
 
   try {
     const isProgramAndProgramDayExists =
-      await WorkoutPrograms.queryIfProgramAndProgramDayExists(programId, dayId);
+      await WorkoutPrograms.IfProgramAndProgramDayExists(programId, dayId);
 
     if (!isProgramAndProgramDayExists) {
       throw new AppError("Program or program day not found", 404);
@@ -332,17 +332,9 @@ const addExercise = async (
     await connection.beginTransaction();
 
     const exerciseId = uuidv4();
-    await WorkoutPrograms.queryAddExercise(
-      dayId,
-      exerciseId,
-      exercise,
-      connection
-    );
+    await WorkoutPrograms.AddExercise(dayId, exerciseId, exercise, connection);
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
-      programId,
-      connection
-    );
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId, connection);
 
     await connection.commit();
   } catch (err) {
@@ -374,17 +366,14 @@ const addProgramDay = async (
     const { dayName, dayNumber } = payload;
     const dayId = uuidv4();
 
-    await WorkoutPrograms.queryAddProgramDay(
+    await WorkoutPrograms.AddProgramDay(
       programId,
       dayId,
       dayName,
       dayNumber,
       connection
     );
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
-      programId,
-      connection
-    );
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId, connection);
 
     await connection.commit();
   } catch (err) {
@@ -414,7 +403,7 @@ const updateWorkoutProgramDescription = async (
 
   try {
     await connection.beginTransaction();
-    const result = await WorkoutPrograms.queryUpdateWorkoutProgramDescription(
+    const result = await WorkoutPrograms.UpdateWorkoutProgramDescription(
       userId,
       programId,
       programName,
@@ -427,10 +416,7 @@ const updateWorkoutProgramDescription = async (
       throw new AppError("Program not found", 404);
     }
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
-      programId,
-      connection
-    );
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId, connection);
 
     await connection.commit();
   } catch (err) {
@@ -464,7 +450,7 @@ const updateWorkoutProgramDay = async (
   try {
     await connection.beginTransaction();
     const { dayName } = payload;
-    const result = await WorkoutPrograms.queryUpdateWorkoutProgramDay(
+    const result = await WorkoutPrograms.UpdateWorkoutProgramDay(
       programId,
       dayId,
       dayName,
@@ -475,7 +461,7 @@ const updateWorkoutProgramDay = async (
       throw new AppError("Program day not found", 404);
     }
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId);
 
     await connection.commit();
   } catch (err) {
@@ -526,7 +512,7 @@ const updateWorkoutProgramExercise = async (
 
   try {
     await connection.beginTransaction();
-    const result = await WorkoutPrograms.queryUpdateWorkoutProgramExercise(
+    const result = await WorkoutPrograms.UpdateWorkoutProgramExercise(
       dayId,
       exerciseId,
       exerciseName,
@@ -543,10 +529,7 @@ const updateWorkoutProgramExercise = async (
       throw new AppError("Exercise not found", 404);
     }
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
-      programId,
-      connection
-    );
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId, connection);
 
     await connection.commit();
   } catch (err) {
@@ -580,7 +563,7 @@ const reorderExerciseOrder = async (
   try {
     await connection.beginTransaction();
     for (const exercise of payload) {
-      await WorkoutPrograms.queryReorderExerciseOrder(
+      await WorkoutPrograms.ReorderExerciseOrder(
         dayId,
         exercise.exerciseId,
         exercise.exerciseOrder,
@@ -588,10 +571,7 @@ const reorderExerciseOrder = async (
       );
     }
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
-      programId,
-      connection
-    );
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId, connection);
 
     await connection.commit();
   } catch (err) {
@@ -623,16 +603,13 @@ const setProgramAsActive = async (
 
   try {
     await connection.beginTransaction();
-    const result = await WorkoutPrograms.querySetAllAsInactive(
-      userId,
-      connection
-    );
+    const result = await WorkoutPrograms.SetAllAsInactive(userId, connection);
 
     if (result.affectedRows === 0) {
       throw new AppError("User not found", 404);
     }
 
-    const result2 = await WorkoutPrograms.querySetProgramAsActive(
+    const result2 = await WorkoutPrograms.SetProgramAsActive(
       userId,
       programId,
       connection
@@ -671,7 +648,7 @@ const setProgramAsInactive = async (
 
   try {
     await connection.beginTransaction();
-    const result1 = await WorkoutPrograms.querySetProgramAsInactive(
+    const result1 = await WorkoutPrograms.SetProgramAsInactive(
       userId,
       programId,
       connection
@@ -712,10 +689,7 @@ const deleteWorkoutProgram = async (
   userId: string,
   programId: string
 ): Promise<{ data: { message: string } }> => {
-  const result = await WorkoutPrograms.queryDeleteWorkoutProgram(
-    userId,
-    programId
-  );
+  const result = await WorkoutPrograms.DeleteWorkoutProgram(userId, programId);
 
   if (result.affectedRows === 0) {
     throw new AppError("Program not found", 404);
@@ -735,7 +709,7 @@ const deleteWorkoutProgramDay = async (
 
   try {
     await connection.beginTransaction();
-    const result = await WorkoutPrograms.queryDeleteWorkoutProgramDay(
+    const result = await WorkoutPrograms.DeleteWorkoutProgramDay(
       programId,
       dayId,
       connection
@@ -745,10 +719,7 @@ const deleteWorkoutProgramDay = async (
       throw new AppError("Program day not found", 404);
     }
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(
-      programId,
-      connection
-    );
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId, connection);
 
     await connection.commit();
   } catch (err) {
@@ -805,7 +776,7 @@ const deleteWorkoutProgramExercise = async (
       [dayId, deletedOrder]
     );
 
-    await WorkoutPrograms.queryUpdateWorkoutProgramUpdatedAt(programId);
+    await WorkoutPrograms.UpdateWorkoutProgramUpdatedAt(programId);
 
     await connection.commit();
   } catch (err) {

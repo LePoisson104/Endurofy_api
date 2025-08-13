@@ -19,7 +19,7 @@ import WeightLogs from "../repositories/weight-log.repositories";
 const getUsersInfo = async (
   userId: string
 ): Promise<UserInfoServiceResponse> => {
-  const userResponse = await Users.queryGetUsersInfo(userId);
+  const userResponse = await Users.GetUsersInfo(userId);
 
   const usersInfo = {
     ...userResponse.user,
@@ -46,7 +46,7 @@ const updateUsersName = async (
 ): Promise<any> => {
   const { firstName, lastName } = userUpdatePayload;
   const updatedAt = new Date();
-  await Users.queryUpdateUsersName(userId, firstName, lastName, updatedAt);
+  await Users.UpdateUsersName(userId, firstName, lastName, updatedAt);
 
   return {
     data: {
@@ -68,10 +68,7 @@ const initiateEmailChange = async (
   try {
     await connection.beginTransaction();
 
-    const userCredentials = await Auth.queryGetUserCredentials(
-      email,
-      connection
-    );
+    const userCredentials = await Auth.GetUserCredentials(email, connection);
 
     if (userCredentials.length === 0) {
       throw new AppError("User not found", 404);
@@ -109,7 +106,7 @@ const initiateEmailChange = async (
       [newEmail, userId]
     );
 
-    await Auth.queryCreateOtp(
+    await Auth.CreateOtp(
       userId,
       newEmail,
       hashedOTP,
@@ -317,7 +314,7 @@ const updateUsersProfile = async (
     updateProfilePayload.current_weight_unit =
       updateProfilePayload.starting_weight_unit;
   } else {
-    const usersProfile = await Users.queryGetUsersProfile(userId);
+    const usersProfile = await Users.GetUsersProfile(userId);
 
     if (
       usersProfile[0].starting_weight !== updateProfilePayload.starting_weight
@@ -331,7 +328,7 @@ const updateUsersProfile = async (
 
   updateProfilePayload.updated_at = new Date();
 
-  await Users.queryUpdateUsersProfile(userId, updateProfilePayload);
+  await Users.UpdateUsersProfile(userId, updateProfilePayload);
 
   return {
     data: {
@@ -409,10 +406,7 @@ const updateUsersProfileAndConvertWeightLogs = async (
   try {
     await connection.beginTransaction();
 
-    const weightLogs = await WeightLogs.queryGetAllWeightLog(
-      userId,
-      connection
-    );
+    const weightLogs = await WeightLogs.GetAllWeightLog(userId, connection);
 
     const newWeightValues = [];
 
@@ -494,7 +488,7 @@ const updateUsersPassword = async (
     await connection.beginTransaction();
 
     // Get user credentials using the same connection
-    const getCredential = await Auth.queryGetUserCredentials(email, connection);
+    const getCredential = await Auth.GetUserCredentials(email, connection);
 
     if (getCredential.length === 0) {
       throw new AppError("User not found", 404);
@@ -518,7 +512,7 @@ const updateUsersPassword = async (
     const updateAt = new Date();
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await Users.queryUpdateUsersPassword(
+    await Users.UpdateUsersPassword(
       userId,
       hashedPassword,
       updateAt,
@@ -560,7 +554,7 @@ const deleteAccount = async (
   try {
     await connection.beginTransaction();
 
-    const getCredential = await Auth.queryGetUserCredentials(email, connection);
+    const getCredential = await Auth.GetUserCredentials(email, connection);
 
     if (getCredential.length === 0) {
       throw new AppError("User not found", 404);

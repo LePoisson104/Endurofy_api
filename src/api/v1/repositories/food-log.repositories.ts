@@ -1,6 +1,4 @@
 import pool from "../../../config/db.config";
-import Logger from "../utils/logger";
-import { AppError } from "../middlewares/error.handlers";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET QUERIES
