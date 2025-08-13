@@ -141,5 +141,26 @@ export const globalErrorHandler = async (
           "INTERNAL_SERVER_ERROR"
         );
 
+  const logMessage = JSON.stringify(
+    {
+      url: req.originalUrl,
+      method: req.method,
+      body: req.body,
+      code: appError.code,
+      message: appError.message,
+      stack: appError.stack,
+      dbError: {
+        sqlMessage: err?.sqlMessage,
+        sql: err?.sql,
+        errno: err?.errno,
+        sqlState: err?.sqlState,
+      },
+    },
+    null,
+    2
+  );
+
+  await Logger.logEvents(logMessage, "errLog.log");
+
   await controllerErrorResponse(res, appError);
 };
