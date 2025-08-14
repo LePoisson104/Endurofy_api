@@ -79,11 +79,7 @@ const getLoggedDates = async (
 const addFood = async (
   userId: string,
   foodPayload: AddFoodPayload
-): Promise<{
-  data: {
-    message: string;
-  };
-}> => {
+): Promise<{ message: string }> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
   }
@@ -202,9 +198,7 @@ const addFood = async (
     await connection.commit();
 
     return {
-      data: {
-        message: "Food added successfully",
-      },
+      message: "Food added successfully",
     };
   } catch (error: any) {
     await connection.rollback();
@@ -226,7 +220,7 @@ const addFood = async (
 const updateFood = async (
   foodId: string,
   updatePayload: UpdateFoodPayload
-): Promise<any> => {
+): Promise<{ message: string }> => {
   if (!updatePayload || Object.keys(updatePayload).length === 0) {
     throw new AppError("Update payload is required!", 400);
   }
@@ -253,13 +247,18 @@ const updateFood = async (
     throw new AppError("Food log not found!", 404);
   }
 
-  return updatedFood;
+  return {
+    message: "Food updated successfully",
+  };
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE SERVICES
 //////////////////////////////////////////////////////////////////////////////////////////////
-const deleteFood = async (foodId: string, foodLogId: string): Promise<any> => {
+const deleteFood = async (
+  foodId: string,
+  foodLogId: string
+): Promise<{ message: string }> => {
   if (!foodId) {
     throw new AppError("foodId is required!", 400);
   }
@@ -312,9 +311,7 @@ const deleteFood = async (foodId: string, foodLogId: string): Promise<any> => {
     }
   }
   return {
-    data: {
-      message: "Food deleted successfully",
-    },
+    message: "Food deleted successfully",
   };
 };
 

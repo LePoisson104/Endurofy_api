@@ -12,7 +12,7 @@ const getAllFood = asyncHandler(
 
     sendSuccess(res, {
       message: "Food logs retrieved successfully",
-      data: foodLogs,
+      foodLog: foodLogs,
     });
   }
 );
@@ -30,7 +30,7 @@ const getLoggedDates = asyncHandler(
 
     sendSuccess(res, {
       message: "Log dates retrieved successfully",
-      data: logDates,
+      logs: logDates,
     });
   }
 );
@@ -43,8 +43,7 @@ const addFood = asyncHandler(
     const addedFood = await foodLogServices.addFood(userId, foodPayload);
 
     sendSuccess(res, {
-      message: "Food added successfully",
-      data: addedFood,
+      message: addedFood.message,
     });
   }
 );
@@ -57,8 +56,7 @@ const updateFood = asyncHandler(
     const updatedFood = await foodLogServices.updateFood(foodId, updatePayload);
 
     sendSuccess(res, {
-      message: "Food updated successfully",
-      data: updatedFood,
+      message: updatedFood.message,
     });
   }
 );
@@ -70,8 +68,7 @@ const deleteFood = asyncHandler(
     const deletedFood = await foodLogServices.deleteFood(foodId, foodLogId);
 
     sendSuccess(res, {
-      message: "Food deleted successfully",
-      data: deletedFood,
+      message: deletedFood.message,
     });
   }
 );
