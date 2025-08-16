@@ -132,7 +132,7 @@ const searchFood = asyncHandler(
           sugar: getNutrientValue(USDAFoodNutrientID.TOTAL_SUGARS),
           sodium: getNutrientValue(USDAFoodNutrientID.SODIUM),
           cholesterol: getNutrientValue(USDAFoodNutrientID.CHOLESTEROL),
-          servingSize: food.servingSize,
+          servingSize: 100,
           servingSizeUnit: food.servingSizeUnit,
           favoriteFoodId: null,
           isFavorite: false,
