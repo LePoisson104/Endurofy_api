@@ -44,21 +44,25 @@ const validateAddFavoriteFood = [
     .withMessage("Food source is required")
     .isIn(["USDA", "custom"])
     .withMessage("Food source must be either 'USDA' or 'custom'"),
-  // Nutritional information validations (all optional)
+  // Nutritional information validations (required for food_items table)
   body("calories")
-    .optional()
+    .notEmpty()
+    .withMessage("Calories is required")
     .isFloat({ min: 0 })
     .withMessage("Calories must be a number greater than or equal to 0"),
   body("protein")
-    .optional()
+    .notEmpty()
+    .withMessage("Protein is required")
     .isFloat({ min: 0 })
     .withMessage("Protein must be a number greater than or equal to 0"),
   body("carbs")
-    .optional()
+    .notEmpty()
+    .withMessage("Carbs is required")
     .isFloat({ min: 0 })
     .withMessage("Carbs must be a number greater than or equal to 0"),
   body("fat")
-    .optional()
+    .notEmpty()
+    .withMessage("Fat is required")
     .isFloat({ min: 0 })
     .withMessage("Fat must be a number greater than or equal to 0"),
   body("fiber")

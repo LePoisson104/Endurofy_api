@@ -195,7 +195,7 @@ const getCustomFoodById = async (foodId: string): Promise<any[]> => {
 const addFavoriteFood = async (
   userId: string,
   foodPayload: AddFavoriteFoodPayload
-): Promise<any> => {
+): Promise<{ message: string }> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
   }
@@ -222,29 +222,65 @@ const addFavoriteFood = async (
       servingUnit,
     } = foodPayload;
 
-    const favFoodId = uuidv4();
+    // Check if food exists in food_items table
+    const [foodItemResult] = await connection.execute(
+      "SELECT food_item_id FROM food_items WHERE external_id = ?",
+      [foodId]
+    );
 
-    const addedFavoriteFood = await foodRepository.AddFavoriteFood(
-      favFoodId,
-      foodId,
-      userId,
-      foodName,
-      foodBrand || null,
-      foodSource,
-      calories,
-      protein,
-      carbs,
-      fat,
-      fiber,
-      sugar,
-      sodium,
-      cholesterol,
-      servingSize,
-      servingUnit
+    let foodItemId;
+
+    // If food doesn't exist, insert it into food_items table
+    if (!foodItemResult || (foodItemResult as any[]).length === 0) {
+      foodItemId = uuidv4();
+
+      const insertFoodQuery = `
+        INSERT INTO food_items (
+          food_item_id, source, external_id, user_id, food_name, brand_name,
+          calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, 
+          cholesterol_mg, serving_size, serving_size_unit
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      `;
+
+      await connection.execute(insertFoodQuery, [
+        foodItemId,
+        foodSource === "USDA" ? "usda" : "custom",
+        foodId,
+        userId,
+        foodName,
+        foodBrand,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
+        cholesterol,
+        servingSize,
+        servingUnit,
+      ]);
+    } else {
+      // Use existing food_item_id
+      foodItemId = (foodItemResult as any[])[0].food_item_id;
+    }
+
+    const favFoodId = uuidv4();
+    await connection.execute(
+      `
+      INSERT INTO favorite_foods (
+        favorite_food_id, 
+        user_id, 
+        food_item_id
+      ) VALUES (?,?,?)
+    `,
+      [favFoodId, userId, foodItemId]
     );
 
     await connection.commit();
-    return addedFavoriteFood;
+    return {
+      message: "Favorite food added successfully",
+    };
   } catch (error: any) {
     await connection.rollback();
     await Logger.logEvents(
@@ -402,35 +438,16 @@ const updateCustomFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE SERVICES - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const deleteFavoriteFood = async (favFoodId: string): Promise<any> => {
+const deleteFavoriteFood = async (
+  favFoodId: string
+): Promise<{ message: string }> => {
   if (!favFoodId) {
     throw new AppError("FavFoodId is required!", 400);
   }
 
-  const connection = await pool.getConnection();
+  await foodRepository.DeleteFavoriteFood(favFoodId);
 
-  try {
-    await connection.beginTransaction();
-
-    const deletedFavoriteFood = await foodRepository.DeleteFavoriteFood(
-      favFoodId
-    );
-
-    await connection.commit();
-    return deletedFavoriteFood;
-  } catch (error: any) {
-    await connection.rollback();
-    await Logger.logEvents(
-      `Error in deleteFavoriteFood service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to delete favorite food!",
-      500
-    );
-  } finally {
-    connection.release();
-  }
+  return { message: "Favorite food deleted successfully" };
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -182,7 +182,7 @@ const getFavoriteFood = asyncHandler(
 
     sendSuccess(res, {
       message: "Favorite food retrieved successfully",
-      data: favoriteFood,
+      favoriteFood: favoriteFood,
     });
   }
 );
@@ -249,8 +249,7 @@ const addFavoriteFood = asyncHandler(
     );
 
     sendSuccess(res, {
-      message: "Favorite food added successfully",
-      data: addedFavoriteFood,
+      message: addedFavoriteFood.message,
     });
   }
 );
@@ -298,8 +297,7 @@ const deleteFavoriteFood = asyncHandler(
     );
 
     sendSuccess(res, {
-      message: "Favorite food deleted successfully",
-      data: deletedFavoriteFood,
+      message: deletedFavoriteFood.message,
     });
   }
 );

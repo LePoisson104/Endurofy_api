@@ -9,23 +9,24 @@ const GetFavoriteFood = async (
 ): Promise<any> => {
   const query = `
       SELECT 
-        favorite_food_id, 
-        food_id, 
-        brand_name, 
-        food_name, 
-        food_source,
-        calories,
-        protein_g,
-        carbs_g,
-        fat_g,
-        fiber_g,
-        sugar_g,
-        sodium_mg,
-        cholesterol_mg,
-        serving_size,
-        serving_size_unit
-      FROM favorite_foods 
-      WHERE user_id = ?
+        ff.favorite_food_id,
+        ff.food_item_id,
+        fi.food_name,
+        fi.brand_name,
+        fi.source as food_source,
+        fi.calories,
+        fi.protein_g,
+        fi.carbs_g,
+        fi.fat_g,
+        fi.fiber_g,
+        fi.sugar_g,
+        fi.sodium_mg,
+        fi.cholesterol_mg,
+        fi.serving_size,
+        fi.serving_size_unit
+      FROM favorite_foods ff
+      JOIN food_items fi ON ff.food_item_id = fi.food_item_id
+      WHERE ff.user_id = ?
     `;
   if (connection) {
     const [result] = await connection.execute(query, [userId]);
@@ -41,7 +42,7 @@ const GetIsFavoriteFood = async (
   foodId: string
 ): Promise<any> => {
   const query =
-    "SELECT * FROM favorite_foods WHERE user_id = ? AND food_id = ?";
+    "SELECT * FROM favorite_foods WHERE user_id = ? AND food_item_id = ?";
   const [result] = await pool.execute(query, [userId, foodId]);
   return result;
 };
@@ -54,7 +55,7 @@ const GetFavoriteStatusBatch = async (
 
   const placeholders = foodIds.map(() => "?").join(",");
   const query = `
-      SELECT favorite_food_id, food_id, 1 as is_favorite 
+      SELECT favorite_food_id, food_item_id, 1 as is_favorite 
       FROM favorite_foods 
       WHERE user_id = ? AND food_id IN (${placeholders})
     `;
@@ -83,59 +84,20 @@ const GetCustomFoodById = async (foodId: string): Promise<any> => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const AddFavoriteFood = async (
   favoriteFoodId: string,
-  foodId: string,
   userId: string,
-  foodName: string,
-  brandName: string | null,
-  foodSource: "USDA" | "custom",
-  calories: number,
-  protein: number,
-  carbs: number,
-  fat: number,
-  fiber: number,
-  sugar: number,
-  sodium: number,
-  cholesterol: number,
-  servingSize: number,
-  servingUnit: string
+  foodItemId: string
 ): Promise<any> => {
   const query = `
       INSERT INTO favorite_foods (
         favorite_food_id, 
         user_id, 
-        food_id, 
-        food_source, 
-        food_name, 
-        brand_name, 
-        calories, 
-        protein_g, 
-        carbs_g, 
-        fat_g, 
-        fiber_g, 
-        sugar_g, 
-        sodium_mg, 
-        cholesterol_mg, 
-        serving_size, 
-        serving_size_unit
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        food_item_id
+      ) VALUES (?,?,?)
     `;
   const [result] = await pool.execute(query, [
     favoriteFoodId,
     userId,
-    foodId,
-    foodSource,
-    foodName,
-    brandName,
-    calories,
-    protein,
-    carbs,
-    fat,
-    fiber,
-    sugar,
-    sodium,
-    cholesterol,
-    servingSize,
-    servingUnit,
+    foodItemId,
   ]);
   return result;
 };
