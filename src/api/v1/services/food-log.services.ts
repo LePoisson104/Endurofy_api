@@ -29,9 +29,8 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
 
     // Group foods by meal_type
     foodLogData.foods.forEach((food: any) => {
-      const mealType = food.meal_type === "snack" ? "snacks" : food.meal_type;
-      if (groupedFoods[mealType]) {
-        groupedFoods[mealType].push(food);
+      if (groupedFoods[food.mealType]) {
+        groupedFoods[food.mealType].push(food);
       } else {
         groupedFoods.uncategorized.push(food);
       }
