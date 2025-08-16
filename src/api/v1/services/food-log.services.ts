@@ -11,6 +11,80 @@ import {
 //////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES
 //////////////////////////////////////////////////////////////////////////////////////////////
+// Helper function to convert between units
+const convertUnits = (
+  value: number,
+  fromUnit: string,
+  toUnit: string
+): number => {
+  if (fromUnit === toUnit) return value;
+
+  // Convert everything to grams first, then to target unit
+  let grams: number;
+
+  switch (fromUnit) {
+    case "g":
+      grams = value;
+      break;
+    case "ml":
+      grams = value; // Assume 1ml = 1g for liquids
+      break;
+    case "oz":
+      grams = value * 28.3495; // 1 oz = 28.3495g
+      break;
+    default:
+      grams = value;
+  }
+
+  switch (toUnit) {
+    case "g":
+      return grams;
+    case "ml":
+      return grams; // Assume 1g = 1ml for liquids
+    case "oz":
+      return grams / 28.3495;
+    default:
+      return grams;
+  }
+};
+
+// Helper function to calculate actual nutrient values based on logged serving size
+const calculateActualNutrients = (food: any) => {
+  const baseServingSize = food.baseServingSize;
+  const baseServingSizeUnit = food.baseServingSizeUnit;
+  const loggedServingSize = food.loggedServingSize;
+  const loggedServingSizeUnit = food.loggedServingSizeUnit;
+
+  // Convert logged serving size to same unit as base serving size
+  const convertedLoggedSize = convertUnits(
+    loggedServingSize,
+    loggedServingSizeUnit,
+    baseServingSizeUnit
+  );
+
+  // Calculate multiplier (how much more/less than base serving)
+  const multiplier = convertedLoggedSize / baseServingSize;
+
+  return {
+    ...food,
+    // Calculate actual nutrient values
+    calories: food.calories
+      ? Math.round(food.calories * multiplier * 100) / 100
+      : 0,
+    protein: food.protein
+      ? Math.round(food.protein * multiplier * 100) / 100
+      : 0,
+    carbs: food.carbs ? Math.round(food.carbs * multiplier * 100) / 100 : 0,
+    fat: food.fat ? Math.round(food.fat * multiplier * 100) / 100 : 0,
+    fiber: food.fiber ? Math.round(food.fiber * multiplier * 100) / 100 : 0,
+    sugar: food.sugar ? Math.round(food.sugar * multiplier * 100) / 100 : 0,
+    sodium: food.sodium ? Math.round(food.sodium * multiplier * 100) / 100 : 0,
+    cholesterol: food.cholesterol
+      ? Math.round(food.cholesterol * multiplier * 100) / 100
+      : 0,
+  };
+};
+
 const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
   if (!userId || !date) {
     throw new AppError("UserId and date are required!", 400);
@@ -27,12 +101,14 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
       uncategorized: [],
     };
 
-    // Group foods by meal_type
+    // Group foods by meal_type and calculate actual nutrient values
     foodLogData.foods.forEach((food: any) => {
+      const foodWithActualNutrients = calculateActualNutrients(food);
+
       if (groupedFoods[food.mealType]) {
-        groupedFoods[food.mealType].push(food);
+        groupedFoods[food.mealType].push(foodWithActualNutrients);
       } else {
-        groupedFoods.uncategorized.push(food);
+        groupedFoods.uncategorized.push(foodWithActualNutrients);
       }
     });
 
