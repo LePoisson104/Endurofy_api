@@ -3,13 +3,7 @@ import foodRepository from "../repositories/food.repositories";
 import { AppError } from "../middlewares/error.handlers";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
-import {
-  AddFavoriteFoodPayload,
-  GetCustomFoodPayload,
-  CustomFoodRepository,
-  CustomFoodPayload,
-  BaseFood,
-} from "../interfaces/food.interfaces";
+import { FoodItemRepository, BaseFood } from "../interfaces/food.interfaces";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - FAVORITE FOOD
@@ -140,53 +134,34 @@ const getFavoriteStatusBatch = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const getCustomFood = async (
-  userId: string
-): Promise<GetCustomFoodPayload[]> => {
+const getCustomFood = async (userId: string): Promise<BaseFood[]> => {
   if (!userId) {
     throw new AppError("UserId is required!", 400);
   }
 
   const customFood = await foodRepository.GetCustomFood(userId);
-  const transformedCustomFood = customFood.map(
-    (food: CustomFoodRepository) => ({
-      customFoodId: food.custom_food_id,
-      description: food.food_name,
-      brandOwner: food.brand_name,
-      calories: food.calories,
-      protein: food.protein_g,
-      carbs: food.carbs_g,
-      fat: food.fat_g,
-      fiber: food.fiber_g,
-      sugar: food.sugar_g,
-      sodium: food.sodium_mg,
-      cholesterol: food.cholesterol_mg,
-      servingSize: food.serving_size,
-      servingSizeUnit: food.serving_size_unit,
-    })
-  );
+
+  const transformedCustomFood = customFood.map((food: any) => ({
+    foodId: food.food_item_id,
+    foodName: food.food_name,
+    foodBrand: food.brand_name,
+    ingredients: food.ingredients,
+    foodSource: food.source,
+    calories: food.calories,
+    protein: food.protein_g,
+    carbs: food.carbs_g,
+    fat: food.fat_g,
+    fiber: food.fiber_g,
+    sugar: food.sugar_g,
+    sodium: food.sodium_mg,
+    cholesterol: food.cholesterol_mg,
+    servingSize: food.serving_size,
+    servingSizeUnit: food.serving_size_unit,
+    isFavorite: food.is_favorite,
+    favoriteFoodId: food.favorite_food_id,
+  }));
 
   return transformedCustomFood;
-};
-
-const getCustomFoodById = async (foodId: string): Promise<any[]> => {
-  if (!foodId) {
-    throw new AppError("FoodId is required!", 400);
-  }
-
-  try {
-    const customFoodById = await foodRepository.GetCustomFoodById(foodId);
-    return customFoodById;
-  } catch (error: any) {
-    await Logger.logEvents(
-      `Error in getCustomFoodById service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to get custom food by id!",
-      500
-    );
-  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +169,7 @@ const getCustomFoodById = async (foodId: string): Promise<any[]> => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const addFavoriteFood = async (
   userId: string,
-  foodPayload: AddFavoriteFoodPayload
+  foodPayload: BaseFood
 ): Promise<{ message: string }> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
@@ -219,7 +194,7 @@ const addFavoriteFood = async (
       sodium,
       cholesterol,
       servingSize,
-      servingUnit,
+      servingSizeUnit,
     } = foodPayload;
 
     // Check if food exists in food_items table
@@ -258,7 +233,7 @@ const addFavoriteFood = async (
         sodium,
         cholesterol,
         servingSize,
-        servingUnit,
+        servingSizeUnit,
       ]);
     } else {
       // Use existing food_item_id
@@ -301,8 +276,8 @@ const addFavoriteFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const addCustomFood = async (
   userId: string,
-  foodPayload: CustomFoodPayload
-): Promise<{ data: { message: string } }> => {
+  foodPayload: BaseFood
+): Promise<{ message: string }> => {
   if (!userId || !foodPayload || Object.keys(foodPayload).length === 0) {
     throw new AppError("UserId and foodPayload are required!", 400);
   }
@@ -311,6 +286,7 @@ const addCustomFood = async (
     foodName,
     foodBrand,
     calories,
+    ingredients,
     protein,
     carbs,
     fat,
@@ -319,13 +295,16 @@ const addCustomFood = async (
     sodium,
     cholesterol,
     servingSize,
-    servingUnit,
+    servingSizeUnit,
   } = foodPayload;
 
-  const customFoodId = uuidv4();
+  const foodItemId = uuidv4();
 
   await foodRepository.AddCustomFood(
-    customFoodId,
+    foodItemId,
+    "custom",
+    ingredients || null,
+    null, // externalId
     userId,
     foodName,
     foodBrand,
@@ -338,11 +317,11 @@ const addCustomFood = async (
     sodium,
     cholesterol,
     servingSize,
-    servingUnit
+    servingSizeUnit
   );
 
   return {
-    data: { message: "Custom food added successfully" },
+    message: "Custom food added successfully",
   };
 };
 
@@ -350,89 +329,69 @@ const addCustomFood = async (
 // @PATCH SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const updateCustomFood = async (
-  customFoodId: string,
-  updatePayload: CustomFoodPayload
-): Promise<any> => {
+  foodItemId: string,
+  updatePayload: Partial<BaseFood>
+): Promise<{ message: string }> => {
   if (
-    !customFoodId ||
+    !foodItemId ||
     !updatePayload ||
     Object.keys(updatePayload).length === 0
   ) {
-    throw new AppError("customFoodId and updatePayload are required!", 400);
+    throw new AppError("foodItemId and updatePayload are required!", 400);
   }
 
-  const {
-    foodName,
-    foodBrand,
-    calories,
-    protein,
-    carbs,
-    fat,
-    fiber,
-    sugar,
-    sodium,
-    cholesterol,
-    servingSize,
-    servingUnit,
-  } = updatePayload;
+  const validFields = [
+    "food_name",
+    "brand_name",
+    "ingredients",
+    "calories",
+    "protein_g",
+    "carbs_g",
+    "fat_g",
+    "fiber_g",
+    "sugar_g",
+    "sodium_mg",
+    "cholesterol_mg",
+    "serving_size",
+    "serving_size_unit",
+  ];
 
-  // reason for not using ! is because protein, carbs, fat can contain 0, so we only need to check if the variables are undefined not when it's equal to 0
-  if (
-    foodName === undefined ||
-    foodBrand === undefined ||
-    calories === undefined ||
-    protein === undefined ||
-    carbs === undefined ||
-    fat === undefined ||
-    fiber === undefined ||
-    sugar === undefined ||
-    sodium === undefined ||
-    cholesterol === undefined ||
-    servingSize === undefined ||
-    servingUnit === undefined
-  ) {
-    throw new AppError(
-      "Make sure your variable names are spelled correctly (food_name, food_brand, calories, protein, carbs, fat, serving_size, serving_unit)",
-      400
-    );
+  // Map frontend field names to database field names
+  const fieldMapping: { [key: string]: string } = {
+    foodName: "food_name",
+    foodBrand: "brand_name",
+    ingredients: "ingredients",
+    calories: "calories",
+    protein: "protein_g",
+    carbs: "carbs_g",
+    fat: "fat_g",
+    fiber: "fiber_g",
+    sugar: "sugar_g",
+    sodium: "sodium_mg",
+    cholesterol: "cholesterol_mg",
+    servingSize: "serving_size",
+    servingSizeUnit: "serving_size_unit",
+  };
+
+  const fields = Object.keys(updatePayload)
+    .map((key) => fieldMapping[key])
+    .filter((field) => field && validFields.includes(field));
+
+  if (fields.length === 0) {
+    throw new AppError("No valid fields to update!", 400);
   }
 
-  const connection = await pool.getConnection();
-
-  try {
-    await connection.beginTransaction();
-
-    const updatedCustomFood = await foodRepository.UpdateCustomFood(
-      customFoodId,
-      foodName,
-      foodBrand,
-      calories,
-      protein,
-      carbs,
-      fat,
-      fiber,
-      sugar,
-      sodium,
-      cholesterol,
-      servingSize,
-      servingUnit
+  const setClause = fields.map((f) => `${f} = ?`).join(", ");
+  const values = fields.map((f) => {
+    const frontendKey = Object.keys(fieldMapping).find(
+      (key) => fieldMapping[key] === f
     );
+    return updatePayload[frontendKey as keyof BaseFood];
+  });
 
-    await connection.commit();
-    return updatedCustomFood;
-  } catch (error: any) {
-    await connection.rollback();
-    await Logger.logEvents(
-      `Error in updateCustomFood service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to update custom food!",
-      500
-    );
-  } finally {
-    connection.release();
-  }
+  await foodRepository.UpdateCustomFood(foodItemId, setClause, values);
+
+  return { message: "Custom food updated successfully" };
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,7 +404,13 @@ const deleteFavoriteFood = async (
     throw new AppError("FavFoodId is required!", 400);
   }
 
-  await foodRepository.DeleteFavoriteFood(favFoodId);
+  const deletedFavoriteFood = await foodRepository.DeleteFavoriteFood(
+    favFoodId
+  );
+
+  if (deletedFavoriteFood.affectedRows === 0) {
+    throw new AppError("Favorite food not found!", 404);
+  }
 
   return { message: "Favorite food deleted successfully" };
 };
@@ -453,35 +418,20 @@ const deleteFavoriteFood = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const deleteCustomFood = async (customFoodId: string): Promise<any> => {
-  if (!customFoodId) {
-    throw new AppError("customFoodId is required!", 400);
+const deleteCustomFood = async (
+  foodItemId: string
+): Promise<{ message: string }> => {
+  if (!foodItemId) {
+    throw new AppError("foodItemId is required!", 400);
   }
 
-  const connection = await pool.getConnection();
+  const deletedCustomFood = await foodRepository.DeleteCustomFood(foodItemId);
 
-  try {
-    await connection.beginTransaction();
-
-    const deletedCustomFood = await foodRepository.DeleteCustomFood(
-      customFoodId
-    );
-
-    await connection.commit();
-    return deletedCustomFood;
-  } catch (error: any) {
-    await connection.rollback();
-    await Logger.logEvents(
-      `Error in deleteCustomFood service: ${error.message}`,
-      "errLog.log"
-    );
-    throw new AppError(
-      "Something went wrong while trying to delete custom food!",
-      500
-    );
-  } finally {
-    connection.release();
+  if (deletedCustomFood.affectedRows === 0) {
+    throw new AppError("Custom food not found!", 404);
   }
+
+  return { message: "Custom food deleted successfully" };
 };
 
 export default {
@@ -493,7 +443,6 @@ export default {
   deleteFavoriteFood,
   // Custom Food
   getCustomFood,
-  getCustomFoodById,
   addCustomFood,
   updateCustomFood,
   deleteCustomFood,

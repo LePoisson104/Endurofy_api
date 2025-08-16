@@ -224,17 +224,7 @@ const getCustomFood = asyncHandler(async (req, res) => {
 
   sendSuccess(res, {
     message: "Custom food retrieved successfully",
-    data: customFood,
-  });
-});
-
-const getCustomFoodById = asyncHandler(async (req, res) => {
-  const { foodId } = req.params;
-  const customFood = await foodServices.getCustomFoodById(foodId);
-
-  sendSuccess(res, {
-    message: "Custom food retrieved successfully",
-    data: customFood,
+    customFood: customFood,
   });
 });
 
@@ -265,25 +255,23 @@ const addCustomFood = asyncHandler(
     );
 
     sendSuccess(res, {
-      message: "Custom food added successfully",
-      data: addedCustomFood,
+      message: addedCustomFood.message,
     });
   }
 );
 
 const updateCustomFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { customFoodId } = req.params;
+    const { foodItemId } = req.params;
     const updatePayload = req.body;
 
     const updatedCustomFood = await foodServices.updateCustomFood(
-      customFoodId,
+      foodItemId,
       updatePayload
     );
 
     sendSuccess(res, {
-      message: "Custom food updated successfully",
-      data: updatedCustomFood,
+      message: updatedCustomFood.message,
     });
   }
 );
@@ -304,13 +292,12 @@ const deleteFavoriteFood = asyncHandler(
 
 const deleteCustomFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { customFoodId } = req.params;
+    const { foodItemId } = req.params;
 
-    const deletedCustomFood = await foodServices.deleteCustomFood(customFoodId);
+    const deletedCustomFood = await foodServices.deleteCustomFood(foodItemId);
 
     sendSuccess(res, {
-      message: "Custom food deleted successfully",
-      data: deletedCustomFood,
+      message: deletedCustomFood.message,
     });
   }
 );
@@ -323,7 +310,6 @@ export default {
   addFavoriteFood,
   deleteFavoriteFood,
   getCustomFood,
-  getCustomFoodById,
   addCustomFood,
   updateCustomFood,
   deleteCustomFood,

@@ -87,7 +87,7 @@ const validateAddFavoriteFood = [
     .withMessage("Serving size is required")
     .isFloat({ min: 0.1 })
     .withMessage("Serving size must be a number greater than 0"),
-  body("servingUnit")
+  body("servingSizeUnit")
     .notEmpty()
     .withMessage("Serving unit is required")
     .isIn(["g", "ml", "oz"])
@@ -116,15 +116,8 @@ const validateGetFavoriteStatusBatch = [
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @CUSTOM FOOD VALIDATIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const validateGetCustomFoodById = [
-  param("foodId")
-    .notEmpty()
-    .withMessage("Food ID is required")
-    .isUUID()
-    .withMessage("Invalid food ID format"),
-];
 
-const validateCustomFood = [
+const validateAddCustomFood = [
   body("foodName")
     .notEmpty()
     .withMessage("Food name is required")
@@ -135,6 +128,10 @@ const validateCustomFood = [
     .withMessage("Food brand is required")
     .isString()
     .withMessage("Food brand must be a string"),
+  body("ingredients")
+    .optional()
+    .isString()
+    .withMessage("Ingredients must be a string"),
   body("calories")
     .notEmpty()
     .withMessage("Calories is required")
@@ -180,19 +177,19 @@ const validateCustomFood = [
     .withMessage("Serving size is required")
     .isFloat({ min: 0.1 })
     .withMessage("Serving size must be a number greater than 0"),
-  body("servingUnit")
+  body("servingSizeUnit")
     .notEmpty()
     .withMessage("Serving unit is required")
     .isIn(["g", "ml", "oz"])
     .withMessage("Serving unit must be either 'g', 'ml', or 'oz'"),
 ];
 
-const validateDeleteCustomFood = [
-  param("customFoodId")
+const validateFoodItemId = [
+  param("foodItemId")
     .notEmpty()
-    .withMessage("Custom food ID is required")
+    .withMessage("Food item ID is required")
     .isUUID()
-    .withMessage("Invalid custom food ID format"),
+    .withMessage("Invalid food item ID format"),
 ];
 
 export default {
@@ -204,7 +201,6 @@ export default {
   validateDeleteFavoriteFood,
   validateGetFavoriteStatusBatch,
   // Custom Food
-  validateGetCustomFoodById,
-  validateCustomFood,
-  validateDeleteCustomFood,
+  validateAddCustomFood,
+  validateFoodItemId,
 };

@@ -71,26 +71,6 @@ export const NutrientGroups = {
 export type FoodSource = "USDA" | "custom";
 export type ServingUnit = "g" | "ml" | "oz";
 
-// Favorite Food Interfaces
-export interface AddFavoriteFoodPayload {
-  foodId: string;
-  foodName: string;
-  foodBrand?: string; // Making optional to match table schema
-  foodSource: FoodSource;
-  // Nutritional information per 100g
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  cholesterol: number;
-  // Serving information
-  servingSize: number;
-  servingUnit: ServingUnit;
-}
-
 export interface BaseFood {
   foodId: string;
   foodName: string;
@@ -111,61 +91,12 @@ export interface BaseFood {
   isFavorite: boolean;
 }
 
-export interface FavoriteFoodResponse {
-  favoriteFoodId: string;
-  foodId: string;
-  foodSource: FoodSource;
-  isFavorite: boolean;
-  description: string;
-  brandOwner: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  cholesterol: number;
-  servingSize: number;
-  servingSizeUnit: ServingUnit;
-}
-
-// Custom Food Interfaces
-export interface CustomFoodPayload {
-  foodName: string;
-  foodBrand: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  cholesterol: number;
-  servingSize: number;
-  servingUnit: ServingUnit;
-}
-
-export interface GetCustomFoodPayload {
-  customFoodId: string;
-  description: string;
-  brandOwner: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  cholesterol: number;
-  servingSize: number;
-  servingSizeUnit: ServingUnit;
-}
-
-export interface CustomFoodRepository {
-  custom_food_id: string;
+export interface FoodItemRepository {
+  food_item_id: string;
   food_name: string;
   brand_name: string;
+  source: FoodSource;
+  ingredients?: string;
   calories: number;
   protein_g: number;
   carbs_g: number;

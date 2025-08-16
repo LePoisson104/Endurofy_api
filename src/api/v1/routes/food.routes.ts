@@ -49,13 +49,6 @@ router.get(
   foodControllers.getCustomFood
 );
 
-router.get(
-  "/custom/:foodId",
-  foodValidations.validateGetCustomFoodById,
-  handleValidationErrors,
-  foodControllers.getCustomFoodById
-);
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @POST ROUTES
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +62,7 @@ router.post(
 
 router.post(
   "/:userId/custom",
-  foodValidations.validateCustomFood,
+  foodValidations.validateAddCustomFood,
   handleValidationErrors,
   foodControllers.addCustomFood
 );
@@ -78,9 +71,9 @@ router.post(
 // @PATCH ROUTES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.put(
-  "/custom/:customFoodId",
-  foodValidations.validateCustomFood,
+router.patch(
+  "/custom/:foodItemId",
+  foodValidations.validateFoodItemId,
   handleValidationErrors,
   foodControllers.updateCustomFood
 );
@@ -97,8 +90,8 @@ router.delete(
 );
 
 router.delete(
-  "/custom/:customFoodId",
-  foodValidations.validateDeleteCustomFood,
+  "/custom/:foodItemId",
+  foodValidations.validateFoodItemId,
   handleValidationErrors,
   foodControllers.deleteCustomFood
 );

@@ -67,15 +67,19 @@ const GetFavoriteStatusBatch = async (
 // @GET QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const GetCustomFood = async (userId: string): Promise<any> => {
-  const query =
-    "SELECT custom_food_id, food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit FROM custom_foods WHERE user_id = ?";
-  const [result] = await pool.execute(query, [userId]);
-  return result;
-};
-
-const GetCustomFoodById = async (foodId: string): Promise<any> => {
-  const query = "SELECT * FROM custom_foods WHERE custom_food_id = ?";
-  const [result] = await pool.execute(query, [foodId]);
+  const query = `
+    SELECT 
+      fi.*,
+      CASE 
+        WHEN ff.favorite_food_id IS NOT NULL THEN true 
+        ELSE false 
+      END as is_favorite,
+      ff.favorite_food_id
+    FROM food_items fi
+    LEFT JOIN favorite_foods ff ON fi.food_item_id = ff.food_item_id AND ff.user_id = ?
+    WHERE fi.user_id = ? AND fi.source = 'custom'
+  `;
+  const [result] = await pool.execute(query, [userId, userId]);
   return result;
 };
 
@@ -106,7 +110,10 @@ const AddFavoriteFood = async (
 // @POST QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const AddCustomFood = async (
-  customFoodId: string,
+  foodItemId: string,
+  source: "usda" | "custom",
+  ingredients: string | null,
+  externalId: string | null,
   userId: string,
   foodName: string,
   brandName: string,
@@ -122,12 +129,15 @@ const AddCustomFood = async (
   servingSizeUnit: "g" | "ml" | "oz"
 ): Promise<any> => {
   const query =
-    "INSERT INTO custom_foods (custom_food_id, user_id, food_name, brand_name, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    "INSERT INTO food_items (food_item_id, source, external_id, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   const [result] = await pool.execute(query, [
-    customFoodId,
+    foodItemId,
+    source,
+    externalId,
     userId,
     foodName,
     brandName,
+    ingredients,
     calories,
     proteinG,
     carbsG,
@@ -146,37 +156,12 @@ const AddCustomFood = async (
 // @PATCH QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const UpdateCustomFood = async (
-  customFoodId: string,
-  foodName: string,
-  foodBrand: string,
-  calories: number,
-  protein: number,
-  carbs: number,
-  fat: number,
-  fiber: number,
-  sugar: number,
-  sodium: number,
-  cholesterol: number,
-  servingSize: number,
-  servingSizeUnit: "g" | "ml" | "oz"
+  foodItemId: string,
+  setClause: string,
+  values: any[]
 ): Promise<any> => {
-  const query =
-    "UPDATE custom_foods SET food_name = ?, brand_name = ?, calories = ?, protein_g = ?, carbs_g = ?, fat_g = ?, fiber_g = ?, sugar_g = ?, sodium_mg = ?, cholesterol_mg = ?, serving_size = ?, serving_size_unit = ? WHERE custom_food_id = ?";
-  const [result] = await pool.execute(query, [
-    foodName,
-    foodBrand,
-    calories,
-    protein,
-    carbs,
-    fat,
-    fiber,
-    sugar,
-    sodium,
-    cholesterol,
-    servingSize,
-    servingSizeUnit,
-    customFoodId,
-  ]);
+  const query = `UPDATE food_items SET ${setClause} WHERE food_item_id = ?`;
+  const [result] = await pool.execute(query, [...values, foodItemId]);
   return result;
 };
 
@@ -192,9 +177,9 @@ const DeleteFavoriteFood = async (favoriteFoodId: string): Promise<any> => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const DeleteCustomFood = async (customFoodId: string): Promise<any> => {
-  const query = "DELETE FROM custom_foods WHERE custom_food_id = ?";
-  const [result] = await pool.execute(query, [customFoodId]);
+const DeleteCustomFood = async (foodItemId: string): Promise<any> => {
+  const query = "DELETE FROM food_items WHERE food_item_id = ?";
+  const [result] = await pool.execute(query, [foodItemId]);
   return result;
 };
 
@@ -207,7 +192,6 @@ export default {
   DeleteFavoriteFood,
   // Custom Food
   GetCustomFood,
-  GetCustomFoodById,
   AddCustomFood,
   UpdateCustomFood,
   DeleteCustomFood,
