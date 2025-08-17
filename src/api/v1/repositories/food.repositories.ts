@@ -11,9 +11,11 @@ const GetFavoriteFood = async (
       SELECT 
         ff.favorite_food_id,
         ff.food_item_id,
+        fi.external_id,
         fi.food_name,
         fi.brand_name,
         fi.source as food_source,
+        fi.ingredients,
         fi.calories,
         fi.protein_g,
         fi.carbs_g,

@@ -123,7 +123,7 @@ const searchFood = asyncHandler(
           foodName: food.description,
           foodBrand: food.brandOwner || "",
           ingredients: food.ingredients || undefined,
-          foodSource: "USDA",
+          foodSource: "usda",
           calories: getNutrientValue(USDAFoodNutrientID.CALORIES),
           protein: getNutrientValue(USDAFoodNutrientID.PROTEIN),
           carbs: getNutrientValue(USDAFoodNutrientID.CARBOHYDRATE),

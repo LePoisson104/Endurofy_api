@@ -68,7 +68,7 @@ export const NutrientGroups = {
 } as const;
 
 // Common types
-export type FoodSource = "USDA" | "custom";
+export type FoodSource = "usda" | "custom";
 export type ServingUnit = "g" | "ml" | "oz";
 
 export interface BaseFood {

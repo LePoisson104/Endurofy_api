@@ -3,7 +3,7 @@ import foodRepository from "../repositories/food.repositories";
 import { AppError } from "../middlewares/error.handlers";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
-import { FoodItemRepository, BaseFood } from "../interfaces/food.interfaces";
+import { BaseFood } from "../interfaces/food.interfaces";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES - FAVORITE FOOD
@@ -18,10 +18,13 @@ const getFavoriteFood = async (userId: string): Promise<BaseFood[]> => {
 
     const transformedFavorites: BaseFood[] = getFavorites.map(
       (favorite: any) => ({
-        foodId: favorite.food_id,
+        foodId:
+          favorite.food_source === "custom"
+            ? favorite.food_item_id
+            : favorite.external_id,
         foodName: favorite.food_name,
         foodBrand: favorite.brand_name || "",
-        ingredients: undefined,
+        ingredients: favorite.ingredients,
         foodSource: favorite.food_source,
         calories: favorite.calories,
         protein: favorite.protein_g,
@@ -37,6 +40,7 @@ const getFavoriteFood = async (userId: string): Promise<BaseFood[]> => {
         isFavorite: true,
       })
     );
+
     return transformedFavorites;
   } catch (error: any) {
     await Logger.logEvents(
@@ -185,6 +189,7 @@ const addFavoriteFood = async (
       foodName,
       foodBrand,
       foodSource,
+      ingredients,
       calories,
       protein,
       carbs,
@@ -197,10 +202,18 @@ const addFavoriteFood = async (
       servingSizeUnit,
     } = foodPayload;
 
+    const usdaQuery = `
+      SELECT food_item_id FROM food_items WHERE external_id = ? AND source = 'usda'
+    `;
+
+    const customQuery = `
+      SELECT food_item_id FROM food_items WHERE food_item_id = ? AND source = 'custom'
+    `;
+
     // Check if food exists in food_items table
     const [foodItemResult] = await connection.execute(
-      "SELECT food_item_id FROM food_items WHERE external_id = ?",
-      [foodId]
+      foodSource === "custom" ? customQuery : usdaQuery,
+      foodSource === "custom" ? [foodId] : [foodId]
     );
 
     let foodItemId;
@@ -211,19 +224,20 @@ const addFavoriteFood = async (
 
       const insertFoodQuery = `
         INSERT INTO food_items (
-          food_item_id, source, external_id, user_id, food_name, brand_name,
+          food_item_id, source, external_id, user_id, food_name, brand_name, ingredients,
           calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, 
           cholesterol_mg, serving_size, serving_size_unit
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `;
 
       await connection.execute(insertFoodQuery, [
         foodItemId,
-        foodSource === "USDA" ? "usda" : "custom",
+        foodSource,
         foodId,
         userId,
         foodName,
         foodBrand,
+        ingredients,
         calories,
         protein,
         carbs,
