@@ -17,7 +17,6 @@ const GetFoodLogByDate = async (
         lf.meal_type AS mealType,
         lf.serving_size AS loggedServingSize,
         lf.serving_size_unit AS loggedServingSizeUnit,
-        lf.is_favorite AS isFavorite,
         fi.food_name AS foodName,
         fi.brand_name AS brandName,
         fi.ingredients,

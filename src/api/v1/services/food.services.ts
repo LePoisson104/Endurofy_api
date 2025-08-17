@@ -116,7 +116,7 @@ const getFavoriteStatusBatch = async (
 
     // Set favorites to true
     favoriteResults.forEach((fav: any) => {
-      favoriteMap[fav.food_id] = {
+      favoriteMap[fav.food_item_id] = {
         favoriteFoodId: fav.favorite_food_id,
         isFavorite: true,
       };

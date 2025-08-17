@@ -59,7 +59,7 @@ const GetFavoriteStatusBatch = async (
   const query = `
       SELECT favorite_food_id, food_item_id, 1 as is_favorite 
       FROM favorite_foods 
-      WHERE user_id = ? AND food_id IN (${placeholders})
+      WHERE user_id = ? AND food_item_id IN (${placeholders})
     `;
   const [result] = await pool.execute(query, [userId, ...foodIds]);
   return result;

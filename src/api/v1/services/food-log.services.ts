@@ -7,6 +7,7 @@ import {
   AddFoodPayload,
   UpdateFoodPayload,
 } from "../interfaces/food-log.interfaces";
+import foodServices from "./food.services";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // @GET SERVICES
@@ -92,6 +93,15 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
 
   try {
     const foodLogData = await foodLogRepository.GetFoodLogByDate(userId, date);
+
+    const foodIds = foodLogData.foods.map((food: any) => food.foodItemId);
+
+    const favoriteStatuses = await foodServices.getFavoriteStatusBatch(
+      userId,
+      foodIds
+    );
+
+    console.log(favoriteStatuses);
 
     const groupedFoods: Record<string, any[]> = {
       breakfast: [],

@@ -151,12 +151,13 @@ const searchFood = asyncHandler(
           userId,
           foodIds
         );
-
+        console.log(transformedData.foods);
+        console.log(favoriteStatuses);
         // Update the foods with favorite status
         transformedData.foods = transformedData.foods.map((food: any) => ({
           ...food,
-          favoriteFoodId: favoriteStatuses[food.foodId]?.favoriteFoodId ?? null,
-          isFavorite: favoriteStatuses[food.foodId]?.isFavorite ?? false,
+          favoriteFoodId: favoriteStatuses[food.foodId]?.favoriteFoodId,
+          isFavorite: favoriteStatuses[food.foodId]?.isFavorite,
         }));
       } catch (error) {
         // Log error but don't fail the search - just return without favorite status
