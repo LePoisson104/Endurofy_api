@@ -129,7 +129,7 @@ const AddCustomFood = async (
   servingSizeUnit: "g" | "ml" | "oz"
 ): Promise<any> => {
   const query =
-    "INSERT INTO food_items (food_item_id, source, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    "INSERT INTO food_items (food_item_id, source, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   const [result] = await pool.execute(query, [
     foodItemId,
     source,
