@@ -101,8 +101,6 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
       foodIds
     );
 
-    console.log(favoriteStatuses);
-
     const groupedFoods: Record<string, any[]> = {
       breakfast: [],
       lunch: [],
@@ -218,7 +216,7 @@ const addFood = async (
 
     if (normalizedSource === "usda" && foodSourceId) {
       const [rows]: any = await connection.execute(
-        "SELECT food_item_id FROM food_items WHERE source = ? AND external_id = ?",
+        "SELECT food_item_id FROM food_items WHERE source = ? AND food_item_id = ?",
         ["usda", foodSourceId]
       );
       if (rows.length > 0) {
@@ -235,16 +233,15 @@ const addFood = async (
       }
     }
 
-    let foodItemId = existingFoodItemId;
+    //existingFoodItemId either the usda food already in the food_items table or it's custom food food else we use the foodSourceId which will always be usda
+    let foodItemId = existingFoodItemId || foodSourceId;
 
-    if (!foodItemId) {
-      foodItemId = uuidv4();
+    if (!existingFoodItemId) {
       await connection.execute(
-        "INSERT INTO food_items (food_item_id, source, external_id, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO food_items (food_item_id, source, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           foodItemId,
           normalizedSource,
-          foodSourceId,
           userId,
           foodName,
           foodBrand,

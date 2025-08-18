@@ -18,10 +18,7 @@ const getFavoriteFood = async (userId: string): Promise<BaseFood[]> => {
 
     const transformedFavorites: BaseFood[] = getFavorites.map(
       (favorite: any) => ({
-        foodId:
-          favorite.food_source === "custom"
-            ? favorite.food_item_id
-            : favorite.external_id,
+        foodId: favorite.food_item_id,
         foodName: favorite.food_name,
         foodBrand: favorite.brand_name || "",
         ingredients: favorite.ingredients,
@@ -202,38 +199,27 @@ const addFavoriteFood = async (
       servingSizeUnit,
     } = foodPayload;
 
-    const usdaQuery = `
-      SELECT food_item_id FROM food_items WHERE external_id = ? AND source = 'usda'
-    `;
-
-    const customQuery = `
-      SELECT food_item_id FROM food_items WHERE food_item_id = ? AND source = 'custom'
-    `;
-
     // Check if food exists in food_items table
     const [foodItemResult] = await connection.execute(
-      foodSource === "custom" ? customQuery : usdaQuery,
-      foodSource === "custom" ? [foodId] : [foodId]
+      "SELECT food_item_id FROM food_items WHERE food_item_id = ?",
+      [foodId]
     );
 
     let foodItemId;
 
     // If food doesn't exist, insert it into food_items table
     if (!foodItemResult || (foodItemResult as any[]).length === 0) {
-      foodItemId = uuidv4();
-
       const insertFoodQuery = `
         INSERT INTO food_items (
-          food_item_id, source, external_id, user_id, food_name, brand_name, ingredients,
+          food_item_id, source, user_id, food_name, brand_name, ingredients,
           calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, 
           cholesterol_mg, serving_size, serving_size_unit
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `;
 
       await connection.execute(insertFoodQuery, [
-        foodItemId,
-        foodSource,
         foodId,
+        foodSource,
         userId,
         foodName,
         foodBrand,
@@ -318,7 +304,6 @@ const addCustomFood = async (
     foodItemId,
     "custom",
     ingredients || null,
-    null, // externalId
     userId,
     foodName,
     foodBrand,

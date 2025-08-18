@@ -21,7 +21,6 @@ const GetFoodLogByDate = async (
         fi.brand_name AS brandName,
         fi.ingredients,
         fi.source,
-        fi.external_id AS foodSourceId,
         fi.calories,
         fi.protein_g AS protein,
         fi.carbs_g AS carbs,

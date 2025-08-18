@@ -151,8 +151,6 @@ const searchFood = asyncHandler(
           userId,
           foodIds
         );
-        console.log(transformedData.foods);
-        console.log(favoriteStatuses);
         // Update the foods with favorite status
         transformedData.foods = transformedData.foods.map((food: any) => ({
           ...food,

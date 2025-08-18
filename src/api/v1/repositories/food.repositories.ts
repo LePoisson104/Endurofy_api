@@ -11,7 +11,6 @@ const GetFavoriteFood = async (
       SELECT 
         ff.favorite_food_id,
         ff.food_item_id,
-        fi.external_id,
         fi.food_name,
         fi.brand_name,
         fi.source as food_source,
@@ -115,7 +114,6 @@ const AddCustomFood = async (
   foodItemId: string,
   source: "usda" | "custom",
   ingredients: string | null,
-  externalId: string | null,
   userId: string,
   foodName: string,
   brandName: string,
@@ -131,11 +129,10 @@ const AddCustomFood = async (
   servingSizeUnit: "g" | "ml" | "oz"
 ): Promise<any> => {
   const query =
-    "INSERT INTO food_items (food_item_id, source, external_id, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    "INSERT INTO food_items (food_item_id, source, user_id, food_name, brand_name, ingredients, calories, protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg, cholesterol_mg, serving_size, serving_size_unit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
   const [result] = await pool.execute(query, [
     foodItemId,
     source,
-    externalId,
     userId,
     foodName,
     brandName,
