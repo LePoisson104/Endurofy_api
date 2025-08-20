@@ -158,7 +158,7 @@ const getCustomFood = async (userId: string): Promise<BaseFood[]> => {
     cholesterol: food.cholesterol_mg,
     servingSize: food.serving_size,
     servingSizeUnit: food.serving_size_unit,
-    isFavorite: food.is_favorite,
+    isFavorite: food.is_favorite === 0 ? false : true,
     favoriteFoodId: food.favorite_food_id,
   }));
 

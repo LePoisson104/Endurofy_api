@@ -112,6 +112,10 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
     // Group foods by meal_type and calculate actual nutrient values
     foodLogData.foods.forEach((food: any) => {
       const foodWithActualNutrients = calculateActualNutrients(food);
+      foodWithActualNutrients.isFavorite =
+        favoriteStatuses[food.foodItemId]?.isFavorite;
+      foodWithActualNutrients.favoriteFoodId =
+        favoriteStatuses[food.foodItemId]?.favoriteFoodId;
 
       if (groupedFoods[food.mealType]) {
         groupedFoods[food.mealType].push(foodWithActualNutrients);

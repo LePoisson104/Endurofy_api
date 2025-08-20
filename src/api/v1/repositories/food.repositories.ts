@@ -69,16 +69,15 @@ const GetFavoriteStatusBatch = async (
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const GetCustomFood = async (userId: string): Promise<any> => {
   const query = `
-    SELECT 
-      fi.*,
-      CASE 
-        WHEN ff.favorite_food_id IS NOT NULL THEN true 
-        ELSE false 
-      END as is_favorite,
-      ff.favorite_food_id
-    FROM food_items fi
-    LEFT JOIN favorite_foods ff ON fi.food_item_id = ff.food_item_id AND ff.user_id = ?
-    WHERE fi.user_id = ? AND fi.source = 'custom'
+  SELECT 
+    fi.*,
+    (ff.favorite_food_id IS NOT NULL) AS is_favorite
+  FROM food_items fi
+  LEFT JOIN favorite_foods ff
+    ON ff.food_item_id = fi.food_item_id 
+    AND ff.user_id = ?
+  WHERE fi.user_id = ?
+    AND fi.source = 'custom'
   `;
   const [result] = await pool.execute(query, [userId, userId]);
   return result;
