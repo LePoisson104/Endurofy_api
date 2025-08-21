@@ -71,6 +71,7 @@ const GetCustomFood = async (userId: string): Promise<any> => {
   const query = `
   SELECT 
     fi.*,
+    ff.favorite_food_id,
     (ff.favorite_food_id IS NOT NULL) AS is_favorite
   FROM food_items fi
   LEFT JOIN favorite_foods ff
