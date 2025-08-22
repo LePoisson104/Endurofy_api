@@ -182,32 +182,54 @@ const DeleteCustomFoodSafe = async (
   userId: string,
   foodItemId: string
 ): Promise<{ deleted: boolean; soft_deleted: boolean }> => {
-  // First check if there are any logged foods with this food_item_id
-  const checkLoggedFoodsQuery = `
-    SELECT COUNT(*) as count 
-    FROM logged_foods lf
-    JOIN food_logs fl ON lf.food_log_id = fl.food_log_id
-    WHERE lf.food_item_id = ? AND fl.user_id = ?
-  `;
+  const connection = await pool.getConnection();
 
-  const [loggedFoodsResult] = await pool.execute(checkLoggedFoodsQuery, [
-    foodItemId,
-    userId,
-  ]);
-  const loggedFoodsCount = (loggedFoodsResult as any[])[0].count;
+  try {
+    await connection.beginTransaction();
 
-  if (loggedFoodsCount > 0) {
-    // If there are logged foods, soft delete (mark as deleted)
-    const softDeleteQuery =
-      "UPDATE food_items SET is_deleted = TRUE WHERE food_item_id = ? AND user_id = ?";
-    await pool.execute(softDeleteQuery, [foodItemId, userId]);
-    return { deleted: true, soft_deleted: true };
-  } else {
-    // If no logged foods, hard delete the food item
-    const hardDeleteQuery =
-      "DELETE FROM food_items WHERE food_item_id = ? AND user_id = ?";
-    await pool.execute(hardDeleteQuery, [foodItemId, userId]);
-    return { deleted: true, soft_deleted: false };
+    // First check if there are any logged foods with this food_item_id
+    const checkLoggedFoodsQuery = `
+      SELECT COUNT(*) as count 
+      FROM logged_foods lf
+      JOIN food_logs fl ON lf.food_log_id = fl.food_log_id
+      WHERE lf.food_item_id = ? AND fl.user_id = ?
+    `;
+
+    const [loggedFoodsResult] = await connection.execute(
+      checkLoggedFoodsQuery,
+      [foodItemId, userId]
+    );
+    const loggedFoodsCount = (loggedFoodsResult as any[])[0].count;
+
+    // Remove from favorite_foods table if it exists (for both soft and hard delete)
+    const deleteFavoriteQuery =
+      "DELETE FROM favorite_foods WHERE food_item_id = ? AND user_id = ?";
+    await connection.execute(deleteFavoriteQuery, [foodItemId, userId]);
+
+    let result;
+    if (loggedFoodsCount > 0) {
+      // If there are logged foods, soft delete (mark as deleted)
+      const softDeleteQuery =
+        "UPDATE food_items SET is_deleted = TRUE WHERE food_item_id = ? AND user_id = ?";
+      await connection.execute(softDeleteQuery, [foodItemId, userId]);
+      result = { deleted: true, soft_deleted: true };
+    } else {
+      // If no logged foods, hard delete the food item
+      const hardDeleteQuery =
+        "DELETE FROM food_items WHERE food_item_id = ? AND user_id = ?";
+      await connection.execute(hardDeleteQuery, [foodItemId, userId]);
+      result = { deleted: true, soft_deleted: false };
+    }
+
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
