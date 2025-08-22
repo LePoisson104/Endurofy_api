@@ -306,7 +306,7 @@ const addCustomFood = async (
     ingredients || null,
     userId,
     foodName,
-    foodBrand,
+    foodBrand || null,
     calories,
     protein,
     carbs,

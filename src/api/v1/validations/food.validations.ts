@@ -124,8 +124,7 @@ const validateAddCustomFood = [
     .isString()
     .withMessage("Food name must be a string"),
   body("foodBrand")
-    .notEmpty()
-    .withMessage("Food brand is required")
+    .optional()
     .isString()
     .withMessage("Food brand must be a string"),
   body("ingredients")
