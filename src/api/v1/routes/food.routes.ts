@@ -90,7 +90,7 @@ router.delete(
 );
 
 router.delete(
-  "/custom/:foodItemId",
+  "/:userId/custom/:foodItemId",
   foodValidations.validateFoodItemId,
   handleValidationErrors,
   foodControllers.deleteCustomFood

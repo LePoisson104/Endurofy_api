@@ -418,15 +418,19 @@ const deleteFavoriteFood = async (
 // @DELETE SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const deleteCustomFood = async (
+  userId: string,
   foodItemId: string
 ): Promise<{ message: string }> => {
   if (!foodItemId) {
     throw new AppError("foodItemId is required!", 400);
   }
 
-  const deletedCustomFood = await foodRepository.DeleteCustomFood(foodItemId);
+  const deletedCustomFood = await foodRepository.DeleteCustomFoodSafe(
+    userId,
+    foodItemId
+  );
 
-  if (deletedCustomFood.affectedRows === 0) {
+  if (deletedCustomFood.deleted === false) {
     throw new AppError("Custom food not found!", 404);
   }
 

@@ -26,7 +26,7 @@ const GetFavoriteFood = async (
         fi.serving_size,
         fi.serving_size_unit
       FROM favorite_foods ff
-      JOIN food_items fi ON ff.food_item_id = fi.food_item_id
+      JOIN food_items fi ON ff.food_item_id = fi.food_item_id AND fi.is_deleted = FALSE
       WHERE ff.user_id = ?
     `;
   if (connection) {
@@ -79,6 +79,7 @@ const GetCustomFood = async (userId: string): Promise<any> => {
     AND ff.user_id = ?
   WHERE fi.user_id = ?
     AND fi.source = 'custom'
+    AND fi.is_deleted = FALSE
   `;
   const [result] = await pool.execute(query, [userId, userId]);
   return result;
@@ -176,10 +177,38 @@ const DeleteFavoriteFood = async (favoriteFoodId: string): Promise<any> => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const DeleteCustomFood = async (foodItemId: string): Promise<any> => {
-  const query = "DELETE FROM food_items WHERE food_item_id = ?";
-  const [result] = await pool.execute(query, [foodItemId]);
-  return result;
+
+const DeleteCustomFoodSafe = async (
+  userId: string,
+  foodItemId: string
+): Promise<{ deleted: boolean; soft_deleted: boolean }> => {
+  // First check if there are any logged foods with this food_item_id
+  const checkLoggedFoodsQuery = `
+    SELECT COUNT(*) as count 
+    FROM logged_foods lf
+    JOIN food_logs fl ON lf.food_log_id = fl.food_log_id
+    WHERE lf.food_item_id = ? AND fl.user_id = ?
+  `;
+
+  const [loggedFoodsResult] = await pool.execute(checkLoggedFoodsQuery, [
+    foodItemId,
+    userId,
+  ]);
+  const loggedFoodsCount = (loggedFoodsResult as any[])[0].count;
+
+  if (loggedFoodsCount > 0) {
+    // If there are logged foods, soft delete (mark as deleted)
+    const softDeleteQuery =
+      "UPDATE food_items SET is_deleted = TRUE WHERE food_item_id = ? AND user_id = ?";
+    await pool.execute(softDeleteQuery, [foodItemId, userId]);
+    return { deleted: true, soft_deleted: true };
+  } else {
+    // If no logged foods, hard delete the food item
+    const hardDeleteQuery =
+      "DELETE FROM food_items WHERE food_item_id = ? AND user_id = ?";
+    await pool.execute(hardDeleteQuery, [foodItemId, userId]);
+    return { deleted: true, soft_deleted: false };
+  }
 };
 
 export default {
@@ -193,5 +222,5 @@ export default {
   GetCustomFood,
   AddCustomFood,
   UpdateCustomFood,
-  DeleteCustomFood,
+  DeleteCustomFoodSafe,
 };

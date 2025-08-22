@@ -291,9 +291,13 @@ const deleteFavoriteFood = asyncHandler(
 
 const deleteCustomFood = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
     const { foodItemId } = req.params;
 
-    const deletedCustomFood = await foodServices.deleteCustomFood(foodItemId);
+    const deletedCustomFood = await foodServices.deleteCustomFood(
+      userId,
+      foodItemId
+    );
 
     sendSuccess(res, {
       message: deletedCustomFood.message,
