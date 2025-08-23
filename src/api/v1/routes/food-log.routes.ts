@@ -59,4 +59,11 @@ router.delete(
   foodLogControllers.deleteFood
 );
 
+router.delete(
+  "/food-log/:foodLogId",
+  foodLogValidations.validateDeleteFoodLog,
+  handleValidationErrors,
+  foodLogControllers.deleteFoodLog
+);
+
 export default router;

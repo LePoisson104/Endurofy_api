@@ -143,10 +143,19 @@ const validateDeleteFood = [
     .withMessage("Invalid food log ID format"),
 ];
 
+const validateDeleteFoodLog = [
+  param("foodLogId")
+    .notEmpty()
+    .withMessage("Food log ID is required")
+    .isUUID()
+    .withMessage("Invalid food log ID format"),
+];
+
 export default {
   validateGetFoodLogByDate,
   validateGetLogDates,
   validateAddFood,
   validateUpdateFood,
   validateDeleteFood,
+  validateDeleteFoodLog,
 };

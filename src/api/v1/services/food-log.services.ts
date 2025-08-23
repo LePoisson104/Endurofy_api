@@ -401,10 +401,27 @@ const deleteFood = async (
   };
 };
 
+const deleteFoodLog = async (
+  foodLogId: string
+): Promise<{ message: string }> => {
+  if (!foodLogId) {
+    throw new AppError("foodLogId is required!", 400);
+  }
+
+  const deletedFoodLog = await foodLogRepository.DeleteFoodLog(foodLogId);
+
+  if (deletedFoodLog.affectedRows === 0) {
+    throw new AppError("Food log not found!", 404);
+  }
+
+  return { message: "Food log deleted successfully" };
+};
+
 export default {
   getFoodLogByDate,
   getLoggedDates,
   addFood,
   updateFood,
   deleteFood,
+  deleteFoodLog,
 };

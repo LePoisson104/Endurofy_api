@@ -51,34 +51,34 @@ const validateAddFavoriteFood = [
     .isFloat({ min: 0 })
     .withMessage("Calories must be a number greater than or equal to 0"),
   body("protein")
-    .notEmpty()
+    .exists()
     .withMessage("Protein is required")
     .isFloat({ min: 0 })
     .withMessage("Protein must be a number greater than or equal to 0"),
   body("carbs")
-    .notEmpty()
+    .exists()
     .withMessage("Carbs is required")
     .isFloat({ min: 0 })
     .withMessage("Carbs must be a number greater than or equal to 0"),
   body("fat")
-    .notEmpty()
+    .exists()
     .withMessage("Fat is required")
     .isFloat({ min: 0 })
     .withMessage("Fat must be a number greater than or equal to 0"),
   body("fiber")
-    .optional()
+    .exists()
     .isFloat({ min: 0 })
     .withMessage("Fiber must be a number greater than or equal to 0"),
   body("sugar")
-    .optional()
+    .exists()
     .isFloat({ min: 0 })
     .withMessage("Sugar must be a number greater than or equal to 0"),
   body("sodium")
-    .optional()
+    .exists()
     .isFloat({ min: 0 })
     .withMessage("Sodium must be a number greater than or equal to 0"),
   body("cholesterol")
-    .optional()
+    .notEmpty()
     .isFloat({ min: 0 })
     .withMessage("Cholesterol must be a number greater than or equal to 0"),
   // Serving information validations (required)

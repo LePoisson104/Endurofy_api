@@ -235,6 +235,9 @@ const addFavoriteFood = async (
         servingSize,
         servingSizeUnit,
       ]);
+
+      // Set foodItemId to the newly inserted food's ID
+      foodItemId = foodId;
     } else {
       // Use existing food_item_id
       foodItemId = (foodItemResult as any[])[0].food_item_id;

@@ -73,10 +73,23 @@ const deleteFood = asyncHandler(
   }
 );
 
+const deleteFoodLog = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { foodLogId } = req.params;
+
+    const deletedFoodLog = await foodLogServices.deleteFoodLog(foodLogId);
+
+    sendSuccess(res, {
+      message: deletedFoodLog.message,
+    });
+  }
+);
+
 export default {
   getAllFood,
   getLoggedDates,
   addFood,
   updateFood,
   deleteFood,
+  deleteFoodLog,
 };

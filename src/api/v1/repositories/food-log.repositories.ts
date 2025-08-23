@@ -96,9 +96,16 @@ const DeleteFood = async (foodId: string): Promise<any> => {
   return result;
 };
 
+const DeleteFoodLog = async (foodLogId: string): Promise<any> => {
+  const query = "DELETE FROM food_logs WHERE food_log_id = ?";
+  const [result] = await pool.execute(query, [foodLogId]);
+  return result;
+};
+
 export default {
   GetFoodLogByDate,
   GetLoggedDates,
   UpdateFood,
   DeleteFood,
+  DeleteFoodLog,
 };
