@@ -1,4 +1,5 @@
 import pool from "../../../config/db.config";
+import { FoodLogResponse } from "../interfaces/food-log.interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET QUERIES
@@ -7,7 +8,7 @@ const GetFoodLogByDate = async (
   userId: string,
   date: string,
   connection?: any
-): Promise<any> => {
+): Promise<FoodLogResponse> => {
   const query1 = `SELECT food_log_id, log_date, status FROM food_logs WHERE user_id = ? AND log_date = ? LIMIT 1`;
   const query2 = `
       SELECT
@@ -34,6 +35,13 @@ const GetFoodLogByDate = async (
       FROM logged_foods lf
       JOIN food_items fi ON lf.food_item_id = fi.food_item_id
       WHERE lf.food_log_id = ?`;
+  const query3 = `
+      SELECT
+        wl.water_log_id AS waterLogId,
+        wl.amount,
+        wl.unit
+      FROM water_logs wl
+      WHERE wl.food_log_id = ?`;
 
   const dbConnection = connection || pool;
 
@@ -47,6 +55,7 @@ const GetFoodLogByDate = async (
       log_date: date,
       status: null,
       foods: [],
+      water_logs: [],
     };
   }
 
@@ -55,11 +64,17 @@ const GetFoodLogByDate = async (
     foodLogData.food_log_id,
   ]);
 
+  // Get all water logs for this food_log_id
+  const [waterLogsResult] = await dbConnection.execute(query3, [
+    foodLogData.food_log_id,
+  ]);
+
   return {
     food_log_id: foodLogData.food_log_id,
     log_date: foodLogData.log_date,
     status: foodLogData.status,
     foods: foodsResult as any[],
+    water_logs: waterLogsResult as any[],
   };
 };
 

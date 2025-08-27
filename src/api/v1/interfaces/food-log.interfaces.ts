@@ -1,4 +1,5 @@
 import { FoodSource, ServingUnit } from "./food.interfaces";
+import { WaterLog } from "./water-log.interfaces";
 
 // Types for service parameters
 export type MealType =
@@ -31,4 +32,12 @@ export interface AddFoodPayload {
 export interface UpdateFoodPayload {
   serving_size?: number;
   serving_size_unit?: ServingUnit;
+}
+
+export interface FoodLogResponse {
+  food_log_id: string | null;
+  log_date: string;
+  status: string | null;
+  foods: any[];
+  water_logs: WaterLog[];
 }
