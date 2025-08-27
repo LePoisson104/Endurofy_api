@@ -129,7 +129,6 @@ const getFoodLogByDate = async (userId: string, date: string): Promise<any> => {
       log_date: foodLogData.log_date,
       status: foodLogData.status,
       foods: groupedFoods,
-      waterLog: foodLogData.water_logs,
     };
   } catch (error: any) {
     await Logger.logEvents(

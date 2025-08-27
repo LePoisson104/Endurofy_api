@@ -39,5 +39,4 @@ export interface FoodLogResponse {
   log_date: string;
   status: string | null;
   foods: any[];
-  water_logs: WaterLog[];
 }

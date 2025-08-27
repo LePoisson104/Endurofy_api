@@ -8,11 +8,4 @@ const router: Router = express.Router();
 
 // router.use(verifyJWT);
 
-router.post(
-  "/",
-  waterLogValidations.validateAddWater,
-  handleValidationErrors,
-  waterLogControllers.addWater
-);
-
 export default router;

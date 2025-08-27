@@ -35,17 +35,9 @@ const GetFoodLogByDate = async (
       FROM logged_foods lf
       JOIN food_items fi ON lf.food_item_id = fi.food_item_id
       WHERE lf.food_log_id = ?`;
-  const query3 = `
-      SELECT
-        wl.water_log_id AS waterLogId,
-        wl.amount,
-        wl.unit
-      FROM water_logs wl
-      WHERE wl.food_log_id = ?`;
 
   const dbConnection = connection || pool;
 
-  // Get the food log metadata (food_log_id, log_date, status)
   const [foodLogResult] = await dbConnection.execute(query1, [userId, date]);
   const foodLogData = (foodLogResult as any[])[0];
 
@@ -55,17 +47,10 @@ const GetFoodLogByDate = async (
       log_date: date,
       status: null,
       foods: [],
-      water_logs: [],
     };
   }
 
-  // Get all foods for this food_log_id
   const [foodsResult] = await dbConnection.execute(query2, [
-    foodLogData.food_log_id,
-  ]);
-
-  // Get all water logs for this food_log_id
-  const [waterLogsResult] = await dbConnection.execute(query3, [
     foodLogData.food_log_id,
   ]);
 
@@ -74,7 +59,6 @@ const GetFoodLogByDate = async (
     log_date: foodLogData.log_date,
     status: foodLogData.status,
     foods: foodsResult as any[],
-    water_logs: waterLogsResult as any[],
   };
 };
 
