@@ -8,4 +8,32 @@ const router: Router = express.Router();
 
 // router.use(verifyJWT);
 
+router.get(
+  "/:userId/date/:date",
+  waterLogValidations.valdiateGetWaterLog,
+  handleValidationErrors,
+  waterLogControllers.getWaterLogByDate
+);
+
+router.post(
+  "/:userId/date/:date",
+  waterLogValidations.validateAddWater,
+  handleValidationErrors,
+  waterLogControllers.addWaterLog
+);
+
+router.patch(
+  "/:waterLogId/:foodLogId",
+  waterLogValidations.validateUpdateWater,
+  handleValidationErrors,
+  waterLogControllers.updateWaterLog
+);
+
+router.delete(
+  "/:waterLogId/:foodLogId",
+  waterLogValidations.validateRemoveWater,
+  handleValidationErrors,
+  waterLogControllers.deleteWaterLog
+);
+
 export default router;
