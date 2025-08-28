@@ -10,7 +10,7 @@ const getWaterLogByDate = asyncHandler(
 
     const waterLog = await waterLogServices.GetWaterLogByDate(userId, date);
     sendSuccess(res, {
-      message: "Food logs retrieved successfully",
+      message: "Water log retrieved successfully",
       waterLog: waterLog,
     });
   }
