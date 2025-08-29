@@ -42,11 +42,11 @@ const addWaterLog = async (
         );
     }
 
-    let waterLogId = uuidv4();
+    const waterLogId = uuidv4();
+    const foodLogId =
+      isFoodLogExists.length === 0 ? uuidv4() : isFoodLogExists[0].food_log_id;
 
     if (isFoodLogExists.length === 0) {
-      const foodLogId = uuidv4();
-
       await connection.execute(
         "INSERT INTO food_logs (food_log_id, user_id, status, log_date) VALUES (?, ?, ?, ?)",
         [foodLogId, userId, "incomplete", date.split("T")[0]]
@@ -55,7 +55,7 @@ const addWaterLog = async (
 
     await connection.execute(
       "INSERT INTO water_logs (water_log_id, food_log_id, amount, unit) VALUES (?,?,?,?)",
-      [waterLogId, isFoodLogExists[0].food_log_id, amount, unit]
+      [waterLogId, foodLogId, amount, unit]
     );
 
     await connection.commit();
