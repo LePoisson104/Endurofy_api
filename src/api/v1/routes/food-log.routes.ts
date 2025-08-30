@@ -48,6 +48,20 @@ router.patch(
   foodLogControllers.updateFood
 );
 
+router.patch(
+  "/mark-as-complete/:userId/:foodLogId",
+  foodLogValidations.validateMarkFoodLogAsComplete,
+  handleValidationErrors,
+  foodLogControllers.markFoodLogAsComplete
+);
+
+router.patch(
+  "/mark-as-incomplete/:foodLogId",
+  foodLogValidations.validateMarkFoodLogAsIncomplete,
+  handleValidationErrors,
+  foodLogControllers.markFoodLogAsIncomplete
+);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE ROUTES
 ////////////////////////////////////////////////////////////////////////////////////////////////

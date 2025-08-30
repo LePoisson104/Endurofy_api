@@ -85,6 +85,39 @@ const deleteFoodLog = asyncHandler(
   }
 );
 
+const markFoodLogAsComplete = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const foodLogId = req.params.foodLogId;
+    const userId = req.params.userId;
+    const { date, caloriesIntake, status } = req.body;
+
+    const markedFoodLog = await foodLogServices.markFoodLogAsComplete(
+      userId,
+      foodLogId,
+      date,
+      caloriesIntake
+    );
+
+    sendSuccess(res, {
+      message: markedFoodLog.message,
+    });
+  }
+);
+
+const markFoodLogAsIncomplete = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const foodLogId = req.params.foodLogId;
+
+    const markedFoodLog = await foodLogServices.markFoodLogAsIncomplete(
+      foodLogId
+    );
+
+    sendSuccess(res, {
+      message: markedFoodLog.message,
+    });
+  }
+);
+
 export default {
   getAllFood,
   getLoggedDates,
@@ -92,4 +125,6 @@ export default {
   updateFood,
   deleteFood,
   deleteFoodLog,
+  markFoodLogAsComplete,
+  markFoodLogAsIncomplete,
 };

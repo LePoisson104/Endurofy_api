@@ -151,6 +151,37 @@ const validateDeleteFoodLog = [
     .withMessage("Invalid food log ID format"),
 ];
 
+const validateMarkFoodLogAsComplete = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User ID is required")
+    .isUUID()
+    .withMessage("Invalid user ID format"),
+  param("foodLogId")
+    .notEmpty()
+    .withMessage("Food log ID is required")
+    .isUUID()
+    .withMessage("Invalid food log ID format"),
+  body("date")
+    .notEmpty()
+    .withMessage("Date is required")
+    .isISO8601()
+    .withMessage("Date must be a valid date in YYYY-MM-DD format"),
+  body("caloriesIntake")
+    .notEmpty()
+    .withMessage("Calories intake is required")
+    .isFloat({ min: 0 })
+    .withMessage("Calories intake must be a number"),
+];
+
+const validateMarkFoodLogAsIncomplete = [
+  param("foodLogId")
+    .notEmpty()
+    .withMessage("Food log ID is required")
+    .isUUID()
+    .withMessage("Invalid food log ID format"),
+];
+
 export default {
   validateGetFoodLogByDate,
   validateGetLogDates,
@@ -158,4 +189,6 @@ export default {
   validateUpdateFood,
   validateDeleteFood,
   validateDeleteFoodLog,
+  validateMarkFoodLogAsComplete,
+  validateMarkFoodLogAsIncomplete,
 };

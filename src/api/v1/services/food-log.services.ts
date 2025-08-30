@@ -417,6 +417,64 @@ const deleteFoodLog = async (
   return { message: "Food log deleted successfully" };
 };
 
+const markFoodLogAsComplete = async (
+  userId: string,
+  foodLogId: string,
+  date: string,
+  caloriesIntake: number
+): Promise<{ message: string }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    await connection.execute(
+      "UPDATE food_logs SET status = 'completed' WHERE food_log_id = ?",
+      [foodLogId]
+    );
+
+    const [isWeightLogExists]: any = await connection.execute(
+      "SELECT * FROM weight_log WHERE user_id = ? AND log_date = ?",
+      [userId, date]
+    );
+
+    if (isWeightLogExists.length === 1) {
+      await connection.execute(
+        "UPDATE weight_log SET calories_intake = ? WHERE weight_log_id = ?",
+        [caloriesIntake, isWeightLogExists[0].weight_log_id]
+      );
+    }
+
+    await connection.commit();
+  } catch (error: any) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error in markFoodLogAsComplete service: ${error.message}`,
+      "errLog.log"
+    );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+  return { message: "Food log marked as complete" };
+};
+
+const markFoodLogAsIncomplete = async (
+  foodLogId: string
+): Promise<{ message: string }> => {
+  if (!foodLogId) {
+    throw new AppError("foodLogId is required!", 400);
+  }
+
+  await pool.execute(
+    "UPDATE food_logs SET status = 'incomplete' WHERE food_log_id = ?",
+    [foodLogId]
+  );
+
+  return { message: "Food log marked as incomplete" };
+};
+
 export default {
   getFoodLogByDate,
   getLoggedDates,
@@ -424,4 +482,6 @@ export default {
   updateFood,
   deleteFood,
   deleteFoodLog,
+  markFoodLogAsComplete,
+  markFoodLogAsIncomplete,
 };
