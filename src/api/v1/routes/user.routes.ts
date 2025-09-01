@@ -7,13 +7,19 @@ import limiters from "../middlewares/limiters";
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 router.get(
   "/:userId",
   userValidation.validateUserId,
   handleValidationErrors,
   userControllers.getUsersInfo
+);
+router.get(
+  "/macros-goals/:userId",
+  userValidation.validateUserId,
+  handleValidationErrors,
+  userControllers.getUsersMacrosGoals
 );
 router.delete(
   "/delete-account/:userId",
@@ -37,7 +43,13 @@ router.patch(
   handleValidationErrors,
   userControllers.updateUsersPassword
 );
-
+router.patch(
+  "/update-macros-goals/:userId",
+  userValidation.validateUserId,
+  userValidation.validateUserUpdateMacrosGoals,
+  handleValidationErrors,
+  userControllers.updateUsersMacrosGoals
+);
 router.patch(
   "/update-email/:userId",
   userValidation.validateUserUpdateEmail,

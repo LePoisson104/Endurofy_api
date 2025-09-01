@@ -31,3 +31,11 @@ export interface UserProfileUpdatePayload {
   activity_level?: string;
   updated_at?: Date;
 }
+
+export interface MacrosGoals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  updated_at?: Date;
+}

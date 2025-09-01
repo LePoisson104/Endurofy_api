@@ -15,6 +15,14 @@ const getUsersInfo = asyncHandler(
   }
 );
 
+const getUsersMacrosGoals = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const result = await usersServices.getUsersMacrosGoals(userId);
+    sendSuccess(res, result.macrosGoals);
+  }
+);
+
 const updateUsersName = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
@@ -84,6 +92,17 @@ const updateUsersProfileAndConvertWeightLogs = asyncHandler(
   }
 );
 
+const updateUsersMacrosGoals = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const updateMacrosGoalsPayload = req.body;
+    const result = await usersServices.updateUsersMacrosGoals(
+      userId,
+      updateMacrosGoalsPayload
+    );
+    sendSuccess(res, result.data.message);
+  }
+);
 const deleteAccount = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
@@ -95,6 +114,8 @@ const deleteAccount = asyncHandler(
 
 export default {
   getUsersInfo,
+  getUsersMacrosGoals,
+  updateUsersMacrosGoals,
   deleteAccount,
   updateUsersName,
   updateUsersPassword,

@@ -35,6 +35,25 @@ const validateUserSignup = [
     .trim(),
 ];
 
+const validateUserUpdateMacrosGoals = [
+  body("calories")
+    .isInt({ min: 0 })
+    .withMessage("Calories must be a positive integer")
+    .trim(),
+  body("protein")
+    .isInt({ min: 0 })
+    .withMessage("Protein must be a positive integer")
+    .trim(),
+  body("carbs")
+    .isInt({ min: 0 })
+    .withMessage("Carbs must be a positive integer")
+    .trim(),
+  body("fat")
+    .isInt({ min: 0 })
+    .withMessage("Fat must be a positive integer")
+    .trim(),
+];
+
 const validateUserLogin = [
   body("email")
     .notEmpty()
@@ -262,4 +281,5 @@ export default {
   validateUserUpdateEmail,
   validateVerifyUpdateEmail,
   validateUserUpdateProfile,
+  validateUserUpdateMacrosGoals,
 };

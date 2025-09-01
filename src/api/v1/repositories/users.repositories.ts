@@ -31,6 +31,12 @@ const GetUsersInfo = async (
   };
 };
 
+const GetUsersMacrosGoals = async (userId: string): Promise<any> => {
+  const query = "SELECT * FROM macros_goals WHERE user_id = ?";
+  const [result] = await pool.execute(query, [userId]);
+  return result;
+};
+
 const UpdateUsersName = async (
   userId: string,
   firstName: string,
@@ -96,10 +102,33 @@ const GetUsersProfile = async (userId: string): Promise<any> => {
   return result;
 };
 
+const UpdateMacrosGoals = async (
+  userId: string,
+  calories: number,
+  protein: number,
+  carbs: number,
+  fat: number,
+  updatedAt: Date
+): Promise<any> => {
+  const query =
+    "UPDATE macros_goals SET calories = ?, protein = ?, carbs = ?, fat = ?, updated_at = ? WHERE user_id = ?";
+  const [result] = await pool.execute(query, [
+    calories,
+    protein,
+    carbs,
+    fat,
+    updatedAt,
+    userId,
+  ]);
+  return result;
+};
+
 export default {
   GetUsersInfo,
+  GetUsersMacrosGoals,
   UpdateUsersName,
   UpdateUsersPassword,
   UpdateUsersProfile,
   GetUsersProfile,
+  UpdateMacrosGoals,
 };

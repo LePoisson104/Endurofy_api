@@ -6,12 +6,14 @@ import bcrypt from "bcrypt";
 import {
   UserCredentialsUpdatePayload,
   UserProfileUpdatePayload,
+  MacrosGoals,
 } from "../interfaces/user.interfaces";
 import { generateOTP } from "../helpers/generateOTP";
 import pool from "../../../config/db.config";
 import { sendOTPVerification } from "./sendOTPVerification.service";
 import Logger from "../utils/logger";
 import WeightLogs from "../repositories/weight-log.repositories";
+import { MACROS_CONSTANTS } from "../helpers/macros-constant";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Get User's Info
@@ -37,6 +39,22 @@ const getUsersInfo = async (
   };
 };
 
+const getUsersMacrosGoals = async (
+  userId: string
+): Promise<{ macrosGoals: MacrosGoals }> => {
+  const usersMacrosGoals = await Users.GetUsersMacrosGoals(userId);
+
+  return {
+    macrosGoals: {
+      calories: usersMacrosGoals[0].calories,
+      protein: usersMacrosGoals[0].protein,
+      carbs: usersMacrosGoals[0].carbs,
+      fat: usersMacrosGoals[0].fat,
+      updated_at: usersMacrosGoals[0].updated_at?.toISOString(),
+    },
+  };
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Update User's Name
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +69,45 @@ const updateUsersName = async (
   return {
     data: {
       message: "Name updated successfully",
+    },
+  };
+};
+
+const updateUsersMacrosGoals = async (
+  userId: string,
+  updateMacrosGoalsPayload: MacrosGoals
+): Promise<{ data: { message: string } }> => {
+  const { calories, protein, carbs, fat } = updateMacrosGoalsPayload;
+  const updatedAt = new Date();
+
+  if (Number(protein) + Number(carbs) + Number(fat) !== 100) {
+    throw new AppError("Protein, carbs, and fat must add up to 100", 400);
+  }
+
+  const totalCalories =
+    Number(protein) * MACROS_CONSTANTS.PROTEIN +
+    Number(carbs) * MACROS_CONSTANTS.CARBS +
+    Number(fat) * MACROS_CONSTANTS.FAT;
+
+  if (totalCalories !== Number(calories)) {
+    throw new AppError(
+      "Total calories must be equal to the sum of protein, carbs, and fat",
+      400
+    );
+  }
+
+  await Users.UpdateMacrosGoals(
+    userId,
+    calories,
+    protein,
+    carbs,
+    fat,
+    updatedAt
+  );
+
+  return {
+    data: {
+      message: "Macros goals updated successfully",
     },
   };
 };
@@ -594,6 +651,7 @@ const deleteAccount = async (
 };
 
 export default {
+  getUsersMacrosGoals,
   getUsersInfo,
   deleteAccount,
   updateUsersName,
@@ -602,4 +660,5 @@ export default {
   verifyUpdateEmail,
   updateUsersProfile,
   updateUsersProfileAndConvertWeightLogs,
+  updateUsersMacrosGoals,
 };
