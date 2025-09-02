@@ -43,13 +43,32 @@ const getUsersMacrosGoals = async (
   userId: string
 ): Promise<{ macrosGoals: MacrosGoals }> => {
   const usersMacrosGoals = await Users.GetUsersMacrosGoals(userId);
+  const calories = usersMacrosGoals[0].calories;
 
   return {
     macrosGoals: {
-      calories: usersMacrosGoals[0].calories,
-      protein: usersMacrosGoals[0].protein,
-      carbs: usersMacrosGoals[0].carbs,
-      fat: usersMacrosGoals[0].fat,
+      calories: calories,
+      protein: Number(
+        (
+          (calories * usersMacrosGoals[0].protein) /
+          100 /
+          MACROS_CONSTANTS.PROTEIN
+        ).toFixed(1)
+      ),
+      carbs: Number(
+        (
+          (calories * usersMacrosGoals[0].carbs) /
+          100 /
+          MACROS_CONSTANTS.CARBS
+        ).toFixed(1)
+      ),
+      fat: Number(
+        (
+          (calories * usersMacrosGoals[0].fat) /
+          100 /
+          MACROS_CONSTANTS.FAT
+        ).toFixed(1)
+      ),
       updated_at: usersMacrosGoals[0].updated_at?.toISOString(),
     },
   };
@@ -82,18 +101,6 @@ const updateUsersMacrosGoals = async (
 
   if (Number(protein) + Number(carbs) + Number(fat) !== 100) {
     throw new AppError("Protein, carbs, and fat must add up to 100", 400);
-  }
-
-  const totalCalories =
-    Number(protein) * MACROS_CONSTANTS.PROTEIN +
-    Number(carbs) * MACROS_CONSTANTS.CARBS +
-    Number(fat) * MACROS_CONSTANTS.FAT;
-
-  if (totalCalories !== Number(calories)) {
-    throw new AppError(
-      "Total calories must be equal to the sum of protein, carbs, and fat",
-      400
-    );
   }
 
   await Users.UpdateMacrosGoals(
