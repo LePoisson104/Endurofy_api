@@ -7,7 +7,7 @@ import limiters from "../middlewares/limiters";
 
 const router: Router = express.Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.get(
   "/:userId",
