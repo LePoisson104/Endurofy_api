@@ -387,6 +387,11 @@ const signup = async (
       [uuidv4(), userId, "system"]
     );
 
+    await connection.execute(
+      "INSERT INTO macros_goals (user_id, calories, protein, carbs, fat) VALUES (?,?,?,?,?)",
+      [userId, 2000, 25, 45, 30]
+    );
+
     // Then add OTP
     await connection.execute(
       "INSERT INTO otp (user_id, email, hashed_otp, created_at, expires_at) VALUES (?,?,?,?,?)",

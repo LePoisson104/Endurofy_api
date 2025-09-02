@@ -44,7 +44,7 @@ router.patch(
   userControllers.updateUsersPassword
 );
 router.patch(
-  "/update-macros-goals/:userId",
+  "/macros-goals/:userId",
   userValidation.validateUserId,
   userValidation.validateUserUpdateMacrosGoals,
   handleValidationErrors,
