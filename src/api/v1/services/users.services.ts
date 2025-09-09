@@ -14,6 +14,7 @@ import { sendOTPVerification } from "./sendOTPVerification.service";
 import Logger from "../utils/logger";
 import WeightLogs from "../repositories/weight-log.repositories";
 import { MACROS_CONSTANTS } from "../helpers/macros-constant";
+import { calculateTDEE } from "../helpers/calculate-calories-intake";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Get User's Info
@@ -360,6 +361,8 @@ const updateUsersProfile = async (
     }
   }
 
+  const profileStatus = updateProfilePayload.profile_status;
+
   if (
     updateProfilePayload.profile_status === "incomplete" &&
     updateProfilePayload.birth_date &&
@@ -393,6 +396,23 @@ const updateUsersProfile = async (
   updateProfilePayload.updated_at = new Date();
 
   await Users.UpdateUsersProfile(userId, updateProfilePayload);
+
+  if (profileStatus === "complete") {
+    const tdee = calculateTDEE(
+      updateProfilePayload.birth_date as string,
+      updateProfilePayload.gender as "male" | "female",
+      updateProfilePayload.current_weight,
+      updateProfilePayload.current_weight_unit as "kg" | "lb",
+      updateProfilePayload.height,
+      updateProfilePayload.height_unit as "cm" | "ft",
+      updateProfilePayload.activity_level as
+        | "sedentary"
+        | "lightly_active"
+        | "moderately_active"
+        | "very_active"
+        | "extra_active"
+    );
+  }
 
   return {
     data: {
