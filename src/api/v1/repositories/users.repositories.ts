@@ -2,6 +2,7 @@ import pool from "../../../config/db.config";
 import { User, UserProfile } from "../interfaces/db.models";
 import { AppError } from "../middlewares/error.handlers";
 import { UserProfileUpdatePayload } from "../interfaces/user.interfaces";
+import Logger from "../utils/logger";
 
 const GetUsersInfo = async (
   userId: string
@@ -79,10 +80,13 @@ const UpdateUsersPassword = async (
   }
 };
 
-const UpdateUsersProfile = async (
+const UpdateUsersProfileAndCaloriesGoal = async (
   userId: string,
-  updateProfilePayload: UserProfileUpdatePayload
+  updateProfilePayload: UserProfileUpdatePayload,
+  calories: number
 ): Promise<any> => {
+  const connection = await pool.getConnection();
+
   const updateFields = Object.keys(updateProfilePayload)
     .map((key) => `${key} = ?`)
     .join(", ");
@@ -90,10 +94,33 @@ const UpdateUsersProfile = async (
   const values = Object.values(updateProfilePayload);
   values.push(userId); // Add userId for WHERE clause
 
-  const query = `UPDATE users_profile SET ${updateFields} WHERE user_id = ?`;
+  try {
+    await connection.beginTransaction();
 
-  const [result] = await pool.execute(query, values);
-  return result;
+    const query = `UPDATE users_profile SET ${updateFields} WHERE user_id = ?`;
+
+    await connection.execute(query, values);
+
+    await connection.execute(
+      "UPDATE macros_goals SET calories = ? WHERE user_id = ?",
+      [calories, userId]
+    );
+
+    await connection.commit();
+
+    return;
+  } catch (err) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error updating user's profile: ${err}`,
+      "errLog.log"
+    );
+    throw new AppError("Error updating user's profile", 500);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
 };
 
 const GetUsersProfile = async (userId: string): Promise<any> => {
@@ -128,7 +155,7 @@ export default {
   GetUsersMacrosGoals,
   UpdateUsersName,
   UpdateUsersPassword,
-  UpdateUsersProfile,
+  UpdateUsersProfileAndCaloriesGoal,
   GetUsersProfile,
   UpdateMacrosGoals,
 };

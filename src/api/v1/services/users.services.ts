@@ -395,24 +395,34 @@ const updateUsersProfile = async (
 
   updateProfilePayload.updated_at = new Date();
 
-  await Users.UpdateUsersProfile(userId, updateProfilePayload);
+  let tdee = calculateTDEE(
+    updateProfilePayload.birth_date as string,
+    updateProfilePayload.gender as "male" | "female",
+    updateProfilePayload.current_weight,
+    updateProfilePayload.current_weight_unit as "kg" | "lb",
+    updateProfilePayload.height,
+    updateProfilePayload.height_unit as "cm" | "ft",
+    updateProfilePayload.activity_level as
+      | "sedentary"
+      | "lightly_active"
+      | "moderately_active"
+      | "very_active"
+      | "extra_active"
+  );
 
-  if (profileStatus === "complete") {
-    const tdee = calculateTDEE(
-      updateProfilePayload.birth_date as string,
-      updateProfilePayload.gender as "male" | "female",
-      updateProfilePayload.current_weight,
-      updateProfilePayload.current_weight_unit as "kg" | "lb",
-      updateProfilePayload.height,
-      updateProfilePayload.height_unit as "cm" | "ft",
-      updateProfilePayload.activity_level as
-        | "sedentary"
-        | "lightly_active"
-        | "moderately_active"
-        | "very_active"
-        | "extra_active"
-    );
+  if (updateProfilePayload.goal === "lose") {
+    tdee = (tdee as number) - 500;
+  } else if (updateProfilePayload.goal === "gain") {
+    tdee = (tdee as number) + 500;
+  } else if (updateProfilePayload.goal === "maintain") {
+    tdee = tdee as number;
   }
+
+  await Users.UpdateUsersProfileAndCaloriesGoal(
+    userId,
+    updateProfilePayload,
+    tdee as number
+  );
 
   return {
     data: {
