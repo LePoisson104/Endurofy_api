@@ -222,6 +222,29 @@ const validateDeleteWorkoutExercise = [
     .withMessage("Invalid workout log type"),
 ];
 
+const validateGetWeeklySets = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User id is required")
+    .isUUID()
+    .withMessage("Invalid user id format"),
+  param("programId")
+    .notEmpty()
+    .withMessage("Program id is required")
+    .isUUID()
+    .withMessage("Invalid program id format"),
+  param("startDate")
+    .notEmpty()
+    .withMessage("Start date is required")
+    .isISO8601()
+    .withMessage("Start date must be a valid date in YYYY-MM-DD format"),
+  param("endDate")
+    .notEmpty()
+    .withMessage("End date is required")
+    .isISO8601()
+    .withMessage("End date must be a valid date in YYYY-MM-DD format"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateCreateManualWorkoutLogRequest,
@@ -238,4 +261,5 @@ export default {
   validateAddWorkoutSet,
   validateGetManualWorkoutLogWithPrevious,
   validateDeleteWorkoutExercise,
+  validateGetWeeklySets,
 };

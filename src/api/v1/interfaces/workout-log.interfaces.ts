@@ -93,3 +93,8 @@ export interface WorkoutLogPagination {
   hasMore: boolean;
   workoutLogsData: WorkoutLogData[];
 }
+
+export interface WeeklyBodyPartSets {
+  bodyPart: string;
+  totalSets: number;
+}

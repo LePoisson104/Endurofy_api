@@ -6,10 +6,77 @@ import {
   PreviousWorkoutLogData,
   WorkoutLogExists,
   WorkoutLogPagination,
+  WeeklyBodyPartSets,
 } from "../interfaces/workout-log.interfaces";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import workoutLogRepository from "../repositories/workout-log.repositories";
+
+const getWeeklySets = async (
+  userId: string,
+  programId: string,
+  startDate: string,
+  endDate: string
+): Promise<{ data: WeeklyBodyPartSets[] }> => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    // Get all completed workout logs within the date range
+    const [workoutLogsResult] = (await connection.execute(
+      `SELECT DISTINCT wl.workout_log_id
+       FROM workout_logs wl
+       WHERE wl.user_id = ? 
+         AND wl.program_id = ? 
+         AND wl.workout_date >= ? 
+         AND wl.workout_date <= ?`,
+      [userId, programId, startDate, endDate]
+    )) as any[];
+
+    if (workoutLogsResult.length === 0) {
+      return { data: [] };
+    }
+
+    // Extract workout log IDs
+    const workoutLogIds = workoutLogsResult.map(
+      (log: any) => log.workout_log_id
+    );
+
+    // Get all sets grouped by body part for the completed workouts
+    const [setsResult] = (await connection.execute(
+      `SELECT 
+         we.body_part,
+         COUNT(ws.workout_set_id) as total_sets
+       FROM workout_exercises we
+       JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+       WHERE we.workout_log_id IN (${workoutLogIds.map(() => "?").join(",")})
+       GROUP BY we.body_part
+       ORDER BY we.body_part`,
+      workoutLogIds
+    )) as any[];
+
+    // Format the results
+    const weeklyBodyPartSets: WeeklyBodyPartSets[] = setsResult.map(
+      (result: any) => ({
+        bodyPart: result.body_part,
+        totalSets: parseInt(result.total_sets),
+      })
+    );
+
+    await connection.commit();
+
+    return { data: weeklyBodyPartSets };
+  } catch (err) {
+    await connection.rollback();
+    Logger.logEvents(`Error getting weekly sets: ${err}`, "errLog.log");
+    if (err instanceof AppError) throw err;
+    throw new AppError("Error getting weekly sets", 500);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+};
 
 const getManualWorkoutLogWithPrevious = async (
   userId: string,
@@ -919,6 +986,7 @@ const deleteWorkoutSetWithCascade = async (
 };
 
 export default {
+  getWeeklySets,
   getWorkoutLogPagination,
   getManualWorkoutLogWithPrevious,
   addWorkoutSet,

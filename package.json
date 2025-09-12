@@ -53,7 +53,7 @@
     "@types/node": "^22.13.9",
     "@types/nodemailer": "^6.4.17",
     "@types/uuid": "^10.0.0",
-    "nodemon": "^3.1.9",
+    "nodemon": "^3.1.10",
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"

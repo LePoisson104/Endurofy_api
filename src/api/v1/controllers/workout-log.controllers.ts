@@ -3,6 +3,23 @@ import { sendSuccess } from "../utils/response.utils";
 import workoutLogServices from "../services/workout-log.services";
 import { asyncHandler } from "../utils/async-handler";
 
+const getWeeklySets = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+    const programId = req.params.programId;
+    const startDate = req.params.startDate;
+    const endDate = req.params.endDate;
+
+    const result = await workoutLogServices.getWeeklySets(
+      userId,
+      programId,
+      startDate,
+      endDate
+    );
+    sendSuccess(res, result.data);
+  }
+);
+
 const getManualWorkoutLogWithPrevious = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
@@ -286,4 +303,5 @@ export default {
   addWorkoutSet,
   deleteWorkoutSet,
   deleteWorkoutExercise,
+  getWeeklySets,
 };

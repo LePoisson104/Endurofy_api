@@ -7,7 +7,14 @@ import workoutLogValidations from "../validations/workout-log.validations";
 
 const router: Router = express.Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
+
+router.get(
+  "/get-weekly-sets/:userId/:programId/:startDate/:endDate",
+  workoutLogValidations.validateGetWeeklySets,
+  handleValidationErrors,
+  workoutLogControllers.getWeeklySets
+);
 
 router.get(
   "/get-manual-workout-log-with-previous/:userId/:programId/:workoutDate",
