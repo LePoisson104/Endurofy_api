@@ -340,7 +340,6 @@ const signup = async (
   password: string
 ): Promise<AuthServiceResponse> => {
   const connection = await pool.getConnection();
-
   try {
     await connection.beginTransaction();
 

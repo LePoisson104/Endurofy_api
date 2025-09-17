@@ -353,9 +353,9 @@ const updateUsersProfile = async (
     const birthDate = new Date(updateProfilePayload.birth_date);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
-    if (age < 18) {
+    if (age < 13) {
       throw new AppError(
-        "You must be at least 12 years old or older to use this app",
+        "You must be at least 13 years old or older to use this app",
         400
       );
     }
