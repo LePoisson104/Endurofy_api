@@ -73,6 +73,37 @@ const GetLoggedDates = async (
   return result;
 };
 
+const GetRecentUniqueFoodItems = async (userId: string): Promise<any> => {
+  const query = `
+    SELECT DISTINCT
+      fi.food_item_id,
+      fi.food_name,
+      fi.brand_name,
+      fi.ingredients,
+      fi.source,
+      fi.calories,
+      fi.protein_g,
+      fi.carbs_g,
+      fi.fat_g,
+      fi.fiber_g,
+      fi.sugar_g,
+      fi.sodium_mg,
+      fi.cholesterol_mg,
+      fi.serving_size,
+      fi.serving_size_unit,
+      MAX(fl.log_date) as last_logged_date
+    FROM logged_foods lf
+    JOIN food_logs fl ON lf.food_log_id = fl.food_log_id
+    JOIN food_items fi ON lf.food_item_id = fi.food_item_id
+    WHERE fl.user_id = ?
+    GROUP BY fi.food_item_id
+    ORDER BY last_logged_date DESC
+    LIMIT 10
+  `;
+  const [result] = await pool.execute(query, [userId]);
+  return result;
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @PATCH QUERIES
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +135,7 @@ const DeleteFoodLog = async (foodLogId: string): Promise<any> => {
 export default {
   GetFoodLogByDate,
   GetLoggedDates,
+  GetRecentUniqueFoodItems,
   UpdateFood,
   DeleteFood,
   DeleteFoodLog,

@@ -217,6 +217,19 @@ const getFavoriteStatusBatch = asyncHandler(
   }
 );
 
+const getRecentFood = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.userId;
+
+    const recentFood = await foodServices.getRecentFoodItems(userId);
+
+    sendSuccess(res, {
+      message: "Favorite status batch retrieved successfully",
+      data: recentFood,
+    });
+  }
+);
+
 const getCustomFood = asyncHandler(async (req, res) => {
   const userId = req.params.userId;
   const customFood = await foodServices.getCustomFood(userId);
@@ -310,6 +323,7 @@ export default {
   getFavoriteFood,
   getIsFavoriteFood,
   getFavoriteStatusBatch,
+  getRecentFood,
   addFavoriteFood,
   deleteFavoriteFood,
   getCustomFood,

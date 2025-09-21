@@ -23,11 +23,9 @@ router.get(
 // @GET ROUTES
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.get(
-  "/:userId/favorites",
-  handleValidationErrors,
-  foodControllers.getFavoriteFood
-);
+router.get("/:userId/favorites", foodControllers.getFavoriteFood);
+
+router.get("/:userId/recent", foodControllers.getRecentFood);
 
 router.get(
   "/:userId/favorites/:foodId",

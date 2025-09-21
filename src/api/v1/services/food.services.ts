@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import foodRepository from "../repositories/food.repositories";
+import foodLogRepository from "../repositories/food-log.repositories";
 import { AppError } from "../middlewares/error.handlers";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
@@ -163,6 +164,69 @@ const getCustomFood = async (userId: string): Promise<BaseFood[]> => {
   }));
 
   return transformedCustomFood;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// @GET SERVICES - RECENT FOOD
+////////////////////////////////////////////////////////////////////////////////////////////////
+const getRecentFoodItems = async (userId: string): Promise<BaseFood[]> => {
+  if (!userId) {
+    throw new AppError("UserId is required!", 400);
+  }
+
+  try {
+    const recentFoodItems = await foodLogRepository.GetRecentUniqueFoodItems(
+      userId
+    );
+
+    if (recentFoodItems.length === 0) {
+      return [];
+    }
+
+    // Get favorite status for all recent food items
+    const foodIds = recentFoodItems.map((item: any) => item.food_item_id);
+    const favoriteStatusMap = await getFavoriteStatusBatch(userId, foodIds);
+
+    const transformedRecentFood: BaseFood[] = recentFoodItems.map(
+      (item: any) => {
+        const favoriteStatus = favoriteStatusMap[item.food_item_id] || {
+          favoriteFoodId: null,
+          isFavorite: false,
+        };
+
+        return {
+          foodId: item.food_item_id,
+          foodName: item.food_name,
+          foodBrand: item.brand_name || "",
+          ingredients: item.ingredients,
+          foodSource: item.source,
+          calories: item.calories,
+          protein: item.protein_g,
+          carbs: item.carbs_g,
+          fat: item.fat_g,
+          fiber: item.fiber_g,
+          sugar: item.sugar_g,
+          sodium: item.sodium_mg,
+          cholesterol: item.cholesterol_mg,
+          servingSize: item.serving_size,
+          servingSizeUnit: item.serving_size_unit,
+          favoriteFoodId: favoriteStatus.favoriteFoodId,
+          isFavorite: favoriteStatus.isFavorite,
+        };
+      }
+    );
+
+    return transformedRecentFood;
+  } catch (error: any) {
+    await Logger.logEvents(
+      `Error in getRecentFoodItems service: ${error.message}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Something went wrong while trying to get recent food items!",
+      500
+    );
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,4 +516,6 @@ export default {
   addCustomFood,
   updateCustomFood,
   deleteCustomFood,
+  // Recent Food
+  getRecentFoodItems,
 };
