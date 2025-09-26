@@ -61,11 +61,11 @@ export const verificationCodeEmail = (
         }
 
         .verification-code {
-            color: teal;
+            color: #60A5FA;
             font-family: 'Courier New', monospace;
             font-size: 36px;
             font-weight: bold;
-            background-color: #F8FAFC;
+            background-color: #DBEAFE;
             border-radius: 6px;
             padding: 15px 30px;
             display: inline-flex;
