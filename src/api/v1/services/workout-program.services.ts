@@ -257,13 +257,14 @@ const createWorkoutProgram = async (
     await connection.beginTransaction();
     const workoutProgramId = uuidv4();
     await connection.execute(
-      "INSERT INTO programs (program_id, user_id, program_name, description, program_type, starting_date) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO programs (program_id, user_id, program_name, description, program_type, is_active, starting_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         workoutProgramId,
         userId,
         workoutProgram.programName,
         workoutProgram.description,
         workoutProgram.programType,
+        false, // New programs start as inactive
         workoutProgram.startingDate,
       ]
     );
@@ -603,12 +604,21 @@ const setProgramAsActive = async (
 
   try {
     await connection.beginTransaction();
-    const result = await WorkoutPrograms.SetAllAsInactive(userId, connection);
 
-    if (result.affectedRows === 0) {
-      throw new AppError("User not found", 404);
+    // First verify the program exists and belongs to the user
+    const [programCheck]: any = await connection.execute(
+      "SELECT program_id FROM programs WHERE user_id = ? AND program_id = ?",
+      [userId, programId]
+    );
+
+    if (programCheck.length === 0) {
+      throw new AppError("Program not found or does not belong to user", 404);
     }
 
+    // Set all user's programs as inactive
+    await WorkoutPrograms.SetAllAsInactive(userId, connection);
+
+    // Set the specified program as active
     const result2 = await WorkoutPrograms.SetProgramAsActive(
       userId,
       programId,
@@ -616,7 +626,7 @@ const setProgramAsActive = async (
     );
 
     if (result2.affectedRows === 0) {
-      throw new AppError("Program not found", 404);
+      throw new AppError("Failed to activate program", 500);
     }
 
     await connection.commit();
@@ -658,10 +668,8 @@ const setProgramAsInactive = async (
       throw new AppError("Program not found", 404);
     }
 
-    await connection.execute(
-      "UPDATE programs SET is_active = 1 WHERE user_id = ? AND program_type = 'manual' ",
-      [userId]
-    );
+    // Removed automatic activation of manual program
+    // Users should explicitly activate the program they want to use
 
     await connection.commit();
 
