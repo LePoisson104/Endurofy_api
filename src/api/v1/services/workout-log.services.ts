@@ -136,7 +136,7 @@ const getManualWorkoutLogWithPrevious = async (
           [exercise.workout_exercise_id]
         )) as any[];
 
-        // Get all previous sets for this exercise to determine max sets
+        // Get all previous sets for this exercise to determine max sets (using exercise name for consistency)
         const previousWorkoutResult = await connection.execute(
           `SELECT DISTINCT ws.set_number
            FROM workout_logs wl
@@ -145,15 +145,17 @@ const getManualWorkoutLogWithPrevious = async (
            WHERE wl.user_id = ? 
              AND wl.program_id = ? 
              AND wl.day_id = ? 
-             AND we.program_exercise_id = ?
-             AND wl.workout_date < ?
+             AND we.exercise_name = ?
+             AND (wl.workout_date < ? OR (wl.workout_date = ? AND we.exercise_order < ?))
            ORDER BY ws.set_number`,
           [
             userId,
             programId,
             workoutLog.day_id,
-            exercise.program_exercise_id,
+            exercise.exercise_name,
             workoutDate,
+            workoutDate,
+            exercise.exercise_order,
           ]
         );
 
@@ -179,15 +181,16 @@ const getManualWorkoutLogWithPrevious = async (
             (s: any) => s.set_number === setNumber
           );
 
-          // Get previous data for this set number
+          // Get previous data for this set number using exercise name for better duplicate handling
           const previousWorkoutLogResult =
-            await workoutLogRepository.GetPreviousWorkoutLogForExercise(
+            await workoutLogRepository.GetPreviousWorkoutLogForExerciseByName(
               userId,
               programId,
               workoutLog.day_id,
-              exercise.program_exercise_id,
+              exercise.exercise_name,
               setNumber,
               workoutDate,
+              exercise.exercise_order,
               connection
             );
 
@@ -388,13 +391,14 @@ const getPreviousWorkoutLog = async (
 
             for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
               const previousWorkoutLogResult =
-                await workoutLogRepository.GetPreviousWorkoutLogForExercise(
+                await workoutLogRepository.GetPreviousWorkoutLogForExerciseByName(
                   userId,
                   programId,
                   dayId,
-                  exercise.program_exercise_id,
+                  exercise.exercise_name,
                   setNumber,
                   currentWorkoutDate,
+                  exercise.exercise_order,
                   connection
                 );
 

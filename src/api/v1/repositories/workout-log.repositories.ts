@@ -100,13 +100,14 @@ const GetWorkoutExercisesAndSets = async (
             (workoutSetsResult as any[]).map(async (set) => {
               // Get previous workout log data for this specific exercise and set number
               const previousWorkoutLogResult =
-                await GetPreviousWorkoutLogForExercise(
+                await GetPreviousWorkoutLogForExerciseByName(
                   userId,
                   programId,
                   workoutLog.day_id,
-                  exercise.program_exercise_id,
+                  exercise.exercise_name,
                   set.set_number,
                   workoutLog.workout_date,
+                  exercise.exercise_order,
                   connection
                 );
 
@@ -325,6 +326,118 @@ const UpdateWorkoutLogStatus = async (
   return result as any[];
 };
 
+const GetPreviousWorkoutLogForExerciseByName = async (
+  userId: string,
+  programId: string,
+  dayId: string,
+  exerciseName: string,
+  setNumber: number,
+  currentWorkoutDate: string,
+  currentExerciseOrder: number,
+  connection?: any
+): Promise<any> => {
+  // First, check for same day exercises with lower exercise_order (earlier in the workout)
+  const sameDayQuery = `
+      SELECT
+        ws.set_number as setNumber,
+        ws.reps_left as leftReps,
+        ws.reps_right as rightReps,
+        ws.weight,
+        ws.weight_unit as weightUnit,
+        we.exercise_order,
+        'same_day' as source
+      FROM workout_logs wl
+      JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+      JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+      WHERE wl.user_id = ? 
+        AND wl.program_id = ? 
+        AND wl.day_id = ? 
+        AND we.exercise_name = ?
+        AND ws.set_number = ?
+        AND wl.workout_date = ?
+        AND we.exercise_order < ?
+      ORDER BY we.exercise_order DESC
+      LIMIT 1
+    `;
+
+  // If no same day result, check previous days (use highest exercise_order from previous days)
+  const previousDayQuery = `
+      SELECT
+        ws.set_number as setNumber,
+        ws.reps_left as leftReps,
+        ws.reps_right as rightReps,
+        ws.weight,
+        ws.weight_unit as weightUnit,
+        we.exercise_order,
+        'previous_day' as source
+      FROM workout_logs wl
+      JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+      JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+      WHERE wl.user_id = ? 
+        AND wl.program_id = ? 
+        AND wl.day_id = ? 
+        AND we.exercise_name = ?
+        AND ws.set_number = ?
+        AND wl.workout_date < ?
+      ORDER BY wl.workout_date DESC, we.exercise_order DESC
+      LIMIT 1
+    `;
+
+  if (connection) {
+    // First try same day
+    const [sameDayResult] = await connection.execute(sameDayQuery, [
+      userId,
+      programId,
+      dayId,
+      exerciseName,
+      setNumber,
+      currentWorkoutDate,
+      currentExerciseOrder,
+    ]);
+
+    if ((sameDayResult as any[]).length > 0) {
+      return sameDayResult as any[];
+    }
+
+    // If no same day result, try previous days
+    const [previousDayResult] = await connection.execute(previousDayQuery, [
+      userId,
+      programId,
+      dayId,
+      exerciseName,
+      setNumber,
+      currentWorkoutDate,
+    ]);
+    return previousDayResult as any[];
+  } else {
+    // First try same day
+    const [sameDayResult] = await pool.execute(sameDayQuery, [
+      userId,
+      programId,
+      dayId,
+      exerciseName,
+      setNumber,
+      currentWorkoutDate,
+      currentExerciseOrder,
+    ]);
+
+    if ((sameDayResult as any[]).length > 0) {
+      return sameDayResult as any[];
+    }
+
+    // If no same day result, try previous days
+    const [previousDayResult] = await pool.execute(previousDayQuery, [
+      userId,
+      programId,
+      dayId,
+      exerciseName,
+      setNumber,
+      currentWorkoutDate,
+    ]);
+    return previousDayResult as any[];
+  }
+};
+
 const GetPreviousWorkoutLogForExercise = async (
   userId: string,
   programId: string,
@@ -332,15 +445,43 @@ const GetPreviousWorkoutLogForExercise = async (
   programExerciseId: string,
   setNumber: number,
   currentWorkoutDate: string,
+  currentExerciseOrder: number,
   connection?: any
 ): Promise<any> => {
-  const query = `
+  // First, check for same day exercises with lower exercise_order (earlier in the workout)
+  const sameDayQuery = `
       SELECT
         ws.set_number as setNumber,
         ws.reps_left as leftReps,
         ws.reps_right as rightReps,
         ws.weight,
-        ws.weight_unit as weightUnit
+        ws.weight_unit as weightUnit,
+        we.exercise_order,
+        'same_day' as source
+      FROM workout_logs wl
+      JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+      JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
+      WHERE wl.user_id = ? 
+        AND wl.program_id = ? 
+        AND wl.day_id = ? 
+        AND we.program_exercise_id = ?
+        AND ws.set_number = ?
+        AND wl.workout_date = ?
+        AND we.exercise_order < ?
+      ORDER BY we.exercise_order DESC
+      LIMIT 1
+    `;
+
+  // If no same day result, check previous days (use highest exercise_order from previous days)
+  const previousDayQuery = `
+      SELECT
+        ws.set_number as setNumber,
+        ws.reps_left as leftReps,
+        ws.reps_right as rightReps,
+        ws.weight,
+        ws.weight_unit as weightUnit,
+        we.exercise_order,
+        'previous_day' as source
       FROM workout_logs wl
       JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
       JOIN workout_sets ws ON we.workout_exercise_id = ws.workout_exercise_id
@@ -350,12 +491,28 @@ const GetPreviousWorkoutLogForExercise = async (
         AND we.program_exercise_id = ?
         AND ws.set_number = ?
         AND wl.workout_date < ?
-      ORDER BY wl.workout_date DESC
+      ORDER BY wl.workout_date DESC, we.exercise_order DESC
       LIMIT 1
     `;
 
   if (connection) {
-    const [result] = await connection.execute(query, [
+    // First try same day
+    const [sameDayResult] = await connection.execute(sameDayQuery, [
+      userId,
+      programId,
+      dayId,
+      programExerciseId,
+      setNumber,
+      currentWorkoutDate,
+      currentExerciseOrder,
+    ]);
+
+    if ((sameDayResult as any[]).length > 0) {
+      return sameDayResult as any[];
+    }
+
+    // If no same day result, try previous days
+    const [previousDayResult] = await connection.execute(previousDayQuery, [
       userId,
       programId,
       dayId,
@@ -363,9 +520,25 @@ const GetPreviousWorkoutLogForExercise = async (
       setNumber,
       currentWorkoutDate,
     ]);
-    return result as any[];
+    return previousDayResult as any[];
   } else {
-    const [result] = await pool.execute(query, [
+    // First try same day
+    const [sameDayResult] = await pool.execute(sameDayQuery, [
+      userId,
+      programId,
+      dayId,
+      programExerciseId,
+      setNumber,
+      currentWorkoutDate,
+      currentExerciseOrder,
+    ]);
+
+    if ((sameDayResult as any[]).length > 0) {
+      return sameDayResult as any[];
+    }
+
+    // If no same day result, try previous days
+    const [previousDayResult] = await pool.execute(previousDayQuery, [
       userId,
       programId,
       dayId,
@@ -373,7 +546,7 @@ const GetPreviousWorkoutLogForExercise = async (
       setNumber,
       currentWorkoutDate,
     ]);
-    return result as any[];
+    return previousDayResult as any[];
   }
 };
 
@@ -510,6 +683,7 @@ export default {
   UpdateWorkoutLogStatus,
   UpdateWorkoutLogName,
   GetPreviousWorkoutLogForExercise,
+  GetPreviousWorkoutLogForExerciseByName,
   GetCompletedWorkoutLogs,
   GetExercisesByDayId,
   GetWorkoutExercisesAndSets,
