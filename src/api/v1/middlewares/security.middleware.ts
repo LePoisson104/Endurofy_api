@@ -6,6 +6,7 @@ import crypto from "crypto";
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || [
   "http://localhost:3000",
   `http://${process.env.HOST}:3000`,
+  `https://${process.env.FRONTEND_URL}`,
 ];
 
 export const configureSecurityMiddleware = (app: Express): void => {
