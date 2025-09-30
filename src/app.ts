@@ -18,6 +18,7 @@ const app: Express = express();
 configureSecurityMiddleware(app);
 app.use(cookieParser());
 app.use(express.json());
+app.set("trust proxy", true);
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
