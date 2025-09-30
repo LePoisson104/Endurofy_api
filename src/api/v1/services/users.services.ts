@@ -305,7 +305,8 @@ const updateUsersProfile = async (
     !updateProfilePayload.height ||
     !updateProfilePayload.height_unit ||
     !updateProfilePayload.gender ||
-    !updateProfilePayload.activity_level
+    !updateProfilePayload.activity_level ||
+    !updateProfilePayload.updated_at
   ) {
     throw new AppError("All fields are required", 400);
   }
@@ -361,8 +362,6 @@ const updateUsersProfile = async (
     }
   }
 
-  const profileStatus = updateProfilePayload.profile_status;
-
   if (
     updateProfilePayload.profile_status === "incomplete" &&
     updateProfilePayload.birth_date &&
@@ -392,8 +391,6 @@ const updateUsersProfile = async (
         updateProfilePayload.starting_weight_unit;
     }
   }
-
-  updateProfilePayload.updated_at = new Date();
 
   let tdee = calculateTDEE(
     updateProfilePayload.birth_date as string,
