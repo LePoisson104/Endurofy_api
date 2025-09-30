@@ -83,7 +83,7 @@ const updateUsersName = async (
   userUpdatePayload: UserCredentialsUpdatePayload
 ): Promise<any> => {
   const { firstName, lastName } = userUpdatePayload;
-  const updatedAt = new Date();
+  const updatedAt = new Date(); // UTC handling via timezone: 'Z' config
   await Users.UpdateUsersName(userId, firstName, lastName, updatedAt);
 
   return {
@@ -98,7 +98,7 @@ const updateUsersMacrosGoals = async (
   updateMacrosGoalsPayload: MacrosGoals
 ): Promise<{ data: { message: string } }> => {
   const { calories, protein, carbs, fat } = updateMacrosGoalsPayload;
-  const updatedAt = new Date();
+  const updatedAt = new Date(); // UTC handling via timezone: 'Z' config
 
   if (Number(protein) + Number(carbs) + Number(fat) !== 100) {
     throw new AppError("Protein, carbs, and fat must add up to 100", 400);
@@ -256,7 +256,7 @@ const verifyUpdateEmail = async (
     }
 
     // Update email and clean up OTP
-    const updatedAt = new Date();
+    const updatedAt = new Date(); // UTC handling via timezone: 'Z' config
 
     await connection.execute(
       "UPDATE users SET email = ?, pending_email = NULL, updated_at = ? WHERE user_id = ?",
@@ -492,7 +492,7 @@ const updateUsersProfileAndConvertWeightLogs = async (
 
   const connection = await pool.getConnection();
 
-  updateProfilePayload.updated_at = new Date();
+  updateProfilePayload.updated_at = new Date(); // This will now be handled consistently with timezone: 'Z'
 
   try {
     await connection.beginTransaction();
