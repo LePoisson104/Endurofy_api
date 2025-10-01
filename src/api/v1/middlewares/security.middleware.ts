@@ -56,7 +56,7 @@ export const configureSecurityMiddleware = (app: Express): void => {
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       allowedHeaders: ["Content-Type", "Authorization"],
-      exposedHeaders: ["set-cookie"],
+      // exposedHeaders: ["set-cookie"],
     })
   );
 
