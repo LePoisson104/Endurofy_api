@@ -195,7 +195,7 @@ const forgotPassword = async (
     const user = await Auth.GetUserCredentials(email, connection);
 
     if (user.length === 0) {
-      throw new AppError("User not found", 404);
+      throw new AppError("Email not found", 404);
     }
 
     if (user[0].verified === 0) {

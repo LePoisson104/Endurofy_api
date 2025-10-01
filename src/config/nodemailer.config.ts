@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 
+// for local development, use nodemailer and gmail
 export const transporter = nodemailer.createTransport({
   // Configure your email provider
   host: process.env.MAIL_HOST as string,
