@@ -33,6 +33,5 @@ export interface CookieOptions {
   secure: boolean;
   sameSite: "none" | "lax" | "strict";
   domain: string;
-  path: string;
   maxAge?: number;
 }
