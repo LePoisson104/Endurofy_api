@@ -46,14 +46,12 @@ router
     handleValidationErrors,
     authControllers.resetPassword
   );
-router
-  .route("/login")
-  .post(
-    limiters.loginLimiter,
-    userValidation.validateUserLogin,
-    handleValidationErrors,
-    authControllers.login
-  );
+router.route("/login").post(
+  // limiters.loginLimiter,
+  userValidation.validateUserLogin,
+  handleValidationErrors,
+  authControllers.login
+);
 router.route("/refresh").get(authControllers.refresh);
 router.route("/logout").post(authControllers.logout);
 
