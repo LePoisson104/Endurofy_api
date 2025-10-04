@@ -5,7 +5,7 @@ import usersRoutes from "./api/v1/routes/user.routes";
 import { scheduleCleanup } from "./api/v1/schedulers/cleanup.scheduler";
 import { configureSecurityMiddleware } from "./api/v1/middlewares/security.middleware";
 import weightLogRoutes from "./api/v1/routes/weight-log.routes";
-import workoutProgramRoutes from "./api/v1/routes/workoutProgramRoutes";
+import workoutProgramRoutes from "./api/v1/routes/workout-program.routes";
 import workoutLogRoutes from "./api/v1/routes/workout-log.routes";
 import foodLogRoutes from "./api/v1/routes/food-log.routes";
 import foodRoutes from "./api/v1/routes/food.routes";
