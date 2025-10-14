@@ -245,6 +245,19 @@ const validateGetWeeklySets = [
     .withMessage("End date must be a valid date in YYYY-MM-DD format"),
 ];
 
+const validatePauseTimer = [
+  body("time")
+    .notEmpty()
+    .withMessage("Time is required")
+    .isInt({ min: 0 })
+    .withMessage("Time must be a number greater than 0"),
+  param("workoutLogId")
+    .notEmpty()
+    .withMessage("Workout log id is required")
+    .isUUID()
+    .withMessage("Invalid workout log id format"),
+];
+
 export default {
   validateCreateWorkoutLogRequest,
   validateCreateManualWorkoutLogRequest,
@@ -262,4 +275,5 @@ export default {
   validateGetManualWorkoutLogWithPrevious,
   validateDeleteWorkoutExercise,
   validateGetWeeklySets,
+  validatePauseTimer,
 };

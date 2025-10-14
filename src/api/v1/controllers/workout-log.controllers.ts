@@ -182,6 +182,15 @@ const addManualWorkoutExercise = asyncHandler(
   }
 );
 
+const pauseTimer = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const time = req.body.time;
+    const workoutLogId = req.params.workoutLogId;
+    const result = await workoutLogServices.pauseTimer(time, workoutLogId);
+    sendSuccess(res, result.data);
+  }
+);
+
 const updateExerciseNotes = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const workoutExerciseId = req.params.workoutExerciseId;
@@ -304,4 +313,5 @@ export default {
   deleteWorkoutSet,
   deleteWorkoutExercise,
   getWeeklySets,
+  pauseTimer,
 };

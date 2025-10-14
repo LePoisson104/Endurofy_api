@@ -96,6 +96,13 @@ router.patch(
 );
 
 router.patch(
+  "/pause-timer/:workoutLogId",
+  workoutLogValidations.validatePauseTimer,
+  handleValidationErrors,
+  workoutLogControllers.pauseTimer
+);
+
+router.patch(
   "/update-workout-log-status/:workoutLogId",
   workoutLogValidations.validateSetWorkoutLogStatus,
   handleValidationErrors,

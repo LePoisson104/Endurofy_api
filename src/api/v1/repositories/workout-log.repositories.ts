@@ -162,6 +162,7 @@ const GetWorkoutExercisesAndSets = async (
         title: workoutLog.title,
         workoutDate: new Date(workoutLog.workout_date),
         status: workoutLog.status,
+        timer: workoutLog.timer,
         workoutExercises: workoutExercises,
       };
     })
@@ -613,7 +614,7 @@ const CreateManualWorkoutLog = async (
   connection?: any
 ): Promise<any> => {
   const query =
-    "INSERT INTO workout_logs (workout_log_id,user_id,  program_id, day_id, title, workout_date, status  ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO workout_logs (workout_log_id, user_id, program_id, day_id, title, workout_date, status, timer ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
   if (connection) {
     const [result] = await connection.execute(query, [
@@ -624,6 +625,7 @@ const CreateManualWorkoutLog = async (
       title,
       workoutDate,
       status,
+      0,
     ]);
     return result as any[];
   } else {
@@ -673,6 +675,15 @@ const DeleteWorkoutSet = async (workoutSetId: string): Promise<any> => {
   return result as any[];
 };
 
+const UpdateTimer = async (
+  workoutLogId: string,
+  time: bigint
+): Promise<any> => {
+  const query = "UPDATE workout_logs SET timer = ? WHERE workout_log_id = ?";
+  const [result] = await pool.execute(query, [time, workoutLogId]);
+  return result as any[];
+};
+
 export default {
   IsWorkoutLogExists,
   IsWorkoutExerciseExists,
@@ -692,4 +703,5 @@ export default {
   AddManualWorkoutExercise,
   AddWorkoutSet,
   DeleteWorkoutSet,
+  UpdateTimer,
 };

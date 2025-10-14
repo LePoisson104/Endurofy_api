@@ -246,6 +246,7 @@ const getManualWorkoutLogWithPrevious = async (
       title: workoutLog.title,
       workoutDate: new Date(workoutLog.workout_date),
       status: workoutLog.status,
+      timer: workoutLog.timer,
       workoutExercises: workoutExercisesData,
     };
 
@@ -601,6 +602,17 @@ const createWorkoutLog = async (
       message: "Workout log created successfully",
     },
   };
+};
+
+const pauseTimer = async (
+  time: bigint,
+  workoutLogId: string
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.UpdateTimer(workoutLogId, time);
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout log id", 400);
+  }
+  return { data: { message: "Timer paused successfully" } };
 };
 
 const createManualWorkoutLog = async (
@@ -1009,4 +1021,5 @@ export default {
   deleteWorkoutSet,
   getPreviousWorkoutLog,
   deleteWorkoutExercise,
+  pauseTimer,
 };
