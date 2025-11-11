@@ -425,6 +425,22 @@ const getPreviousWorkoutLog = async (
               }
             }
 
+            // Get previous exercise notes
+            const previousNotesResult =
+              await workoutLogRepository.GetPreviousExerciseNotes(
+                userId,
+                programId,
+                dayId,
+                exercise.exercise_name,
+                currentWorkoutDate,
+                connection
+              );
+
+            const previousNotes =
+              previousNotesResult.length > 0
+                ? previousNotesResult[0].notes
+                : null;
+
             return {
               programExerciseId: exercise.program_exercise_id,
               exerciseName: exercise.exercise_name,
@@ -434,6 +450,7 @@ const getPreviousWorkoutLog = async (
               minReps: exercise.min_reps,
               maxReps: exercise.max_reps,
               exerciseOrder: exercise.exercise_order,
+              notes: previousNotes,
               previousWorkoutSets: previousWorkoutSets,
             };
           }

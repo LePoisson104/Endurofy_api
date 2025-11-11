@@ -67,6 +67,7 @@ export interface PreviousWorkoutLogData {
   minReps: number;
   maxReps: number;
   exerciseOrder: number;
+  notes?: string | null;
   previousWorkoutSets: {
     setNumber: number;
     leftReps: number | null;

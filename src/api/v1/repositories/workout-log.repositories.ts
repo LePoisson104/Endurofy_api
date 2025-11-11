@@ -579,6 +579,52 @@ const GetExercisesByDayId = async (
   }
 };
 
+const GetPreviousExerciseNotes = async (
+  userId: string,
+  programId: string,
+  dayId: string,
+  exerciseName: string,
+  currentWorkoutDate: string,
+  connection?: any
+): Promise<any> => {
+  // Get notes from previous workout days only
+  const query = `
+      SELECT
+        we.notes,
+        we.exercise_order,
+        'previous_day' as source
+      FROM workout_logs wl
+      JOIN workout_exercises we ON wl.workout_log_id = we.workout_log_id
+      WHERE wl.user_id = ? 
+        AND wl.program_id = ? 
+        AND wl.day_id = ? 
+        AND we.exercise_name = ?
+        AND wl.workout_date < ?
+      ORDER BY wl.workout_date DESC, we.exercise_order DESC
+      LIMIT 1
+    `;
+
+  if (connection) {
+    const [result] = await connection.execute(query, [
+      userId,
+      programId,
+      dayId,
+      exerciseName,
+      currentWorkoutDate,
+    ]);
+    return result as any[];
+  } else {
+    const [result] = await pool.execute(query, [
+      userId,
+      programId,
+      dayId,
+      exerciseName,
+      currentWorkoutDate,
+    ]);
+    return result as any[];
+  }
+};
+
 const AddWorkoutSet = async (
   workoutSetId: string,
   workoutExerciseId: string,
@@ -695,6 +741,7 @@ export default {
   UpdateWorkoutLogName,
   GetPreviousWorkoutLogForExercise,
   GetPreviousWorkoutLogForExerciseByName,
+  GetPreviousExerciseNotes,
   GetCompletedWorkoutLogs,
   GetExercisesByDayId,
   GetWorkoutExercisesAndSets,
