@@ -22,6 +22,7 @@ export interface WorkoutLogData {
   title: string;
   workoutDate: Date;
   status: string;
+  notes?: string | null;
   workoutExercises: WorkoutExerciseData[];
 }
 

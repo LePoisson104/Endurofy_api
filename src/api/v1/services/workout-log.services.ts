@@ -237,6 +237,20 @@ const getManualWorkoutLogWithPrevious = async (
       })
     );
 
+    // Get previous exercise notes
+    const previousNotesResult =
+      await workoutLogRepository.GetPreviousExerciseNotes(
+        userId,
+        programId,
+        workoutLog.day_id,
+        workoutExercisesData[0].exerciseName,
+        workoutDate,
+        connection
+      );
+
+    const previousNotes =
+      previousNotesResult.length > 0 ? previousNotesResult[0].notes : null;
+
     // Construct the complete workout log data
     const workoutLogData = {
       workoutLogId: workoutLog.workout_log_id,
