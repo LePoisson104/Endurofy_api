@@ -264,21 +264,11 @@ const addFood = async (
       );
     }
 
-    // Normalize meal type to match DB enum (snacks -> snack)
-    const normalizedMealType = mealType === "snacks" ? "snack" : mealType;
-
     // Insert into logged_foods with the actual user serving
     const foodId = uuidv4();
     await connection.execute(
       "INSERT INTO logged_foods (food_id, food_log_id, food_item_id, meal_type, serving_size, serving_size_unit) VALUES (?, ?, ?, ?, ?, ?)",
-      [
-        foodId,
-        foodLogId,
-        foodItemId,
-        normalizedMealType,
-        servingSize,
-        servingUnit,
-      ]
+      [foodId, foodLogId, foodItemId, mealType, servingSize, servingUnit]
     );
 
     await connection.commit();
