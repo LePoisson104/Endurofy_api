@@ -159,6 +159,18 @@ const getManualWorkoutLogWithPrevious = async (
           ]
         );
 
+        const [previousNotes] = (await connection.execute(
+          `SELECT we.notes
+            FROM workout_logs wl
+            JOIN workout_exercises we
+              ON wl.workout_log_id = we.workout_log_id
+            WHERE we.program_exercise_id = ?
+              AND wl.workout_date < ?
+            ORDER BY wl.workout_date DESC
+            LIMIT 1;`,
+          [exercise.program_exercise_id, workoutDate]
+        )) as any[];
+
         const [previousSets] = previousWorkoutResult as any[];
 
         // Determine the maximum number of sets between current and previous
@@ -232,24 +244,11 @@ const getManualWorkoutLogWithPrevious = async (
           laterality: exercise.laterality,
           exerciseOrder: exercise.exercise_order,
           notes: exercise.notes,
+          previousNotes: previousNotes[0].notes,
           workoutSets: workoutSetsWithPrevious,
         };
       })
     );
-
-    // Get previous exercise notes
-    const previousNotesResult =
-      await workoutLogRepository.GetPreviousExerciseNotes(
-        userId,
-        programId,
-        workoutLog.day_id,
-        workoutExercisesData[0].exerciseName,
-        workoutDate,
-        connection
-      );
-
-    const previousNotes =
-      previousNotesResult.length > 0 ? previousNotesResult[0].notes : null;
 
     // Construct the complete workout log data
     const workoutLogData = {
