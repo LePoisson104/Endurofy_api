@@ -163,6 +163,7 @@ const GetWorkoutExercisesAndSets = async (
         workoutDate: new Date(workoutLog.workout_date),
         status: workoutLog.status,
         timer: workoutLog.timer,
+        expectedNumberOfSets: workoutLog.expected_number_of_sets,
         workoutExercises: workoutExercises,
       };
     })
@@ -657,10 +658,11 @@ const CreateManualWorkoutLog = async (
   title: string,
   workoutDate: string,
   status: string,
+  expectedNumberOfSets: number,
   connection?: any
 ): Promise<any> => {
   const query =
-    "INSERT INTO workout_logs (workout_log_id, user_id, program_id, day_id, title, workout_date, status, timer ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    "INSERT INTO workout_logs (workout_log_id, user_id, program_id, day_id, title, workout_date, status, timer, expected_number_of_sets ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   if (connection) {
     const [result] = await connection.execute(query, [
@@ -672,6 +674,7 @@ const CreateManualWorkoutLog = async (
       workoutDate,
       status,
       0,
+      expectedNumberOfSets,
     ]);
     return result as any[];
   } else {
@@ -681,6 +684,9 @@ const CreateManualWorkoutLog = async (
       dayId,
       title,
       workoutDate,
+      status,
+      0,
+      expectedNumberOfSets,
     ]);
     return result as any[];
   }

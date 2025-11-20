@@ -649,9 +649,13 @@ const createManualWorkoutLog = async (
   userId: string,
   programId: string,
   dayId: string,
-  workoutLogPayload: { title: string; workoutDate: string }
+  workoutLogPayload: {
+    title: string;
+    workoutDate: string;
+    expectedNumberOfSets: number;
+  }
 ): Promise<{ data: { message: string } }> => {
-  const { title, workoutDate } = workoutLogPayload;
+  const { title, workoutDate, expectedNumberOfSets } = workoutLogPayload;
 
   const connection = await pool.getConnection();
   try {
@@ -675,6 +679,7 @@ const createManualWorkoutLog = async (
       title,
       workoutDate,
       "incomplete",
+      expectedNumberOfSets,
       connection
     );
 
