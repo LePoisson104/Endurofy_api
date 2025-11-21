@@ -244,7 +244,8 @@ const getManualWorkoutLogWithPrevious = async (
           laterality: exercise.laterality,
           exerciseOrder: exercise.exercise_order,
           notes: exercise.notes,
-          previousNotes: previousNotes[0].notes,
+          previousNotes:
+            previousNotes.length > 0 ? previousNotes[0].notes : null,
           workoutSets: workoutSetsWithPrevious,
         };
       })
@@ -772,6 +773,26 @@ const addManualWorkoutExercise = async (
   };
 };
 
+const updateExpectedNumberOfSets = async (
+  workoutLogId: string,
+  expectedNumberOfSets: number
+): Promise<{ data: { message: string } }> => {
+  const result = await workoutLogRepository.UpdateExpectedNumberOfSets(
+    workoutLogId,
+    expectedNumberOfSets
+  );
+
+  if (result.affectedRows === 0) {
+    throw new AppError("Invalid workout log id", 400);
+  }
+
+  return {
+    data: {
+      message: "Expected number of sets updated successfully",
+    },
+  };
+};
+
 const updateWorkoutLogStatus = async (
   workoutLogId: string,
   status: string
@@ -1045,6 +1066,7 @@ export default {
   createManualWorkoutLog,
   addManualWorkoutExercise,
   updateWorkoutLogStatus,
+  updateExpectedNumberOfSets,
   updateWorkoutLogName,
   deleteWorkoutLog,
   updateWorkoutSet,

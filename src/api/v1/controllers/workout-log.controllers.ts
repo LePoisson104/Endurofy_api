@@ -191,6 +191,19 @@ const pauseTimer = asyncHandler(
   }
 );
 
+const updateExpectedNumberOfSets = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const workoutLogId = req.params.workoutLogId;
+    const expectedNumberOfSets = req.body.expectedNumberOfSets;
+
+    const result = await workoutLogServices.updateExpectedNumberOfSets(
+      workoutLogId,
+      expectedNumberOfSets
+    );
+    sendSuccess(res, result.data);
+  }
+);
+
 const updateExerciseNotes = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const workoutExerciseId = req.params.workoutExerciseId;
@@ -305,6 +318,7 @@ export default {
   updateWorkoutSet,
   updateWorkoutLogName,
   updateWorkoutLogStatus,
+  updateExpectedNumberOfSets,
   getCompletedWorkoutLogs,
   getPreviousWorkoutLog,
   getWorkoutLogPagination,

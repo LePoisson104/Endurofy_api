@@ -727,6 +727,19 @@ const DeleteWorkoutSet = async (workoutSetId: string): Promise<any> => {
   return result as any[];
 };
 
+const UpdateExpectedNumberOfSets = async (
+  workoutLogId: string,
+  expectedNumberOfSets: number
+): Promise<any> => {
+  const query =
+    "UPDATE workout_logs SET expected_number_of_sets = ? WHERE workout_log_id = ?";
+  const [result] = await pool.execute(query, [
+    expectedNumberOfSets,
+    workoutLogId,
+  ]);
+  return result as any[];
+};
+
 const UpdateTimer = async (
   workoutLogId: string,
   time: bigint
@@ -742,6 +755,7 @@ export default {
   GetWorkoutLogsByDateRange,
   UpdateExerciseNotes,
   GetWorkoutLogDates,
+  UpdateExpectedNumberOfSets,
   UpdateWorkoutSet,
   UpdateWorkoutLogStatus,
   UpdateWorkoutLogName,

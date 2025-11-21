@@ -89,6 +89,11 @@ router.post(
 );
 
 router.patch(
+  "/update-expected-number-of-sets/:workoutLogId",
+  workoutLogControllers.updateExpectedNumberOfSets
+);
+
+router.patch(
   "/update-workout-log-name/:workoutLogId",
   workoutLogValidations.validateUpdateWorkoutLogName,
   handleValidationErrors,
