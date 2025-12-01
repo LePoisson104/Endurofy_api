@@ -28,7 +28,7 @@ const validateAddFood = [
     .isString()
     .withMessage("Food name must be a string"),
   body("foodBrand")
-    .notEmpty()
+    .optional()
     .withMessage("Food brand is required")
     .isString()
     .withMessage("Food brand must be a string"),
