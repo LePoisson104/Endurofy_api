@@ -165,12 +165,15 @@ const getAnalyticsData = async (
 
   const volumeProgression = Object.values(sessionHistory).map(
     (session: any) => {
-      return {
-        date: session.workout_date,
-        volume: session.sets.reduce((acc: number, curr: any) => {
-          return acc + parseFloat(curr.weight);
-        }, 0),
-      };
+      return session.sets.map((set: any) => {
+        return {
+          date: session.workoutDate,
+          setNumber: set.setNumber,
+          reps: set.reps,
+          weight: set.weight,
+          volume: set.reps * set.weight,
+        };
+      });
     }
   );
 
