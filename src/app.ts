@@ -12,6 +12,7 @@ import foodRoutes from "./api/v1/routes/food.routes";
 import { globalErrorHandler } from "./api/v1/middlewares/error.handlers";
 import settingsRoutes from "./api/v1/routes/settings.routes";
 import waterLogRoutes from "./api/v1/routes/water-log.routes";
+import workoutProgressionRoutes from "./api/v1/routes/workout-progression.routes";
 
 const app: Express = express();
 
@@ -30,6 +31,7 @@ app.use("/api/v1/foods", foodRoutes);
 app.use("/api/v1/food-logs", foodLogRoutes);
 app.use("/api/v1/settings", settingsRoutes);
 app.use("/api/v1/water-logs", waterLogRoutes);
+app.use("/api/v1/workout-progressions", workoutProgressionRoutes);
 
 // Global error handling middleware (must be last)
 app.use(globalErrorHandler);

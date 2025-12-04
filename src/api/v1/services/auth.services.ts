@@ -24,7 +24,7 @@ import workoutProgramServices from "./workout-program.services";
 const AUTH_CONSTANTS = {
   SALT_ROUNDS: 10,
   ACCESS_TOKEN_EXPIRY: "15min",
-  REFRESH_TOKEN_EXPIRY: "7d",
+  REFRESH_TOKEN_EXPIRY: "30d",
   OTP_EXPIRY_MINUTES: 15,
   COOKIE_NAME: "jwt",
 } as const;
@@ -33,7 +33,7 @@ const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

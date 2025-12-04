@@ -74,8 +74,8 @@ export type ServingUnit = "g" | "ml" | "oz";
 export interface BaseFood {
   foodId: string;
   foodName: string;
-  foodBrand: string;
-  ingredients?: string;
+  foodBrand: string | null;
+  ingredients?: string | null;
   foodSource: FoodSource;
   calories: number;
   protein: number;
