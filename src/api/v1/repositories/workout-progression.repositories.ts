@@ -58,7 +58,7 @@ const getExerciseSessionHistory = async (
   AND wl.program_id = ?
   AND we.program_exercise_id = ?
   AND wl.workout_date BETWEEN ? AND ?
-  ORDER BY we.exercise_order, ws.set_number`;
+  ORDER BY wl.workout_date, we.exercise_order, ws.set_number`;
   const [result] = await pool.execute(query, [
     userId,
     programId,
