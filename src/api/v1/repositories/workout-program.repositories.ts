@@ -301,12 +301,13 @@ const UpdateWorkoutProgramUpdatedAt = async (
   programId: string,
   connection?: any
 ): Promise<any> => {
-  const query = "UPDATE programs SET updated_at = NOW() WHERE program_id = ?";
+  const updatedAt = new Date().toISOString().split("T")[0];
+  const query = "UPDATE programs SET updated_at = ? WHERE program_id = ?";
   if (connection) {
-    const [result] = await connection.execute(query, [programId]);
+    const [result] = await connection.execute(query, [updatedAt, programId]);
     return result;
   } else {
-    const [result] = await pool.execute(query, [programId]);
+    const [result] = await pool.execute(query, [updatedAt, programId]);
     return result;
   }
 };
