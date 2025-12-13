@@ -6,7 +6,8 @@ import { asyncHandler } from "../utils/async-handler";
 import {
   USDAFoodNutrient,
   NutrientGroups,
-  USDAFoodNutrientID,
+  USDABrandedFoodNutrientID,
+  USDAFoundationFoodNutrientID,
 } from "../interfaces/food.interfaces";
 import foodServices from "../services/food.services";
 
@@ -55,7 +56,7 @@ const searchFood = asyncHandler(
 
     // Build the API URL with proper encoding
     const encodedQuery = encodeURIComponent(searchItem.trim().toLowerCase());
-    const apiUrl = `${process.env.USDA_URL}/fdc/v1/foods/search?query=${encodedQuery}&dataType=Branded&api_key=${process.env.FDC_API_KEY}`;
+    const apiUrl = `${process.env.USDA_URL}/fdc/v1/foods/search?query=${encodedQuery}&dataType=Branded,Foundation&api_key=${process.env.FDC_API_KEY}`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -92,7 +93,6 @@ const searchFood = asyncHandler(
     }
 
     const responseData = await response.json();
-
     // Validate response structure
     if (
       !responseData ||
@@ -113,25 +113,77 @@ const searchFood = asyncHandler(
     const transformedData = {
       foods: responseData.foods.map((food: any) => {
         const nutrients = organizeNutrientsByGroups(food.foodNutrients || []);
-        const getNutrientValue = (id: number): number => {
-          const nutrient = nutrients.find((n) => n.nutrientId === id);
-          return typeof nutrient?.value === "number" ? nutrient.value : 0;
+        const isFoundationFood = food.dataType === "Foundation";
+
+        const getNutrientValue = (
+          brandedId: number,
+          foundationId?: number
+        ): number => {
+          // For Foundation foods, try foundation ID first if provided
+          if (isFoundationFood && foundationId) {
+            const foundationNutrient = nutrients.find(
+              (n) => n.nutrientId === foundationId
+            );
+            if (foundationNutrient !== undefined) {
+              return typeof foundationNutrient.value === "number"
+                ? Number(foundationNutrient.value) > 0
+                  ? foundationNutrient.value
+                  : 0
+                : 0;
+            }
+          }
+
+          // Try branded nutrient ID (or fallback for Foundation foods)
+          const nutrient = nutrients.find((n) => n.nutrientId === brandedId);
+
+          if (nutrient === undefined) {
+            // Last resort: try foundation ID if we haven't already
+            if (!isFoundationFood && foundationId) {
+              const foundationNutrient = nutrients.find(
+                (n) => n.nutrientId === foundationId
+              );
+              return typeof foundationNutrient?.value === "number"
+                ? Number(foundationNutrient.value) > 0
+                  ? foundationNutrient.value
+                  : 0
+                : 0;
+            }
+            return 0;
+          }
+
+          const value =
+            typeof nutrient?.value === "number"
+              ? Number(nutrient.value) > 0
+                ? nutrient.value
+                : 0
+              : 0;
+
+          return value;
         };
 
         return {
           foodId: String(food.fdcId),
           foodName: food.description,
-          foodBrand: food.brandOwner || "",
+          foodBrand:
+            food.dataType === "Foundation"
+              ? "Foundation Food Item"
+              : food.brandOwner || "",
           ingredients: food.ingredients || undefined,
           foodSource: "usda",
-          calories: getNutrientValue(USDAFoodNutrientID.CALORIES),
-          protein: getNutrientValue(USDAFoodNutrientID.PROTEIN),
-          carbs: getNutrientValue(USDAFoodNutrientID.CARBOHYDRATE),
-          fat: getNutrientValue(USDAFoodNutrientID.FAT),
-          fiber: getNutrientValue(USDAFoodNutrientID.FIBER),
-          sugar: getNutrientValue(USDAFoodNutrientID.TOTAL_SUGARS),
-          sodium: getNutrientValue(USDAFoodNutrientID.SODIUM),
-          cholesterol: getNutrientValue(USDAFoodNutrientID.CHOLESTEROL),
+          calories: getNutrientValue(
+            USDABrandedFoodNutrientID.CALORIES,
+            USDAFoundationFoodNutrientID.CALORIES
+          ),
+          protein: getNutrientValue(USDABrandedFoodNutrientID.PROTEIN),
+          carbs: getNutrientValue(USDABrandedFoodNutrientID.CARBOHYDRATE),
+          fat: getNutrientValue(USDABrandedFoodNutrientID.FAT),
+          fiber: getNutrientValue(USDABrandedFoodNutrientID.FIBER),
+          sugar: getNutrientValue(USDABrandedFoodNutrientID.TOTAL_SUGARS),
+          sodium: getNutrientValue(USDABrandedFoodNutrientID.SODIUM),
+          cholesterol: getNutrientValue(
+            USDABrandedFoodNutrientID.CHOLESTEROL,
+            USDAFoundationFoodNutrientID.CHOLESTEROL
+          ),
           servingSize: 100,
           servingSizeUnit: food.servingSizeUnit,
           favoriteFoodId: null,

@@ -29,7 +29,7 @@ export interface USDAFoodNutrient {
   foodNutrientId: number;
 }
 
-export enum USDAFoodNutrientID {
+export enum USDABrandedFoodNutrientID {
   // Basic Macronutrients
   PROTEIN = 1003,
   FAT = 1004, // "Total lipid (fat)"
@@ -53,17 +53,26 @@ export enum USDAFoodNutrientID {
   CHOLESTEROL = 1006,
 }
 
+export enum USDAFoundationFoodNutrientID {
+  CALORIES = 2048, // "Energy"
+  CHOLESTEROL = 1253,
+}
+
 // Helper object for common nutrient groupings
 export const NutrientGroups = {
   BASIC_NUTRITION: [
-    USDAFoodNutrientID.CALORIES,
-    USDAFoodNutrientID.PROTEIN,
-    USDAFoodNutrientID.FAT,
-    USDAFoodNutrientID.CARBOHYDRATE,
-    USDAFoodNutrientID.FIBER,
-    USDAFoodNutrientID.TOTAL_SUGARS,
-    USDAFoodNutrientID.SODIUM,
-    USDAFoodNutrientID.CHOLESTEROL,
+    // Branded nutrient IDs
+    USDABrandedFoodNutrientID.CALORIES,
+    USDABrandedFoodNutrientID.PROTEIN,
+    USDABrandedFoodNutrientID.FAT,
+    USDABrandedFoodNutrientID.CARBOHYDRATE,
+    USDABrandedFoodNutrientID.FIBER,
+    USDABrandedFoodNutrientID.TOTAL_SUGARS,
+    USDABrandedFoodNutrientID.SODIUM,
+    USDABrandedFoodNutrientID.CHOLESTEROL,
+    // Foundation nutrient IDs (for nutrients that differ)
+    USDAFoundationFoodNutrientID.CALORIES,
+    USDAFoundationFoodNutrientID.CHOLESTEROL,
   ],
 } as const;
 
