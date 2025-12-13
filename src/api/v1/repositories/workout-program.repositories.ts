@@ -301,7 +301,8 @@ const UpdateWorkoutProgramUpdatedAt = async (
   programId: string,
   connection?: any
 ): Promise<any> => {
-  const query = "UPDATE programs SET updated_at = NOW() WHERE program_id = ?";
+  const query =
+    "UPDATE programs SET updated_at = CONVERT_TZ(NOW(), '+00:00', '-06:00') WHERE program_id = ?";
   if (connection) {
     const [result] = await connection.execute(query, [programId]);
     return result;

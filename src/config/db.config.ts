@@ -8,7 +8,7 @@ const pool: Pool = mysql.createPool({
   database: process.env.DATABASE_NAME as string,
   user: process.env.USER_NAME as string,
   password: process.env.PASSWORD as string,
-  timezone: "-06:00", // or 'America/Chicago' for Central Time
+  timezone: "Z", // Store and retrieve dates in UTC
 });
 
 const connectDB = async () => {
