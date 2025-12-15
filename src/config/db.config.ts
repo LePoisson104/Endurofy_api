@@ -9,6 +9,11 @@ const pool: Pool = mysql.createPool({
   user: process.env.USER_NAME as string,
   password: process.env.PASSWORD as string,
   timezone: "Z", // Store and retrieve dates in UTC
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 50,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
 });
 
 const connectDB = async () => {
