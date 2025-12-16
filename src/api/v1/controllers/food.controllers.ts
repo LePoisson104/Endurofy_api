@@ -110,8 +110,10 @@ const searchFood = asyncHandler(
       );
     }
 
-    const transformedData = {
-      foods: responseData.foods.map((food: any) => {
+    // Transform foods and remove duplicates
+    const transformedFoods = responseData.foods
+      .filter((food: any) => food.fdcId) // Filter out foods without fdcId
+      .map((food: any) => {
         const nutrients = organizeNutrientsByGroups(food.foodNutrients || []);
         const isFoundationFood = food.dataType === "Foundation";
 
@@ -189,7 +191,33 @@ const searchFood = asyncHandler(
           favoriteFoodId: null,
           isFavorite: false,
         };
-      }),
+      });
+
+    // Remove duplicates based on foodId first
+    const uniqueByIdMap = new Map();
+    transformedFoods.forEach((food: any) => {
+      if (!uniqueByIdMap.has(food.foodId)) {
+        uniqueByIdMap.set(food.foodId, food);
+      }
+    });
+
+    // Then remove duplicates by foodName + foodBrand combination
+    const uniqueByNameMap = new Map();
+    Array.from(uniqueByIdMap.values()).forEach((food: any) => {
+      const key = `${food.foodName.toLowerCase().trim()}|${(
+        food.foodBrand || ""
+      )
+        .toLowerCase()
+        .trim()}`;
+      if (!uniqueByNameMap.has(key)) {
+        uniqueByNameMap.set(key, food);
+      }
+    });
+
+    const uniqueFoods = Array.from(uniqueByNameMap.values());
+
+    const transformedData = {
+      foods: uniqueFoods,
       totalHits: responseData.totalHits || 0,
       currentPage: responseData.currentPage || 1,
       totalPages: responseData.totalPages || 1,
