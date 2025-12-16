@@ -9,6 +9,7 @@ import { startOfWeek, endOfWeek, subWeeks } from "date-fns";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 
+//for calendar
 const getWeightLogDatesByRange = async (
   userId: string,
   startDate: Date,
@@ -167,6 +168,7 @@ const getWeightLogByRange = async (
 
     // Calculate average weight for each week
     const weeklyAverages: { [weekKey: string]: number } = {};
+    const weeklyCaloriesAverages: { [weekKey: string]: number } = {};
 
     Object.keys(logsByWeek).forEach((weekKey) => {
       const logsInWeek = logsByWeek[weekKey];
@@ -174,7 +176,12 @@ const getWeightLogByRange = async (
         (sum: number, log: any) => sum + Number(log.weight),
         0
       );
+      const totalCalories = logsInWeek.reduce(
+        (sum: number, log: any) => sum + Number(log.calories_intake),
+        0
+      );
       weeklyAverages[weekKey] = totalWeight / logsInWeek.length;
+      weeklyCaloriesAverages[weekKey] = totalCalories / logsInWeek.length;
     });
 
     // Sort week keys chronologically
@@ -246,10 +253,15 @@ const getWeightLogByRange = async (
 
       weeklyRate = Math.round((currWeekAvg - prevWeekAvg) * 100) / 100;
 
+      const weeklyAvgCalories = weeklyCaloriesAverages[currWeekStart]
+        ? Math.round(weeklyCaloriesAverages[currWeekStart] * 100) / 100
+        : 0;
+
       weightLogsWithRateChange.push({
         ...currLog,
         weightChange,
         weeklyRate,
+        weeklyAvgCalories,
       });
     }
 
@@ -287,6 +299,7 @@ const getWeightLogByRange = async (
 
   // Calculate average weight for each week
   const weeklyAverages: { [weekKey: string]: number } = {};
+  const weeklyCaloriesAverages: { [weekKey: string]: number } = {};
 
   Object.keys(logsByWeek).forEach((weekKey) => {
     const logsInWeek = logsByWeek[weekKey];
@@ -294,7 +307,12 @@ const getWeightLogByRange = async (
       (sum: number, log: any) => sum + Number(log.weight),
       0
     );
+    const totalCalories = logsInWeek.reduce(
+      (sum: number, log: any) => sum + Number(log.calories_intake),
+      0
+    );
     weeklyAverages[weekKey] = totalWeight / logsInWeek.length;
+    weeklyCaloriesAverages[weekKey] = totalCalories / logsInWeek.length;
   });
 
   // Sort week keys chronologically
@@ -303,10 +321,19 @@ const getWeightLogByRange = async (
   const weightLogsWithRateChange = [];
   for (let i = weightLogs.length - 1; i >= 0; i--) {
     if (i === 0) {
+      const firstLogDate = new Date(sortedLogs[i].log_date);
+      const firstWeekStart = startOfWeek(firstLogDate, { weekStartsOn: 1 })
+        .toISOString()
+        .split("T")[0];
+      const weeklyAvgCalories = weeklyCaloriesAverages[firstWeekStart]
+        ? Math.round(weeklyCaloriesAverages[firstWeekStart] * 100) / 100
+        : 0;
+
       weightLogsWithRateChange.push({
         ...sortedLogs[i],
         weightChange: 0,
         weeklyRate: 0,
+        weeklyAvgCalories,
       });
     } else {
       const prevLog = sortedLogs[i - 1];
@@ -363,10 +390,15 @@ const getWeightLogByRange = async (
         }
       }
 
+      const weeklyAvgCalories = weeklyCaloriesAverages[currWeekStart]
+        ? Math.round(weeklyCaloriesAverages[currWeekStart] * 100) / 100
+        : 0;
+
       weightLogsWithRateChange.push({
         ...currLog,
         weightChange,
         weeklyRate,
+        weeklyAvgCalories,
       });
     }
   }
