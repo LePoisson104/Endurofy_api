@@ -9,12 +9,12 @@ const router: Router = express.Router();
 router.use(verifyJWT);
 
 router.get(
-  "/personal-record/:userId/:programId/:programExerciseId",
+  "/personal-record/:programId/:programExerciseId",
   workoutProgressionControllers.getPersonalRecord
 );
 
 router.get(
-  "/analytics/:userId/:programId/:programExerciseId/:startDate/:endDate",
+  "/analytics/:programId/:programExerciseId/:startDate/:endDate",
   workoutProgressionValidation.validateGetWorkoutProgressionAnalytics,
   handleValidationErrors,
   workoutProgressionControllers.getAnalytics

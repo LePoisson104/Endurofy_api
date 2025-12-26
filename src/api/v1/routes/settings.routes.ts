@@ -12,10 +12,10 @@ router.use(verifyJWT);
 // @GET ROUTES - SEARCH FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.get("/:userId", settingsControllers.getSettings);
+router.get("/", settingsControllers.getSettings);
 
 router.patch(
-  "/toggle-theme/:userId",
+  "/toggle-theme",
   validateToggleTheme,
   handleValidationErrors,
   settingsControllers.toggleTheme

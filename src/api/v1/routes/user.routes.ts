@@ -9,70 +9,57 @@ const router: Router = express.Router();
 
 router.use(verifyJWT);
 
-router.get(
-  "/:userId",
-  userValidation.validateUserId,
-  handleValidationErrors,
-  userControllers.getUsersInfo
-);
-router.get(
-  "/macros-goals/:userId",
-  userValidation.validateUserId,
-  handleValidationErrors,
-  userControllers.getUsersMacrosGoals
-);
+router.get("/", userControllers.getUsersInfo);
+router.get("/macros-goals/", userControllers.getUsersMacrosGoals);
 router.delete(
-  "/delete-account/:userId",
+  "/delete-account/",
   limiters.deleteAccountAttemptLimiter,
   userValidation.validateDeleteAccount,
   handleValidationErrors,
   userControllers.deleteAccount
 );
 router.patch(
-  "/update-name/:userId",
-  userValidation.validateUserId,
+  "/update-name/",
   userValidation.validateUserUpdateName,
   handleValidationErrors,
   userControllers.updateUsersName
 );
 router.patch(
-  "/update-password/:userId",
-  userValidation.validateUserId,
+  "/update-password/",
   userValidation.validateUsersEmail,
   userValidation.validateUserUpdatePassword,
   handleValidationErrors,
   userControllers.updateUsersPassword
 );
 router.patch(
-  "/macros-goals/:userId",
-  userValidation.validateUserId,
+  "/macros-goals/",
   userValidation.validateUserUpdateMacrosGoals,
   handleValidationErrors,
   userControllers.updateUsersMacrosGoals
 );
 router.patch(
-  "/update-email/:userId",
+  "/update-email/",
   userValidation.validateUserUpdateEmail,
   handleValidationErrors,
   userControllers.updateUsersEmail
 );
 
 router.post(
-  "/verify-update-email/:userId",
+  "/verify-update-email/",
   userValidation.validateVerifyUpdateEmail,
   handleValidationErrors,
   userControllers.verifyUpdateEmail
 );
 
 router.patch(
-  "/update-profile/:userId",
+  "/update-profile/",
   userValidation.validateUserUpdateProfile,
   handleValidationErrors,
   userControllers.updateUsersProfile
 );
 
 router.patch(
-  "/update-profile-and-convert-weight-logs/:userId",
+  "/update-profile-and-convert-weight-logs/",
   userValidation.validateUserUpdateProfile,
   handleValidationErrors,
   userControllers.updateUsersProfileAndConvertWeightLogs

@@ -77,11 +77,6 @@ const validateUserId = [
 ];
 
 const validateDeleteAccount = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid userId format")
-    .notEmpty()
-    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
   body("email")
     .notEmpty()
     .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Email"))
@@ -96,11 +91,6 @@ const validateDeleteAccount = [
 ];
 
 const validateOTPVerification = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid userId format")
-    .notEmpty()
-    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
   body("email")
     .notEmpty()
     .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Email"))
@@ -169,11 +159,6 @@ const validateUserUpdateName = [
 ];
 
 const validateUserUpdateEmail = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid userId format")
-    .notEmpty()
-    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
   body("email")
     .notEmpty()
     .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("Email"))
@@ -195,11 +180,6 @@ const validateUserUpdateEmail = [
 ];
 
 const validateVerifyUpdateEmail = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid userId format")
-    .notEmpty()
-    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
   body("otp")
     .notEmpty()
     .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("OTP"))
@@ -211,11 +191,6 @@ const validateVerifyUpdateEmail = [
 ];
 
 const validateUserUpdateProfile = [
-  param("userId")
-    .isUUID()
-    .withMessage("Invalid userId format")
-    .notEmpty()
-    .withMessage(ERROR_MESSAGES.REQUIRED_FIELD("UserId")),
   body("birth_date").isDate().withMessage("Invalid birth date format").trim(),
   body("gender").isIn(["male", "female"]).withMessage("Invalid gender").trim(),
   body("height")

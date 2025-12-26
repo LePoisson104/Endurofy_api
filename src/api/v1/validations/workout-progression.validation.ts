@@ -1,7 +1,6 @@
 import { param } from "express-validator";
 
 const validateGetWorkoutProgressionAnalytics = [
-  param("userId").isUUID().withMessage("Invalid user ID"),
   param("programId").isUUID().withMessage("Invalid program ID"),
   param("programExerciseId")
     .notEmpty()

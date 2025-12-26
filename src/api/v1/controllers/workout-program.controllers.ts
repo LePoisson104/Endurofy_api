@@ -6,10 +6,10 @@ import {
 } from "../interfaces/workout-program.interface";
 import workoutProgramServices from "../services/workout-program.services";
 import { asyncHandler } from "../utils/async-handler";
-
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 const getWorkoutProgram = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
 
     const result = await workoutProgramServices.getAllWorkoutPrograms(userId);
     sendSuccess(res, result.data);
@@ -30,8 +30,8 @@ const createManualWorkoutExercise = asyncHandler(
 );
 
 const createWorkoutProgram = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const workoutProgram = req.body as WorkoutProgramRequest;
 
     const result = await workoutProgramServices.createWorkoutProgram(
@@ -72,8 +72,8 @@ const addProgramDay = asyncHandler(
 );
 
 const updateWorkoutProgramDescription = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const payload = req.body;
 
@@ -122,8 +122,8 @@ const updateWorkoutProgramExercise = asyncHandler(
 );
 
 const setProgramAsActive = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
 
     const result = await workoutProgramServices.setProgramAsActive(
@@ -135,8 +135,8 @@ const setProgramAsActive = asyncHandler(
 );
 
 const setProgramAsInactive = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
 
     const result = await workoutProgramServices.setProgramAsInactive(
@@ -164,8 +164,8 @@ const reorderExerciseOrder = asyncHandler(
 );
 
 const deleteWorkoutProgram = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
 
     const result = await workoutProgramServices.deleteWorkoutProgram(

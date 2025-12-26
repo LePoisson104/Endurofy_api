@@ -2,10 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../utils/response.utils";
 import workoutLogServices from "../services/workout-log.services";
 import { asyncHandler } from "../utils/async-handler";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getWeeklySets = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
@@ -21,8 +22,8 @@ const getWeeklySets = asyncHandler(
 );
 
 const getManualWorkoutLogWithPrevious = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const workoutDate = req.params.workoutDate;
 
@@ -36,8 +37,8 @@ const getManualWorkoutLogWithPrevious = asyncHandler(
 );
 
 const getWorkoutLogPagination = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const limit = parseInt(req.params.limit);
     const offset = parseInt(req.params.offset);
@@ -53,8 +54,8 @@ const getWorkoutLogPagination = asyncHandler(
 );
 
 const getPreviousWorkoutLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const dayId = req.params.dayId;
     const currentWorkoutDate = req.params.currentWorkoutDate;
@@ -70,8 +71,8 @@ const getPreviousWorkoutLog = asyncHandler(
 );
 
 const getWorkoutLogByDate = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
@@ -87,8 +88,8 @@ const getWorkoutLogByDate = asyncHandler(
 );
 
 const getCompletedWorkoutLogs = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
@@ -104,8 +105,8 @@ const getCompletedWorkoutLogs = asyncHandler(
 );
 
 const getWorkoutLogDates = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const startDate = req.params.startDate;
     const endDate = req.params.endDate;
@@ -121,8 +122,8 @@ const getWorkoutLogDates = asyncHandler(
 );
 
 const createWorkoutLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const dayId = req.params.dayId;
     const payload = req.body;
@@ -151,8 +152,8 @@ const addWorkoutSet = asyncHandler(
 );
 
 const createManualWorkoutLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const dayId = req.params.dayId;
     const payload = req.body;

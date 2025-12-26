@@ -122,11 +122,6 @@ const validateGetPreviousWorkoutLog = [
 ];
 
 const validateGetWorkoutLogPagination = [
-  param("userId")
-    .notEmpty()
-    .withMessage("User id is required")
-    .isUUID()
-    .withMessage("Invalid user id format"),
   param("limit")
     .notEmpty()
     .withMessage("Limit is required")
@@ -187,11 +182,6 @@ const validateAddWorkoutSet = [
 ];
 
 const validateGetManualWorkoutLogWithPrevious = [
-  param("userId")
-    .notEmpty()
-    .withMessage("User id is required")
-    .isUUID()
-    .withMessage("Invalid user id format"),
   param("programId")
     .notEmpty()
     .withMessage("Program id is required")
@@ -223,11 +213,6 @@ const validateDeleteWorkoutExercise = [
 ];
 
 const validateGetWeeklySets = [
-  param("userId")
-    .notEmpty()
-    .withMessage("User id is required")
-    .isUUID()
-    .withMessage("Invalid user id format"),
   param("programId")
     .notEmpty()
     .withMessage("Program id is required")

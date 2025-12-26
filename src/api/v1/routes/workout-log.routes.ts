@@ -10,65 +10,63 @@ const router: Router = express.Router();
 router.use(verifyJWT);
 
 router.get(
-  "/get-weekly-sets/:userId/:programId/:startDate/:endDate",
+  "/get-weekly-sets/:programId/:startDate/:endDate",
   workoutLogValidations.validateGetWeeklySets,
   handleValidationErrors,
   workoutLogControllers.getWeeklySets
 );
 
 router.get(
-  "/get-manual-workout-log-with-previous/:userId/:programId/:workoutDate",
+  "/get-manual-workout-log-with-previous/:programId/:workoutDate",
   workoutLogValidations.validateGetManualWorkoutLogWithPrevious,
   handleValidationErrors,
   workoutLogControllers.getManualWorkoutLogWithPrevious
 );
 
 router.get(
-  "/get-workout-log-pagination/:userId/:programId/:offset/:limit",
+  "/get-workout-log-pagination/:programId/:offset/:limit",
   workoutLogValidations.validateGetWorkoutLogPagination,
   handleValidationErrors,
   workoutLogControllers.getWorkoutLogPagination
 );
 
 router.get(
-  "/get-previous-workout-log/:userId/:programId/:dayId/:currentWorkoutDate",
+  "/get-previous-workout-log/:programId/:dayId/:currentWorkoutDate",
   workoutLogValidations.validateGetPreviousWorkoutLog,
   handleValidationErrors,
   workoutLogControllers.getPreviousWorkoutLog
 );
 
 router.get(
-  "/get-workout-log/:userId/:programId/:startDate/:endDate",
+  "/get-workout-log/:programId/:startDate/:endDate",
   workoutLogValidations.validateGetWorkoutLogByDate,
   handleValidationErrors,
   workoutLogControllers.getWorkoutLogByDate
 );
 
 router.get(
-  "/get-workout-log-dates/:userId/:programId/:startDate/:endDate",
+  "/get-workout-log-dates/:programId/:startDate/:endDate",
   workoutLogValidations.validateGetWorkoutLogByDate,
   handleValidationErrors,
   workoutLogControllers.getWorkoutLogDates
 );
 
 router.get(
-  "/get-completed-workout-logs/:userId/:programId/:startDate/:endDate",
+  "/get-completed-workout-logs/:programId/:startDate/:endDate",
   workoutLogValidations.validateGetCompletedWorkoutLogs,
   handleValidationErrors,
   workoutLogControllers.getCompletedWorkoutLogs
 );
 
 router.post(
-  "/create-workout-log/:userId/:programId/:dayId",
-  userValidation.validateUserId,
+  "/create-workout-log/:programId/:dayId",
   workoutLogValidations.validateCreateWorkoutLogRequest,
   handleValidationErrors,
   workoutLogControllers.createWorkoutLog
 );
 
 router.post(
-  "/create-manual-workout-log/:userId/:programId/:dayId",
-  userValidation.validateUserId,
+  "/create-manual-workout-log/:programId/:dayId",
   workoutLogValidations.validateCreateManualWorkoutLogRequest,
   handleValidationErrors,
   workoutLogControllers.createManualWorkoutLog

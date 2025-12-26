@@ -1,11 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { sendSuccess } from "../utils/response.utils";
 import { asyncHandler } from "../utils/async-handler";
 import settingsServices from "../services/settings.services";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getSettings = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
 
     const settings = await settingsServices.getSettings(userId);
 
@@ -17,8 +18,8 @@ const getSettings = asyncHandler(
 );
 
 const toggleTheme = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { theme } = req.body;
 
     const settings = await settingsServices.toggleTheme(userId, theme);

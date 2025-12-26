@@ -91,11 +91,6 @@ const validateUpdateWeightLog = [
 ];
 
 const validateConvertAllWeightLogsByUnits = [
-  param("userId")
-    .notEmpty()
-    .withMessage("User id is required!")
-    .isUUID()
-    .withMessage("User id must be a valid UUID"),
   body("weightUnit")
     .notEmpty()
     .withMessage("Weight unit is required!")
@@ -104,11 +99,6 @@ const validateConvertAllWeightLogsByUnits = [
 ];
 
 const validateGetWeightLogDatesByRange = [
-  param("userId")
-    .notEmpty()
-    .withMessage("User id is required!")
-    .isUUID()
-    .withMessage("User id must be a valid UUID"),
   query("startDate")
     .notEmpty()
     .withMessage("Start date is required!")

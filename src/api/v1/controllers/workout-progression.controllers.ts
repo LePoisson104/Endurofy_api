@@ -2,10 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../utils/response.utils";
 import workoutProgressionServices from "../services/workout-progression.services";
 import { asyncHandler } from "../utils/async-handler";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getPersonalRecord = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const programExerciseId = req.params.programExerciseId;
 
@@ -19,8 +20,8 @@ const getPersonalRecord = asyncHandler(
 );
 
 const getAnalytics = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const programId = req.params.programId;
     const programExerciseId = req.params.programExerciseId;
     const startDate = req.params.startDate;

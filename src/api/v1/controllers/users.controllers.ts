@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import usersServices from "../services/users.services";
 import { sendSuccess } from "../utils/response.utils";
 import {
@@ -6,26 +6,27 @@ import {
   UserProfileUpdatePayload,
 } from "../interfaces/user.interfaces";
 import { asyncHandler } from "../utils/async-handler";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getUsersInfo = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const result = await usersServices.getUsersInfo(userId);
     sendSuccess(res, result.data.userInfo);
   }
 );
 
 const getUsersMacrosGoals = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const result = await usersServices.getUsersMacrosGoals(userId);
     sendSuccess(res, result.macrosGoals);
   }
 );
 
 const updateUsersName = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const userUpdatePayload: UserCredentialsUpdatePayload = req.body;
     const result = await usersServices.updateUsersName(
       userId,
@@ -36,8 +37,8 @@ const updateUsersName = asyncHandler(
 );
 
 const updateUsersPassword = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const updatePasswordPayload: UserCredentialsUpdatePayload = req.body;
     const result = await usersServices.updateUsersPassword(
       userId,
@@ -48,8 +49,8 @@ const updateUsersPassword = asyncHandler(
 );
 
 const updateUsersEmail = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const updateEmailPayload: UserCredentialsUpdatePayload = req.body;
     const result = await usersServices.initiateEmailChange(
       userId,
@@ -60,8 +61,8 @@ const updateUsersEmail = asyncHandler(
 );
 
 const verifyUpdateEmail = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const otp = req.body.otp;
     const result = await usersServices.verifyUpdateEmail(userId, otp);
     sendSuccess(res, result.data.message);
@@ -69,8 +70,8 @@ const verifyUpdateEmail = asyncHandler(
 );
 
 const updateUsersProfile = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const updateProfilePayload: UserProfileUpdatePayload = req.body;
     const result = await usersServices.updateUsersProfile(
       userId,
@@ -81,8 +82,8 @@ const updateUsersProfile = asyncHandler(
 );
 
 const updateUsersProfileAndConvertWeightLogs = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const updateProfilePayload: UserProfileUpdatePayload = req.body;
     const result = await usersServices.updateUsersProfileAndConvertWeightLogs(
       userId,
@@ -93,8 +94,8 @@ const updateUsersProfileAndConvertWeightLogs = asyncHandler(
 );
 
 const updateUsersMacrosGoals = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const updateMacrosGoalsPayload = req.body;
     const result = await usersServices.updateUsersMacrosGoals(
       userId,
@@ -104,8 +105,8 @@ const updateUsersMacrosGoals = asyncHandler(
   }
 );
 const deleteAccount = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { email, password } = req.body;
     const result = await usersServices.deleteAccount(userId, email, password);
     sendSuccess(res, result.data.message);

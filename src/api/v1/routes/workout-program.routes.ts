@@ -10,14 +10,13 @@ const router: Router = express.Router();
 router.use(verifyJWT);
 
 router.get(
-  "/get-workout-program/:userId",
-  userValidation.validateUserId,
+  "/get-workout-program",
   handleValidationErrors,
   workoutProgramControllers.getWorkoutProgram
 );
 
 router.post(
-  "/create-workout-program/:userId",
+  "/create-workout-program",
   workoutProgramValidations.validateWorkoutProgramRequest,
   handleValidationErrors,
   workoutProgramControllers.createWorkoutProgram
@@ -55,7 +54,7 @@ router.patch(
 );
 
 router.patch(
-  "/update-workout-program-description/:userId/:programId",
+  "/update-workout-program-description/:programId",
   workoutProgramValidations.validateProgramId,
   workoutProgramValidations.validateUpdateWorkoutProgramDescriptionRequest,
   handleValidationErrors,
@@ -82,24 +81,21 @@ router.patch(
 );
 
 router.patch(
-  "/set-program-as-active/:userId/:programId",
+  "/set-program-as-active/:programId",
   workoutProgramValidations.validateProgramId,
-  userValidation.validateUserId,
   handleValidationErrors,
   workoutProgramControllers.setProgramAsActive
 );
 
 router.patch(
-  "/set-program-as-inactive/:userId/:programId",
+  "/set-program-as-inactive/:programId",
   workoutProgramValidations.validateProgramId,
-  userValidation.validateUserId,
   handleValidationErrors,
   workoutProgramControllers.setProgramAsInactive
 );
 
 router.delete(
-  "/delete-workout-program/:userId/:programId",
-  userValidation.validateUserId,
+  "/delete-workout-program/:programId",
   workoutProgramValidations.validateProgramId,
   handleValidationErrors,
   workoutProgramControllers.deleteWorkoutProgram

@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import weightLogServices from "../services/weight-log.services";
 import { sendSuccess } from "../utils/response.utils";
 import { WeightLogPayload } from "../interfaces/weight-log.interface";
 import { asyncHandler } from "../utils/async-handler";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getWeightLogByDate = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const startDate = new Date(req.query.startDate as string);
     const endDate = new Date(req.query.endDate as string);
     const options = req.query.options as string;
@@ -23,8 +24,8 @@ const getWeightLogByDate = asyncHandler(
 );
 
 const getWeightLogDatesByRange = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const startDate = new Date(req.query.startDate as string);
     const endDate = new Date(req.query.endDate as string);
     const result = await weightLogServices.getWeightLogDatesByRange(
@@ -37,16 +38,16 @@ const getWeightLogDatesByRange = asyncHandler(
 );
 
 const getWeeklyWeightDifference = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const result = await weightLogServices.getWeeklyWeightDifference(userId);
     sendSuccess(res, result.data);
   }
 );
 
 const createWeightLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const weightLogPayload: WeightLogPayload = req.body;
 
     const result = await weightLogServices.createWeightLog(
@@ -58,9 +59,9 @@ const createWeightLog = asyncHandler(
 );
 
 const updateWeightLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const weightLogId = req.params.weightLogId;
-    const userId = req.params.userId;
+    const userId = req.userId;
     const weightLogPayload: WeightLogPayload = req.body;
 
     const result = await weightLogServices.updateWeightLog(
@@ -73,9 +74,9 @@ const updateWeightLog = asyncHandler(
 );
 
 const deleteWeightLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const weightLogId = req.params.weightLogId;
-    const userId = req.params.userId;
+    const userId = req.userId;
 
     const result = await weightLogServices.deleteWeightLog(weightLogId, userId);
     sendSuccess(res, result.data.message);
