@@ -294,6 +294,8 @@ const addFood = async (
 // @PATCH SERVICES
 //////////////////////////////////////////////////////////////////////////////////////////////
 const updateFood = async (
+  userId: string,
+  foodLogId: string,
   foodId: string,
   updatePayload: UpdateFoodPayload
 ): Promise<{ message: string }> => {
@@ -310,28 +312,64 @@ const updateFood = async (
     throw new AppError("No valid fields to update!", 400);
   }
 
-  const setClause = fields.map((f) => `${f} = ?`).join(", ");
-  const values = fields.map((f) => updatePayload[f as keyof UpdateFoodPayload]);
+  const connection = await pool.getConnection();
 
-  const updatedFood = await foodLogRepository.UpdateFood(
-    foodId,
-    setClause,
-    values
-  );
+  try {
+    await connection.beginTransaction();
 
-  if (updatedFood.affectedRows === 0) {
-    throw new AppError("Food log not found!", 404);
+    const setClause = fields.map((f) => `${f} = ?`).join(", ");
+    const values = fields.map(
+      (f) => updatePayload[f as keyof UpdateFoodPayload]
+    );
+
+    const foodLog = await foodLogRepository.FindFoodLogById(
+      userId,
+      foodLogId,
+      connection
+    );
+
+    if (!foodLog || foodLog.length === 0) {
+      throw new AppError("Food log not found or unauthorized!", 404);
+    }
+
+    const updatedFood = await foodLogRepository.UpdateFood(
+      foodId,
+      setClause,
+      values
+    );
+
+    if (updatedFood.affectedRows === 0) {
+      throw new AppError("Food not found!", 404);
+    }
+
+    await connection.commit();
+
+    return {
+      message: "Food updated successfully",
+    };
+  } catch (error: any) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error in updateFood service: ${error.message}`,
+      "errLog.log"
+    );
+    if (error instanceof AppError) throw error;
+    throw new AppError(
+      "Something went wrong while trying to update food!",
+      500
+    );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
-
-  return {
-    message: "Food updated successfully",
-  };
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE SERVICES
 //////////////////////////////////////////////////////////////////////////////////////////////
 const deleteFood = async (
+  userId: string,
   foodId: string,
   foodLogId: string
 ): Promise<{ message: string }> => {
@@ -343,6 +381,15 @@ const deleteFood = async (
 
   try {
     await connection.beginTransaction();
+    const foodLogExists = await foodLogRepository.FindFoodLogById(
+      userId,
+      foodLogId,
+      connection
+    );
+
+    if (!foodLogExists || foodLogExists.length === 0) {
+      throw new AppError("Food log not found or unauthorized!", 404);
+    }
 
     const [deletedFood]: any = await connection.execute(
       "DELETE FROM logged_foods WHERE food_id = ?",
@@ -392,13 +439,17 @@ const deleteFood = async (
 };
 
 const deleteFoodLog = async (
+  userId: string,
   foodLogId: string
 ): Promise<{ message: string }> => {
   if (!foodLogId) {
     throw new AppError("foodLogId is required!", 400);
   }
 
-  const deletedFoodLog = await foodLogRepository.DeleteFoodLog(foodLogId);
+  const deletedFoodLog = await foodLogRepository.DeleteFoodLog(
+    userId,
+    foodLogId
+  );
 
   if (deletedFoodLog.affectedRows === 0) {
     throw new AppError("Food log not found!", 404);
@@ -419,8 +470,8 @@ const markFoodLogAsComplete = async (
     await connection.beginTransaction();
 
     await connection.execute(
-      "UPDATE food_logs SET status = 'completed' WHERE food_log_id = ?",
-      [foodLogId]
+      "UPDATE food_logs SET status = 'completed' WHERE food_log_id = ? AND user_id = ?",
+      [foodLogId, userId]
     );
 
     const [isWeightLogExists]: any = await connection.execute(
@@ -430,8 +481,8 @@ const markFoodLogAsComplete = async (
 
     if (isWeightLogExists.length === 1) {
       await connection.execute(
-        "UPDATE weight_log SET calories_intake = ? WHERE weight_log_id = ?",
-        [caloriesIntake, isWeightLogExists[0].weight_log_id]
+        "UPDATE weight_log SET calories_intake = ? WHERE weight_log_id = ? AND user_id = ?",
+        [caloriesIntake, isWeightLogExists[0].weight_log_id, userId]
       );
     }
 
@@ -451,16 +502,21 @@ const markFoodLogAsComplete = async (
 };
 
 const markFoodLogAsIncomplete = async (
+  userId: string,
   foodLogId: string
 ): Promise<{ message: string }> => {
   if (!foodLogId) {
     throw new AppError("foodLogId is required!", 400);
   }
 
-  await pool.execute(
-    "UPDATE food_logs SET status = 'incomplete' WHERE food_log_id = ?",
-    [foodLogId]
+  const [updatedFoodLogStatus]: any = await pool.execute(
+    "UPDATE food_logs SET status = 'incomplete' WHERE food_log_id = ? AND user_id = ?",
+    [foodLogId, userId]
   );
+
+  if (updatedFoodLogStatus.affectedRows === 0) {
+    throw new AppError("Food log not found!", 404);
+  }
 
   return { message: "Food log marked as incomplete" };
 };

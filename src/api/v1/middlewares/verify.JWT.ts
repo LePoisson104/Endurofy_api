@@ -38,7 +38,7 @@ const verifyJWT = (
 
       const payload = decoded as DecodedToken; // Type assertion for safety
       req.email = payload.UserInfo?.email;
-      req.userId = payload.UserInfo?.user_id;
+      req.userId = payload.UserInfo?.userId;
 
       next();
     }

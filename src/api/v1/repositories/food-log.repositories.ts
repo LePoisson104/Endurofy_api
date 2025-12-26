@@ -4,6 +4,21 @@ import { FoodLogResponse } from "../interfaces/food-log.interfaces";
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET QUERIES
 ////////////////////////////////////////////////////////////////////////////////////////////////
+const FindFoodLogById = async (
+  userId: string,
+  foodLogId: string,
+  connection?: any
+): Promise<any> => {
+  const query = "SELECT * FROM food_logs WHERE food_log_id = ? AND user_id = ?";
+  if (connection) {
+    const [result] = await connection.execute(query, [foodLogId, userId]);
+    return result;
+  } else {
+    const [result] = await pool.execute(query, [foodLogId, userId]);
+    return result;
+  }
+};
+
 const GetFoodLogByDate = async (
   userId: string,
   date: string,
@@ -126,13 +141,17 @@ const DeleteFood = async (foodId: string): Promise<any> => {
   return result;
 };
 
-const DeleteFoodLog = async (foodLogId: string): Promise<any> => {
-  const query = "DELETE FROM food_logs WHERE food_log_id = ?";
-  const [result] = await pool.execute(query, [foodLogId]);
+const DeleteFoodLog = async (
+  userId: string,
+  foodLogId: string
+): Promise<any> => {
+  const query = "DELETE FROM food_logs WHERE food_log_id = ? AND user_id = ?";
+  const [result] = await pool.execute(query, [foodLogId, userId]);
   return result;
 };
 
 export default {
+  FindFoodLogById,
   GetFoodLogByDate,
   GetLoggedDates,
   GetRecentUniqueFoodItems,

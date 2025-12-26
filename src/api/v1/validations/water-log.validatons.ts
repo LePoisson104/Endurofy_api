@@ -1,7 +1,6 @@
 import { body, param } from "express-validator";
 
 const valdiateGetWaterLog = [
-  param("userId").isString().notEmpty().withMessage("User id is required"),
   param("date")
     .notEmpty()
     .withMessage("Date is required")
@@ -10,7 +9,6 @@ const valdiateGetWaterLog = [
 ];
 
 const validateAddWater = [
-  param("userId").isString().notEmpty().withMessage("User id is required"),
   body("amount")
     .isFloat({ min: 0.01 })
     .withMessage("Amount must be a positive number"),

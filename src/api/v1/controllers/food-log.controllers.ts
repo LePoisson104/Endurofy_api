@@ -1,11 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { sendSuccess } from "../utils/response.utils";
 import foodLogServices from "../services/food-log.services";
 import { asyncHandler } from "../utils/async-handler";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getAllFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { date } = req.params;
 
     const foodLogs = await foodLogServices.getFoodLogByDate(userId, date);
@@ -18,8 +19,8 @@ const getAllFood = asyncHandler(
 );
 
 const getLoggedDates = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { startDate, endDate } = req.params;
 
     const logDates = await foodLogServices.getLoggedDates(
@@ -36,8 +37,8 @@ const getLoggedDates = asyncHandler(
 );
 
 const addFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const foodPayload = req.body;
 
     const addedFood = await foodLogServices.addFood(userId, foodPayload);
@@ -49,11 +50,17 @@ const addFood = asyncHandler(
 );
 
 const updateFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { foodId } = req.params;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { foodLogId, foodId } = req.params;
+    const userId = req.userId;
     const updatePayload = req.body;
 
-    const updatedFood = await foodLogServices.updateFood(foodId, updatePayload);
+    const updatedFood = await foodLogServices.updateFood(
+      userId,
+      foodLogId,
+      foodId,
+      updatePayload
+    );
 
     sendSuccess(res, {
       message: updatedFood.message,
@@ -62,10 +69,15 @@ const updateFood = asyncHandler(
 );
 
 const deleteFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { foodId, foodLogId } = req.params;
+    const userId = req.userId;
 
-    const deletedFood = await foodLogServices.deleteFood(foodId, foodLogId);
+    const deletedFood = await foodLogServices.deleteFood(
+      userId,
+      foodId,
+      foodLogId
+    );
 
     sendSuccess(res, {
       message: deletedFood.message,
@@ -74,10 +86,14 @@ const deleteFood = asyncHandler(
 );
 
 const deleteFoodLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { foodLogId } = req.params;
+    const userId = req.userId;
 
-    const deletedFoodLog = await foodLogServices.deleteFoodLog(foodLogId);
+    const deletedFoodLog = await foodLogServices.deleteFoodLog(
+      userId,
+      foodLogId
+    );
 
     sendSuccess(res, {
       message: deletedFoodLog.message,
@@ -86,10 +102,10 @@ const deleteFoodLog = asyncHandler(
 );
 
 const markFoodLogAsComplete = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const foodLogId = req.params.foodLogId;
-    const userId = req.params.userId;
-    const { date, caloriesIntake, status } = req.body;
+    const userId = req.userId;
+    const { date, caloriesIntake } = req.body;
 
     const markedFoodLog = await foodLogServices.markFoodLogAsComplete(
       userId,
@@ -105,10 +121,12 @@ const markFoodLogAsComplete = asyncHandler(
 );
 
 const markFoodLogAsIncomplete = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const foodLogId = req.params.foodLogId;
+    const userId = req.userId;
 
     const markedFoodLog = await foodLogServices.markFoodLogAsIncomplete(
+      userId,
       foodLogId
     );
 

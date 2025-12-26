@@ -13,7 +13,7 @@ router.use(verifyJWT);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.get(
-  "/:userId/search/:searchItem",
+  "/search/:searchItem",
   foodValidations.validateSearchFood,
   handleValidationErrors,
   foodControllers.searchFood
@@ -23,43 +23,39 @@ router.get(
 // @GET ROUTES
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.get("/:userId/favorites", foodControllers.getFavoriteFood);
+router.get("/favorites", foodControllers.getFavoriteFood);
 
-router.get("/:userId/recent", foodControllers.getRecentFood);
+router.get("/recent", foodControllers.getRecentFood);
 
 router.get(
-  "/:userId/favorites/:foodId",
+  "/favorites/:foodId",
   foodValidations.validateGetIsFavoriteFood,
   handleValidationErrors,
   foodControllers.getIsFavoriteFood
 );
 
 router.post(
-  "/:userId/favorites/batch",
+  "/favorites/batch",
   foodValidations.validateGetFavoriteStatusBatch,
   handleValidationErrors,
   foodControllers.getFavoriteStatusBatch
 );
 
-router.get(
-  "/:userId/custom",
-  handleValidationErrors,
-  foodControllers.getCustomFood
-);
+router.get("/custom", handleValidationErrors, foodControllers.getCustomFood);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @POST ROUTES
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.post(
-  "/:userId/favorites",
+  "/favorites",
   foodValidations.validateAddFavoriteFood,
   handleValidationErrors,
   foodControllers.addFavoriteFood
 );
 
 router.post(
-  "/:userId/custom",
+  "/custom",
   foodValidations.validateAddCustomFood,
   handleValidationErrors,
   foodControllers.addCustomFood
@@ -88,7 +84,7 @@ router.delete(
 );
 
 router.delete(
-  "/:userId/custom/:foodItemId",
+  "/custom/:foodItemId",
   foodValidations.validateFoodItemId,
   handleValidationErrors,
   foodControllers.deleteCustomFood

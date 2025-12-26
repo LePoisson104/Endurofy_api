@@ -148,11 +148,6 @@ const validateDeleteFoodLog = [
 ];
 
 const validateMarkFoodLogAsComplete = [
-  param("userId")
-    .notEmpty()
-    .withMessage("User ID is required")
-    .isUUID()
-    .withMessage("Invalid user ID format"),
   param("foodLogId")
     .notEmpty()
     .withMessage("Food log ID is required")

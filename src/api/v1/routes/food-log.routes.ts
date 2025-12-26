@@ -13,14 +13,14 @@ router.use(verifyJWT);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.get(
-  "/:userId/date/:date",
+  "/:date",
   foodLogValidations.validateGetFoodLogByDate,
   handleValidationErrors,
   foodLogControllers.getAllFood
 );
 
 router.get(
-  "/:userId/dates/:startDate/:endDate",
+  "/:startDate/:endDate",
   foodLogValidations.validateGetLogDates,
   handleValidationErrors,
   foodLogControllers.getLoggedDates
@@ -31,7 +31,7 @@ router.get(
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.post(
-  "/:userId",
+  "/",
   foodLogValidations.validateAddFood,
   handleValidationErrors,
   foodLogControllers.addFood
@@ -42,14 +42,14 @@ router.post(
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.patch(
-  "/food/:foodId",
+  "/food/:foodLogId/:foodId",
   foodLogValidations.validateUpdateFood,
   handleValidationErrors,
   foodLogControllers.updateFood
 );
 
 router.patch(
-  "/mark-as-complete/:userId/:foodLogId",
+  "/mark-as-complete/:foodLogId",
   foodLogValidations.validateMarkFoodLogAsComplete,
   handleValidationErrors,
   foodLogControllers.markFoodLogAsComplete

@@ -36,7 +36,7 @@ const validateAddFavoriteFood = [
     .isString()
     .withMessage("Food name must be a string"),
   body("foodBrand")
-    .optional()
+    .optional({ nullable: true })
     .isString()
     .withMessage("Food brand must be a string"),
   body("foodSource")

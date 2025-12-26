@@ -9,14 +9,14 @@ const router: Router = express.Router();
 router.use(verifyJWT);
 
 router.get(
-  "/:userId/date/:date",
+  "/:date",
   waterLogValidations.valdiateGetWaterLog,
   handleValidationErrors,
   waterLogControllers.getWaterLogByDate
 );
 
 router.post(
-  "/:userId/date/:date",
+  "/:date",
   waterLogValidations.validateAddWater,
   handleValidationErrors,
   waterLogControllers.addWaterLog

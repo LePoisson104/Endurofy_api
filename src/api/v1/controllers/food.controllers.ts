@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { AppError } from "../middlewares/error.handlers";
 import { sendSuccess } from "../utils/response.utils";
 import Logger from "../utils/logger";
@@ -10,6 +10,7 @@ import {
   USDAFoundationFoodNutrientID,
 } from "../interfaces/food.interfaces";
 import foodServices from "../services/food.services";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 // Helper function to organize nutrients by groups
 const organizeNutrientsByGroups = (foodNutrients: any[]) => {
@@ -40,8 +41,8 @@ const organizeNutrientsByGroups = (foodNutrients: any[]) => {
 };
 
 const searchFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const searchItem = req.params.searchItem;
 
     // Check if API key exists
@@ -254,8 +255,8 @@ const searchFood = asyncHandler(
 );
 
 const getFavoriteFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
 
     const favoriteFood = await foodServices.getFavoriteFood(userId);
 
@@ -267,8 +268,8 @@ const getFavoriteFood = asyncHandler(
 );
 
 const getIsFavoriteFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { foodId } = req.params;
 
     const isFavorite = await foodServices.getIsFavoriteFood(userId, foodId);
@@ -281,8 +282,8 @@ const getIsFavoriteFood = asyncHandler(
 );
 
 const getFavoriteStatusBatch = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { foodIds } = req.body;
 
     const favoriteStatuses = await foodServices.getFavoriteStatusBatch(
@@ -298,8 +299,8 @@ const getFavoriteStatusBatch = asyncHandler(
 );
 
 const getRecentFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
 
     const recentFood = await foodServices.getRecentFoodItems(userId);
 
@@ -310,19 +311,21 @@ const getRecentFood = asyncHandler(
   }
 );
 
-const getCustomFood = asyncHandler(async (req, res) => {
-  const userId = req.params.userId;
-  const customFood = await foodServices.getCustomFood(userId);
+const getCustomFood = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+    const customFood = await foodServices.getCustomFood(userId);
 
-  sendSuccess(res, {
-    message: "Custom food retrieved successfully",
-    customFood: customFood,
-  });
-});
+    sendSuccess(res, {
+      message: "Custom food retrieved successfully",
+      customFood: customFood,
+    });
+  }
+);
 
 const addFavoriteFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const payload = req.body;
 
     const addedFavoriteFood = await foodServices.addFavoriteFood(
@@ -337,8 +340,8 @@ const addFavoriteFood = asyncHandler(
 );
 
 const addCustomFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const foodPayload = req.body;
 
     const addedCustomFood = await foodServices.addCustomFood(
@@ -353,11 +356,15 @@ const addCustomFood = asyncHandler(
 );
 
 const updateCustomFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { foodItemId } = req.params;
     const updatePayload = req.body;
 
+    console.log(updatePayload);
+
     const updatedCustomFood = await foodServices.updateCustomFood(
+      userId,
       foodItemId,
       updatePayload
     );
@@ -369,10 +376,12 @@ const updateCustomFood = asyncHandler(
 );
 
 const deleteFavoriteFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { favFoodId } = req.params;
 
     const deletedFavoriteFood = await foodServices.deleteFavoriteFood(
+      userId,
       favFoodId
     );
 
@@ -383,8 +392,8 @@ const deleteFavoriteFood = asyncHandler(
 );
 
 const deleteCustomFood = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const { foodItemId } = req.params;
 
     const deletedCustomFood = await foodServices.deleteCustomFood(

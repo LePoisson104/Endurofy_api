@@ -3,6 +3,22 @@ import pool from "../../../config/db.config";
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @GET QUERIES - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
+const GetFoodItemById = async (
+  userId: string,
+  foodItemId: string,
+  connection?: any
+): Promise<any> => {
+  const query =
+    "SELECT * FROM food_items WHERE food_item_id = ? AND user_id = ?";
+  if (connection) {
+    const [result] = await connection.execute(query, [foodItemId, userId]);
+    return result;
+  } else {
+    const [result] = await pool.execute(query, [foodItemId, userId]);
+    return result;
+  }
+};
+
 const GetFavoriteFood = async (
   userId: string,
   connection?: any
@@ -156,21 +172,36 @@ const AddCustomFood = async (
 // @PATCH QUERIES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const UpdateCustomFood = async (
+  userId: string,
   foodItemId: string,
   setClause: string,
-  values: any[]
+  values: any[],
+  connection?: any
 ): Promise<any> => {
-  const query = `UPDATE food_items SET ${setClause} WHERE food_item_id = ?`;
-  const [result] = await pool.execute(query, [...values, foodItemId]);
-  return result;
+  const query = `UPDATE food_items SET ${setClause} WHERE food_item_id = ? AND user_id = ?`;
+  if (connection) {
+    const [result] = await connection.execute(query, [
+      ...values,
+      foodItemId,
+      userId,
+    ]);
+    return result;
+  } else {
+    const [result] = await pool.execute(query, [...values, foodItemId, userId]);
+    return result;
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // @DELETE QUERIES - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const DeleteFavoriteFood = async (favoriteFoodId: string): Promise<any> => {
-  const query = "DELETE FROM favorite_foods WHERE favorite_food_id = ?";
-  const [result] = await pool.execute(query, [favoriteFoodId]);
+const DeleteFavoriteFood = async (
+  userId: string,
+  favoriteFoodId: string
+): Promise<any> => {
+  const query =
+    "DELETE FROM favorite_foods WHERE favorite_food_id = ? AND user_id = ?";
+  const [result] = await pool.execute(query, [favoriteFoodId, userId]);
   return result;
 };
 
@@ -242,6 +273,7 @@ export default {
   DeleteFavoriteFood,
   // Custom Food
   GetCustomFood,
+  GetFoodItemById,
   AddCustomFood,
   UpdateCustomFood,
   DeleteCustomFoodSafe,

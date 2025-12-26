@@ -395,6 +395,7 @@ const addCustomFood = async (
 // @PATCH SERVICES - CUSTOM FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const updateCustomFood = async (
+  userId: string,
   foodItemId: string,
   updatePayload: Partial<BaseFood>
 ): Promise<{ message: string }> => {
@@ -455,7 +456,47 @@ const updateCustomFood = async (
     return updatePayload[frontendKey as keyof BaseFood];
   });
 
-  await foodRepository.UpdateCustomFood(foodItemId, setClause, values);
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const foodItem = await foodRepository.GetFoodItemById(
+      userId,
+      foodItemId,
+      connection
+    );
+
+    if (!foodItem || foodItem.length === 0) {
+      throw new AppError("Food item not found!", 404);
+    }
+
+    const updatedFood: any = await foodRepository.UpdateCustomFood(
+      userId,
+      foodItemId,
+      setClause,
+      values,
+      connection
+    );
+
+    if (updatedFood.affectedRows === 0) {
+      throw new AppError("Food item not found!", 404);
+    }
+
+    await connection.commit();
+  } catch (error: any) {
+    await connection.rollback();
+    await Logger.logEvents(
+      `Error in updateCustomFood service: ${error.message}`,
+      "errLog.log"
+    );
+    throw new AppError(
+      "Something went wrong while trying to update custom food!",
+      500
+    );
+  } finally {
+    connection.release();
+  }
 
   return { message: "Custom food updated successfully" };
 };
@@ -464,6 +505,7 @@ const updateCustomFood = async (
 // @DELETE SERVICES - FAVORITE FOOD
 ////////////////////////////////////////////////////////////////////////////////////////////////
 const deleteFavoriteFood = async (
+  userId: string,
   favFoodId: string
 ): Promise<{ message: string }> => {
   if (!favFoodId) {
@@ -471,6 +513,7 @@ const deleteFavoriteFood = async (
   }
 
   const deletedFavoriteFood = await foodRepository.DeleteFavoriteFood(
+    userId,
     favFoodId
   );
 

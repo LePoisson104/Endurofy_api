@@ -3,6 +3,7 @@ import { AppError } from "../middlewares/error.handlers";
 import pool from "../../../config/db.config";
 import Logger from "../utils/logger";
 import waterLogRepository from "../repositories/water-log.repositories";
+import foodLogRepository from "../repositories/food-log.repositories";
 import type { AddWaterLogPayload } from "../interfaces/water-log.interfaces";
 
 const GetWaterLogByDate = async (userId: string, date: string) => {
@@ -77,6 +78,7 @@ const addWaterLog = async (
 };
 
 const updateWaterLog = async (
+  userId: string,
   waterLogId: string,
   foodLogId: string,
   amount: number
@@ -86,8 +88,23 @@ const updateWaterLog = async (
   try {
     await connection.beginTransaction();
 
+    const foodLogExists = await foodLogRepository.FindFoodLogById(
+      userId,
+      foodLogId,
+      connection
+    );
+
+    if (!foodLogExists || foodLogExists.length === 0) {
+      throw new AppError("Food log not found or unauthorized!", 404);
+    }
+
     if (amount <= 0) {
-      const result = await deleteWaterLog(waterLogId, foodLogId, connection);
+      const result = await deleteWaterLog(
+        userId,
+        waterLogId,
+        foodLogId,
+        connection
+      );
       await connection.commit();
       return result;
     }
@@ -113,6 +130,7 @@ const updateWaterLog = async (
 };
 
 const deleteWaterLog = async (
+  userId: string,
   waterLogId: string,
   foodLogId: string,
   connection?: any
@@ -122,6 +140,16 @@ const deleteWaterLog = async (
 
   try {
     if (!externalConnection) await localConnection.beginTransaction();
+
+    const foodLogExists = await foodLogRepository.FindFoodLogById(
+      userId,
+      foodLogId,
+      localConnection
+    );
+
+    if (!foodLogExists || foodLogExists.length === 0) {
+      throw new AppError("Food log not found or unauthorized!", 404);
+    }
 
     const [deletedWaterLog]: any = await localConnection.execute(
       "DELETE FROM water_logs WHERE water_log_id = ?",

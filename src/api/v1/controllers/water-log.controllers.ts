@@ -2,10 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../utils/response.utils";
 import { asyncHandler } from "../utils/async-handler";
 import waterLogServices from "../services/water-log.services";
+import { AuthenticatedRequest } from "../interfaces/request.interfaces";
 
 const getWaterLogByDate = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const date = req.params.date;
 
     const waterLog = await waterLogServices.GetWaterLogByDate(userId, date);
@@ -17,8 +18,8 @@ const getWaterLogByDate = asyncHandler(
 );
 
 const addWaterLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const date = req.params.date;
     const waterPaylaod = req.body;
 
@@ -33,12 +34,14 @@ const addWaterLog = asyncHandler(
 );
 
 const updateWaterLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const waterLogId = req.params.waterLogId;
     const foodLogId = req.params.foodLogId;
     const { amount } = req.body;
 
     const updatedWaterLog = await waterLogServices.updateWaterLog(
+      userId,
       waterLogId,
       foodLogId,
       amount
@@ -48,11 +51,13 @@ const updateWaterLog = asyncHandler(
 );
 
 const deleteWaterLog = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.userId;
     const waterLogId = req.params.waterLogId;
     const foodLogId = req.params.foodLogId;
 
     const deletedWaterLog = await waterLogServices.deleteWaterLog(
+      userId,
       waterLogId,
       foodLogId
     );
